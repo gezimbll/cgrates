@@ -2,7 +2,7 @@ db = db.getSiblingDB('cgrates')
 db.createUser(
   {
     user: "cgrates",
-    pwd: "CGRateS.org",
+    pwd: "eVdyYzJRSjQW2Rec",
     roles: [ { role: "dbAdmin", db: "cgrates" } ]
   }
 )

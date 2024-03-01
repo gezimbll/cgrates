@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 
 
-mongo --quiet create_user.js
+mongosh --quiet create_user.js
 cu=$?
 
 if [ $cu = 0 ]; then

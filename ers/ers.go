@@ -89,6 +89,7 @@ func (erS *ERService) ListenAndServe(stopChan, cfgRldChan chan struct{}) (err er
 			return
 		}
 	}
+	ch1 := make(chan struct{}, 20)
 	for {
 		select {
 		case err = <-erS.rdrErr: // got application error
@@ -101,11 +102,16 @@ func (erS *ERService) ListenAndServe(stopChan, cfgRldChan chan struct{}) (err er
 			erS.closeAllRdrs()
 			return
 		case erEv := <-erS.rdrEvents:
-			if err := erS.processEvent(erEv.cgrEvent, erEv.rdrCfg); err != nil {
-				utils.Logger.Warning(
-					fmt.Sprintf("<%s> reading event: <%s> from reader: <%s> got error: <%s>",
-						utils.ERs, utils.ToJSON(erEv.cgrEvent), erEv.rdrCfg.ID, err.Error()))
-			}
+			ch1 <- struct{}{}
+			go func() {
+				if err := erS.processEvent(erEv.cgrEvent, erEv.rdrCfg); err != nil {
+					utils.Logger.Warning(
+						fmt.Sprintf("<%s> reading event: <%s> from reader: <%s> got error: <%s>",
+							utils.ERs, utils.ToJSON(erEv.cgrEvent), erEv.rdrCfg.ID, err.Error()))
+				}
+				<-ch1
+			}()
+
 		case pEv := <-erS.partialEvents:
 			if err := erS.processPartialEvent(pEv.cgrEvent, pEv.rdrCfg); err != nil {
 				utils.Logger.Warning(
