@@ -1399,3 +1399,65 @@ func TestArgeesRPCClone(t *testing.T) {
 		t.Errorf("expected %v,received %v", utils.ToJSON(exp), utils.ToJSON(val))
 	}
 }
+
+func BenchmarkAttributesProcessevent(b *testing.B) {
+	cfg := config.NewDefaultCGRConfig()
+	cfg.FilterSCfg().ResourceSConns = []string{}
+	conMng := NewConnManager(cfg, make(map[string]chan rpcclient.ClientConnector))
+	dm := NewDataManager(NewInternalDB(nil, nil, true, cfg.DataDbCfg().Items), nil, conMng)
+	filterS := NewFilterS(cfg, conMng, dm)
+	dm.SetAttributeProfile(&AttributeProfile{
+		Tenant:    "cgrates.org",
+		ID:        "ATTR_CHANGE_TENANT_FROM_USER",
+		Contexts:  []string{utils.MetaAny},
+		FilterIDs: []string{"*string:~*req.Account:dan@itsyscom.com|adrian@itsyscom.com"},
+		Attributes: []*Attribute{
+			{
+				Path:  "*tenant",
+				Type:  "*variable",
+				Value: config.NewRSRParsersMustCompile("~*req.Account:s/(.*)@(.*)/${1}.${2}/", utils.InfieldSep),
+			},
+			{
+				Path:  "*req.Account",
+				Type:  "*variable",
+				Value: config.NewRSRParsersMustCompile("~*req.Account:s/(dan)@(.*)/${1}.${2}/:s/(adrian)@(.*)/andrei.${2}/", utils.InfieldSep),
+			},
+			{
+				Path:  "*tenant",
+				Type:  "*composed",
+				Value: config.NewRSRParsersMustCompile(".co.uk", utils.InfieldSep),
+			},
+		},
+		Blocker: false,
+		Weight:  20,
+	}, true)
+
+	dm.SetAttributeProfile(&AttributeProfile{
+		Tenant:   "adrian.itsyscom.com.co.uk",
+		ID:       "ATTR_MATCH_TENANT",
+		Contexts: []string{utils.MetaAny},
+		Attributes: []*Attribute{
+			{
+				Path:  "*req.Password",
+				Type:  utils.MetaConstant,
+				Value: config.NewRSRParsersMustCompile("CGRATES.ORG", utils.InfieldSep),
+			},
+		},
+		Blocker: false,
+		Weight:  20}, true)
+
+	alS := NewAttributeService(dm, filterS, cfg)
+	var rply AttrSProcessEventReply
+	for i := 0; i < b.N; i++ {
+		alS.V1ProcessEvent(&utils.CGREvent{
+			Tenant: "cgrates.org",
+			Event: map[string]interface{}{
+				utils.AccountField: "adrian@itsyscom.com",
+			},
+			APIOpts: map[string]interface{}{
+				utils.OptsAttributesProcessRuns: 2,
+			},
+		}, &rply)
+
+	}
+}

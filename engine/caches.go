@@ -274,10 +274,13 @@ func (chS *CacheS) Precache() (err error) {
 	errChan := make(chan error)
 	doneChan := make(chan struct{})
 	for cacheID, cacheCfg := range chS.cfg.CacheCfg().Partitions {
+
 		if !cacheCfg.Precache {
 			close(chS.pcItems[cacheID]) // no need of precache
 			continue
 		}
+		utils.Logger.Debug(cacheID)
+		utils.Logger.Debug(fmt.Sprintf("%v boolean", cacheCfg.Precache))
 		wg.Add(1)
 		go func(cacheID string) {
 			errCache := chS.dm.CacheDataFromDB(
