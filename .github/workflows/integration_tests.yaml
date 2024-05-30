@@ -1,10 +1,10 @@
 name: Integration Tests
 
 on:
-  # push:
+  push:
+    branches: [test1.0]
+  # pull_request:
   #   branches: [1.0]
-  pull_request:
-    branches: [1.0]
 
 jobs:
   # check-if-duplicate-action:
