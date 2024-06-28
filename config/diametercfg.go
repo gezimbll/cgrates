@@ -20,7 +20,7 @@ package config
 
 import (
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 )
 
 // DiameterAgentCfg the config section that describes the Diameter Agent

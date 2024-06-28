@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"github.com/cgrates/birpc/context"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 
 	"github.com/cgrates/cgrates/utils"
 )

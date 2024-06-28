@@ -46,7 +46,7 @@ import (
 	"github.com/cgrates/cgrates/services"
 	"github.com/cgrates/cgrates/servmanager"
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 )
 
 var (
@@ -201,7 +201,8 @@ func startRPC(server *cores.Server, internalRaterChan,
 	}
 
 	go server.ServeJSON(cfg.ListenCfg().RPCJSONListen, shdChan)
-	go server.ServeGOB(cfg.ListenCfg().RPCGOBListen, shdChan)
+	//go server.ServeGOB(cfg.ListenCfg().RPCGOBListen, shdChan)
+	go server.ServeMsgPack(shdChan)
 	go server.ServeHTTP(
 		cfg.ListenCfg().HTTPListen,
 		cfg.HTTPCfg().HTTPJsonRPCURL,

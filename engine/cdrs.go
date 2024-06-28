@@ -30,7 +30,7 @@ import (
 	"github.com/cgrates/cgrates/config"
 	"github.com/cgrates/cgrates/guardian"
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 )
 
 func newMapEventFromReqForm(r *http.Request) (mp MapEvent, err error) {

@@ -80,6 +80,7 @@
 
 "sessions": {
 	"enabled": true,
+	"listen_bigob": ":2019",	
 	"session_ttl": "50ms",
 	"chargers_conns": ["*internal"],
 	"rals_conns": ["*internal"],

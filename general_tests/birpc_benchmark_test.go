@@ -23,24 +23,21 @@ package general_tests
 
 import (
 	"errors"
-	"fmt"
-	"io"
+	"log"
 	"net"
 	"net/rpc"
-	"net/rpc/jsonrpc"
 	"os"
 	"path"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/cgrates/birpc"
 	"github.com/cgrates/birpc/context"
-	jsonrpc2 "github.com/cgrates/birpc/jsonrpc"
 	"github.com/cgrates/cgrates/config"
 	"github.com/cgrates/cgrates/engine"
 	"github.com/cgrates/cgrates/sessions"
 	"github.com/cgrates/cgrates/utils"
+	"github.com/ugorji/go/codec"
 )
 
 func BenchmarkRPCCalls(b *testing.B) {
@@ -49,7 +46,7 @@ func BenchmarkRPCCalls(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	benchDelay := 1000
+	//	benchDelay := 1000
 	if err := engine.InitDataDb(benchCfg); err != nil {
 		b.Fatal(err)
 	}
@@ -62,16 +59,23 @@ func BenchmarkRPCCalls(b *testing.B) {
 	if err := os.MkdirAll("/tmp/TestBenchRPC", 0755); err != nil {
 		b.Error(err)
 	}
-	if _, err := engine.StopStartEngine(benchCfgPath, benchDelay); err != nil {
+	// if _, err := engine.StopStartEngine(benchCfgPath, benchDelay); err != nil {
+	// 	b.Fatal(err)
+	// }
+	// b.Cleanup(func() {
+	// 	engine.KillEngine(benchDelay)
+	// 	if err := os.RemoveAll("/tmp/TestBenchRPC"); err != nil {
+	// 		b.Error(err)
+	// 	}
+	// })
+	conn, err := net.Dial("tcp", ":2015")
+	if err != nil {
 		b.Fatal(err)
 	}
-	b.Cleanup(func() {
-		engine.KillEngine(benchDelay)
-		if err := os.RemoveAll("/tmp/TestBenchRPC"); err != nil {
-			b.Error(err)
-		}
-	})
-	benchRPC, err := jsonrpc2.Dial("tcp", "127.0.0.1:2012")
+
+	rpcCodec := codec.MsgpackSpecRpc.ClientCodec(conn, &codec.MsgpackHandle{})
+	log.Println("Creating the client")
+	benchRPC := rpc.NewClientWithCodec(rpcCodec)
 	if err != nil {
 		b.Fatal("could not connect to engine: ", err.Error())
 	}
@@ -197,23 +201,21 @@ cgrates.org,ROUTE_RPC,,,,,route2,,,,,,10,,,
 	var replyLoad string
 	attrs := &utils.AttrLoadTpFromFolder{FolderPath: "/tmp/TestBenchRPC"}
 	if err := benchRPC.Call(
-		context.Background(),
 		utils.APIerSv1LoadTariffPlanFromFolder, attrs, &replyLoad); err != nil {
 		b.Error(err)
 	} else if replyLoad != utils.OK {
 		b.Error("unexpected reply returned", replyLoad)
 	}
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 
 	b.Run("CoreSv1Status", func(b *testing.B) {
-		b.Skip()
+		b.SkipNow()
 		var reply map[string]any
 		args := &utils.TenantWithAPIOpts{}
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			err := benchRPC.Call(
-				context.Background(),
 				utils.CoreSv1Status, args, &reply)
 			if err != nil {
 				b.Error(err)
@@ -222,7 +224,7 @@ cgrates.org,ROUTE_RPC,,,,,route2,,,,,,10,,,
 	})
 
 	b.Run("ChargerSv1ProcessEvent", func(b *testing.B) {
-		b.Skip()
+		b.SkipNow()
 		processedEv := []*engine.ChrgSProcessEventReply{
 			{
 				ChargerSProfile:    "DEFAULT",
@@ -247,7 +249,6 @@ cgrates.org,ROUTE_RPC,,,,,route2,,,,,,10,,,
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			if err := benchRPC.Call(
-				context.Background(),
 				utils.ChargerSv1ProcessEvent, &utils.CGREvent{
 					Tenant: "cgrates.org",
 					ID:     "event1",
@@ -349,7 +350,6 @@ cgrates.org,ROUTE_RPC,,,,,route2,,,,,,10,,,
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			if err := benchRPC.Call(
-				context.Background(),
 				utils.SessionSv1AuthorizeEvent,
 				argsInit, &rplyAuth); err != nil {
 				b.Error(err)
@@ -629,133 +629,133 @@ type server interface {
 	Register(any) error
 }
 
-func BenchmarkRPC(b *testing.B) {
-	tests := []struct {
-		lib    string
-		codec  string
-		method string
-	}{
-		{"birpc", "json", "BiRPCObj.Add"},
-		{"rpc", "json", "StdRPCObj.Add"},
-		{"birpc", "gob", "BiRPCObj.Add"},
-		{"rpc", "gob", "StdRPCObj.Add"},
-	}
+// func BenchmarkRPC(b *testing.B) {
+// 	tests := []struct {
+// 		lib    string
+// 		codec  string
+// 		method string
+// 	}{
+// 		{"birpc", "json", "BiRPCObj.Add"},
+// 		{"rpc", "json", "StdRPCObj.Add"},
+// 		{"birpc", "gob", "BiRPCObj.Add"},
+// 		{"rpc", "gob", "StdRPCObj.Add"},
+// 	}
 
-	for _, tt := range tests {
-		b.Run(fmt.Sprintf("%s %s", tt.lib, tt.codec), func(b *testing.B) {
-			var err error
-			errChan := make(chan error)
-			stopChan := make(chan struct{})
+// 	for _, tt := range tests {
+// 		b.Run(fmt.Sprintf("%s %s", tt.lib, tt.codec), func(b *testing.B) {
+// 			var err error
+// 			errChan := make(chan error)
+// 			stopChan := make(chan struct{})
 
-			// Setting up and starting the server.
-			var server server
-			switch tt.lib {
-			case "birpc":
-				server = birpc.NewServer()
-				var service *birpc.Service
-				service, err = birpc.NewService(&BiRPCObj{}, "", false)
-				if err != nil {
-					b.Fatal(err)
-				}
-				err = server.Register(service)
-			case "rpc":
-				server = rpc.NewServer()
-				err = server.Register(&StdRPCObj{})
-			default:
-				b.Fatal("unsupported lib")
-			}
-			if err != nil {
-				b.Fatal(err)
-			}
+// 			// Setting up and starting the server.
+// 			var server server
+// 			switch tt.lib {
+// 			case "birpc":
+// 				server = birpc.NewServer()
+// 				var service *birpc.Service
+// 				service, err = birpc.NewService(&BiRPCObj{}, "", false)
+// 				if err != nil {
+// 					b.Fatal(err)
+// 				}
+// 				err = server.Register(service)
+// 			case "rpc":
+// 				server = rpc.NewServer()
+// 				err = server.Register(&StdRPCObj{})
+// 			default:
+// 				b.Fatal("unsupported lib")
+// 			}
+// 			if err != nil {
+// 				b.Fatal(err)
+// 			}
 
-			go listenAndServe(server, tt.codec, "tcp", "127.0.0.1:2012", errChan, stopChan)
+// 			go listenAndServe(server, tt.codec, "tcp", "127.0.0.1:2012", errChan, stopChan)
 
-			select {
-			case err := <-errChan:
-				b.Fatal(err)
-			case <-time.After(time.Second):
-			}
+// 			select {
+// 			case err := <-errChan:
+// 				b.Fatal(err)
+// 			case <-time.After(time.Second):
+// 			}
 
-			// Creating the client.
-			var client any
-			switch tt.lib + "." + tt.codec {
-			case "birpc.json":
-				client, err = jsonrpc2.Dial("tcp", "127.0.0.1:2012")
-			case "birpc.gob":
-				client, err = birpc.Dial("tcp", "127.0.0.1:2012")
-			case "rpc.json":
-				client, err = jsonrpc.Dial("tcp", "127.0.0.1:2012")
-			case "rpc.gob":
-				client, err = rpc.Dial("tcp", "127.0.0.1:2012")
-			default:
-				b.Fatal("unsupported codec")
-			}
-			if err != nil {
-				b.Fatal(err)
-			}
+// 			// Creating the client.
+// 			var client any
+// 			switch tt.lib + "." + tt.codec {
+// 			case "birpc.json":
+// 				client, err = jsonrpc2.Dial("tcp", "127.0.0.1:2012")
+// 			case "birpc.gob":
+// 				client, err = birpc.Dial("tcp", "127.0.0.1:2012")
+// 			case "rpc.json":
+// 				client, err = jsonrpc.Dial("tcp", "127.0.0.1:2012")
+// 			case "rpc.gob":
+// 				client, err = rpc.Dial("tcp", "127.0.0.1:2012")
+// 			default:
+// 				b.Fatal("unsupported codec")
+// 			}
+// 			if err != nil {
+// 				b.Fatal(err)
+// 			}
 
-			args := &ArgsSum{A: 5, B: 3}
-			runBenchmark(b, client, tt.method, args)
+// 			args := &ArgsSum{A: 5, B: 3}
+// 			runBenchmark(b, client, tt.method, args)
 
-			close(stopChan)
-		})
-	}
-}
-func listenAndServe(server server, codec, network, address string, errChan chan error, stopChan chan struct{}) {
-	l, err := net.Listen(network, address)
-	if err != nil {
-		errChan <- err
-		return
-	}
-	defer l.Close()
+// 			close(stopChan)
+// 		})
+// 	}
+// }
+// func listenAndServe(server server, codec, network, address string, errChan chan error, stopChan chan struct{}) {
+// 	l, err := net.Listen(network, address)
+// 	if err != nil {
+// 		errChan <- err
+// 		return
+// 	}
+// 	defer l.Close()
 
-	var serveFunc func(conn io.ReadWriteCloser)
+// 	var serveFunc func(conn io.ReadWriteCloser)
 
-	switch s := server.(type) {
-	case *birpc.Server:
-		if codec == "json" {
-			serveFunc = func(conn io.ReadWriteCloser) { s.ServeCodec(jsonrpc2.NewServerCodec(conn)) }
-		} else {
-			serveFunc = s.ServeConn
-		}
-	case *rpc.Server:
-		if codec == "json" {
-			serveFunc = func(conn io.ReadWriteCloser) { s.ServeCodec(jsonrpc.NewServerCodec(conn)) }
-		} else {
-			serveFunc = s.ServeConn
-		}
-	}
+// 	switch s := server.(type) {
+// 	case *birpc.Server:
+// 		if codec == "json" {
+// 			serveFunc = func(conn io.ReadWriteCloser) { s.ServeCodec(jsonrpc2.NewServerCodec(conn)) }
+// 		} else {
+// 			serveFunc = s.ServeConn
+// 		}
+// 	case *rpc.Server:
+// 		if codec == "json" {
+// 			serveFunc = func(conn io.ReadWriteCloser) { s.ServeCodec(jsonrpc.NewServerCodec(conn)) }
+// 		} else {
+// 			serveFunc = s.ServeConn
+// 		}
+// 	}
 
-	go func() {
-		for {
-			conn, err := l.Accept()
-			if err != nil {
-				return
-			}
-			go serveFunc(conn)
-		}
-	}()
-	<-stopChan
-}
+// 	go func() {
+// 		for {
+// 			conn, err := l.Accept()
+// 			if err != nil {
+// 				return
+// 			}
+// 			go serveFunc(conn)
+// 		}
+// 	}()
+// 	<-stopChan
+// }
 
-func runBenchmark(b *testing.B, client any, method string, args *ArgsSum) {
-	var reply int
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		var err error
-		switch c := client.(type) {
-		case *birpc.Client:
-			err = c.Call(context.Background(), method, args, &reply)
-		case *rpc.Client:
-			err = c.Call(method, args, &reply)
-		}
-		b.StopTimer()
-		if err != nil {
-			b.Fatal(err)
-		}
-		b.StartTimer()
-	}
-}
+// func runBenchmark(b *testing.B, client any, method string, args *ArgsSum) {
+// 	var reply int
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		var err error
+// 		switch c := client.(type) {
+// 		case *birpc.Client:
+// 			err = c.Call(context.Background(), method, args, &reply)
+// 		case *rpc.Client:
+// 			err = c.Call(method, args, &reply)
+// 		}
+// 		b.StopTimer()
+// 		if err != nil {
+// 			b.Fatal(err)
+// 		}
+// 		b.StartTimer()
+// 	}
+// }
 
 /*
 $ go test -bench=.  -run=^$ -benchtime=1s -count=10 -benchmem

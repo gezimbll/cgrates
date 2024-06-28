@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 )
 
 // NewDfltRemoteHost returns the first cached default value for a RemoteHost connection

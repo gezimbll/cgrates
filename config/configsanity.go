@@ -27,7 +27,7 @@ import (
 	"strings"
 
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 )
 
 // CheckConfigSanity is used in cgr-engine

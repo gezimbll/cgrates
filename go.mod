@@ -25,7 +25,6 @@ require (
 	github.com/cgrates/kamevapi v0.0.0-20240307160311-26273f03eedf
 	github.com/cgrates/ltcache v0.0.0-20240411152156-e673692056db
 	github.com/cgrates/radigo v0.0.0-20240123163129-491c899df727
-	github.com/cgrates/rpcclient v0.0.0-20230605090759-8bb5188b73e5
 	github.com/cgrates/sipingo v1.0.1-0.20200514112313-699ebc1cdb8e
 	github.com/creack/pty v1.1.20
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -85,6 +84,9 @@ require (
 	github.com/couchbase/ghistogram v0.1.0 // indirect
 	github.com/couchbase/moss v0.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/gezimbll/msgpack v0.0.0-20240628083639-25e9edf671d0 // indirect
+	github.com/gezimbll/msgpack/codec v0.0.0-20240628083639-25e9edf671d0 // indirect
+	github.com/gezimbll/rpcclient v0.0.0-20240628101711-d3c605003292 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect

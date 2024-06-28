@@ -29,7 +29,7 @@ import (
 	"github.com/cgrates/cgrates/config"
 	"github.com/cgrates/cgrates/engine"
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 )
 
 var dataDir = flag.String("data_dir", "/usr/share/cgrates", "CGR data dir path here")

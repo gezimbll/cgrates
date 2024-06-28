@@ -43,7 +43,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 	"golang.org/x/crypto/bcrypt"
 )
 

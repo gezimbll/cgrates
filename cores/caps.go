@@ -26,7 +26,8 @@ import (
 	"github.com/cgrates/cgrates/analyzers"
 	"github.com/cgrates/cgrates/engine"
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/msgpack/codec"
+	"github.com/gezimbll/rpcclient"
 )
 
 type conn interface {
@@ -39,6 +40,24 @@ type conn interface {
 
 func newCapsGOBCodec(conn conn, caps *engine.Caps, anz *analyzers.AnalyzerService) (r birpc.ServerCodec) {
 	r = newCapsServerCodec(birpc.NewServerCodec(conn), caps)
+	if anz != nil {
+		from := conn.RemoteAddr()
+		var fromstr string
+		if from != nil {
+			fromstr = from.String()
+		}
+		to := conn.LocalAddr()
+		var tostr string
+		if to != nil {
+			tostr = to.String()
+		}
+		return analyzers.NewAnalyzerServerCodec(r, anz, utils.MetaGOB, fromstr, tostr)
+	}
+	return
+}
+
+func newCapsMsgPckCodec(conn conn, caps *engine.Caps, anz *analyzers.AnalyzerService) (r birpc.ServerCodec) {
+	r = newCapsServerCodec(codec.NewMsgPackServerCodec(conn), caps)
 	if anz != nil {
 		from := conn.RemoteAddr()
 		var fromstr string
@@ -128,6 +147,24 @@ func newCapsBiRPCGOBCodec(conn conn, caps *engine.Caps, anz *analyzers.AnalyzerS
 
 func newCapsBiRPCJSONCodec(conn conn, caps *engine.Caps, anz *analyzers.AnalyzerService) (r birpc.BirpcCodec) {
 	r = newCapsBiRPCCodec(jsonrpc.NewJSONBirpcCodec(conn), caps)
+	if anz != nil {
+		from := conn.RemoteAddr()
+		var fromstr string
+		if from != nil {
+			fromstr = from.String()
+		}
+		to := conn.LocalAddr()
+		var tostr string
+		if to != nil {
+			tostr = to.String()
+		}
+		return analyzers.NewAnalyzerBiRPCCodec(r, anz, rpcclient.BiRPCJSON, fromstr, tostr)
+	}
+	return
+}
+
+func newCapsBirpcMsgpackCodec(conn conn, caps *engine.Caps, anz *analyzers.AnalyzerService) (r birpc.BirpcCodec) {
+	r = newCapsBiRPCCodec(codec.NewMsgPackBirpcCodec(conn), caps)
 	if anz != nil {
 		from := conn.RemoteAddr()
 		var fromstr string

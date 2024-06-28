@@ -20,7 +20,7 @@ package config
 
 import (
 	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
+	"github.com/gezimbll/rpcclient"
 )
 
 // JanusConn represents one connection to Janus server

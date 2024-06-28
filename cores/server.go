@@ -173,6 +173,10 @@ func (s *Server) ServeGOB(addr string, shdChan *utils.SyncedChan) {
 	s.serveCodec(addr, utils.GOBCaps, newCapsGOBCodec, shdChan)
 }
 
+func (s *Server) ServeMsgPack(shdChan *utils.SyncedChan) {
+	s.serveCodec(":2015", utils.GOBCaps, newCapsMsgPckCodec, shdChan)
+}
+
 func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	w.Header().Set("Content-Type", "application/json")
@@ -264,8 +268,8 @@ func (s *Server) ServeBiRPC(addrJSON, addrGOB string, onConn, onDis func(birpc.C
 	}
 	if addrGOB != utils.EmptyString {
 		var lgob net.Listener
-		if lgob, err = listenBiRPC(s.birpcSrv, addrGOB, utils.GOBCaps, func(conn conn) birpc.BirpcCodec {
-			return newCapsBiRPCGOBCodec(conn, s.caps, s.anz)
+		if lgob, err = listenBiRPC(s.birpcSrv, addrGOB, utils.MsgPack, func(conn conn) birpc.BirpcCodec {
+			return newCapsBirpcMsgpackCodec(conn, s.caps, s.anz)
 		}, s.stopBiRPCServer); err != nil {
 			return
 		}
