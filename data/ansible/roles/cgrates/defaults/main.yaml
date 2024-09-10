@@ -13,7 +13,6 @@ cgrates_dbs:
 # CGRateS dependencies
 cgrates_dependencies:
   - git
-  - redis-server
   - mariadb-server
   - make
   - gcc

@@ -1,4 +1,28 @@
 ---
+- name: Add KeyDB GPG key
+  become: true
+  ansible.builtin.apt_key:
+      url: https://download.keydb.dev/open-source-dist/keyring.gpg
+      state: present
+      keyring: /etc/apt/trusted.gpg.d/keydb.gpg
+
+- name: Add KeyDB APT repository
+  become: true
+  ansible.builtin.apt_repository:
+      repo: "deb https://download.keydb.dev/open-source-dist {{ ansible_distribution_release }} main"
+      state: present
+    
+- name: Update APT cache
+  become: true
+  ansible.builtin.apt:
+      update_cache: yes
+
+- name: Install KeyDB
+  become: true
+  ansible.builtin.apt:
+      name: keydb
+      state: present
+
 - name: Install CGRateS dependencies
   become: true
   ansible.builtin.package:
