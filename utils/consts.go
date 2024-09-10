@@ -2392,6 +2392,7 @@ const (
 
 	// StatSCfg
 	StoreUncompressedLimitCfg = "store_uncompressed_limit"
+	OnlineStatExportsCfg      = "online_stat_exports"
 
 	// Cache
 	PartitionsCfg = "partitions"

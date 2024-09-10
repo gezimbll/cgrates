@@ -673,6 +673,8 @@ type StatServJsonCfg struct {
 	Suffix_indexed_fields    *[]string
 	Nested_fields            *bool // applies when indexed fields is not defined
 	Opts                     *StatsOptsJson
+	Ees_conns                *[]string
+	Online_stat_exports      *[]string
 }
 
 type TrendsJsonCfg struct {

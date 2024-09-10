@@ -42,6 +42,8 @@ type StatSCfg struct {
 	SuffixIndexedFields    *[]string
 	NestedFields           bool
 	Opts                   *StatsOpts
+	EEsConns               []string
+	OnlineStatExports      []string
 }
 
 func (sqOpts *StatsOpts) loadFromJSONCfg(jsnCfg *StatsOptsJson) {
@@ -84,6 +86,19 @@ func (st *StatSCfg) loadFromJSONCfg(jsnCfg *StatServJsonCfg) (err error) {
 			}
 		}
 	}
+	if jsnCfg.Ees_conns != nil {
+		st.EEsConns = make([]string, len(*jsnCfg.Ees_conns))
+		for idx, connID := range *jsnCfg.Ees_conns {
+			// if we have the connection internal we change the name so we can have internal rpc for each subsystem
+			st.EEsConns[idx] = connID
+			if connID == utils.MetaInternal {
+				st.EEsConns[idx] = utils.ConcatenatedKey(utils.MetaInternal, utils.MetaEEs)
+			}
+		}
+	}
+	if jsnCfg.Online_stat_exports != nil {
+		st.OnlineStatExports = append(st.OnlineStatExports, *jsnCfg.Online_stat_exports...)
+	}
 	if jsnCfg.String_indexed_fields != nil {
 		sif := make([]string, len(*jsnCfg.String_indexed_fields))
 		copy(sif, *jsnCfg.String_indexed_fields)
@@ -125,6 +140,12 @@ func (st *StatSCfg) AsMapInterface() (initialMP map[string]any) {
 	if st.StoreInterval != 0 {
 		initialMP[utils.StoreIntervalCfg] = st.StoreInterval.String()
 	}
+
+	onlineStatExports := make([]string, len(st.OnlineStatExports))
+	copy(onlineStatExports, st.OnlineStatExports)
+
+	initialMP[utils.OnlineStatExportsCfg] = onlineStatExports
+
 	if st.StringIndexedFields != nil {
 		stringIndexedFields := make([]string, len(*st.StringIndexedFields))
 		copy(stringIndexedFields, *st.StringIndexedFields)
@@ -153,6 +174,16 @@ func (st *StatSCfg) AsMapInterface() (initialMP map[string]any) {
 		}
 		initialMP[utils.ThresholdSConnsCfg] = thresholdSConns
 	}
+	if st.EEsConns != nil {
+		eesConns := make([]string, len(st.EEsConns))
+		for i, item := range st.EEsConns {
+			eesConns[i] = item
+			if item == utils.ConcatenatedKey(utils.MetaInternal, utils.MetaEEs) {
+				eesConns[i] = utils.MetaInternal
+			}
+		}
+		initialMP[utils.EEsConnsCfg] = eesConns
+	}
 	return
 }
 
@@ -177,7 +208,14 @@ func (st StatSCfg) Clone() (cln *StatSCfg) {
 		cln.ThresholdSConns = make([]string, len(st.ThresholdSConns))
 		copy(cln.ThresholdSConns, st.ThresholdSConns)
 	}
-
+	if st.EEsConns != nil {
+		cln.EEsConns = make([]string, len(st.EEsConns))
+		copy(cln.EEsConns, st.EEsConns)
+	}
+	if st.OnlineStatExports != nil {
+		cln.OnlineStatExports = make([]string, len(st.OnlineStatExports))
+		copy(cln.OnlineStatExports, st.OnlineStatExports)
+	}
 	if st.StringIndexedFields != nil {
 		idx := make([]string, len(*st.StringIndexedFields))
 		copy(idx, *st.StringIndexedFields)
