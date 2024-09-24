@@ -1,5 +1,5 @@
 # Define global variables
-%global version 0.10.3
+%global version 0.10.4
 %global go_version 1.22.3
 
 # Define system paths
