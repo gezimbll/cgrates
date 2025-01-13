@@ -92,7 +92,7 @@ func GetStringOpts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS *Fil
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evDP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return utils.EmptyString, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evDP)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass

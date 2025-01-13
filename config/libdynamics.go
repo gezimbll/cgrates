@@ -32,10 +32,17 @@ type DynamicStringSliceOpt struct {
 	Values    []string
 }
 
-type DynamicStringOpt struct {
+type DynamicStringOptJson struct {
 	FilterIDs []string `json:",omitempty"`
 	Tenant    string
 	Value     string
+}
+
+type DynamicStringOpt struct {
+	FilterIDs []string `json:",omitempty"`
+	Tenant    string
+	value     string
+	dynVal    RSRParsers
 }
 
 type DynamicIntOpt struct {
@@ -59,7 +66,8 @@ type DynamicBoolOpt struct {
 type DynamicDurationOpt struct {
 	FilterIDs []string `json:",omitempty"`
 	Tenant    string
-	Value     time.Duration
+	value     time.Duration
+	dynVal    RSRParsers
 }
 
 type DynamicDecimalOpt struct {
@@ -99,13 +107,26 @@ func CloneDynamicStringSliceOpt(in []*DynamicStringSliceOpt) (cl []*DynamicStrin
 	return
 }
 
-func CloneDynamicStringOpt(in []*DynamicStringOpt) (cl []*DynamicStringOpt) {
+func CloneDynamicStringOpt(in []*DynamicStringOptJson) (cl []*DynamicStringOptJson) {
+	cl = make([]*DynamicStringOptJson, len(in))
+	for i, val := range in {
+		cl[i] = &DynamicStringOptJson{
+			Tenant:    val.Tenant,
+			FilterIDs: slices.Clone(val.FilterIDs),
+			Value:     val.Value,
+		}
+	}
+	return
+}
+
+func CloneDynamicStringOpt2(in []*DynamicStringOpt) (cl []*DynamicStringOpt) {
 	cl = make([]*DynamicStringOpt, len(in))
 	for i, val := range in {
 		cl[i] = &DynamicStringOpt{
 			Tenant:    val.Tenant,
 			FilterIDs: slices.Clone(val.FilterIDs),
-			Value:     val.Value,
+			value:     val.value,
+			dynVal:    val.dynVal.Clone(),
 		}
 	}
 	return
@@ -165,7 +186,8 @@ func CloneDynamicDurationOpt(in []*DynamicDurationOpt) (cl []*DynamicDurationOpt
 		cl[i] = &DynamicDurationOpt{
 			Tenant:    val.Tenant,
 			FilterIDs: slices.Clone(val.FilterIDs),
-			Value:     val.Value,
+			value:     val.value,
+			dynVal:    val.dynVal.Clone(),
 		}
 	}
 	return
@@ -178,6 +200,7 @@ func CloneDynamicDecimalOpt(in []*DynamicDecimalOpt) (cl []*DynamicDecimalOpt) {
 			Tenant:    val.Tenant,
 			FilterIDs: slices.Clone(val.FilterIDs),
 			value:     utils.CloneDecimalBig(val.value),
+			dynVal:    val.dynVal.Clone(),
 		}
 	}
 	return
@@ -225,7 +248,7 @@ func DynamicStringSliceOptEqual(v1, v2 []*DynamicStringSliceOpt) bool {
 	return true
 }
 
-func DynamicStringOptEqual(v1, v2 []*DynamicStringOpt) bool {
+func DynamicStringOptEqual(v1, v2 []*DynamicStringOptJson) bool {
 	if len(v1) != len(v2) {
 		return false
 	}
@@ -308,7 +331,10 @@ func DynamicDurationOptEqual(v1, v2 []*DynamicDurationOpt) bool {
 		if !slices.Equal(v1[i].FilterIDs, v2[i].FilterIDs) {
 			return false
 		}
-		if v1[i].Value != v2[i].Value {
+		if v1[i].value != v2[i].value {
+			return false
+		}
+		if v1[i].dynVal.GetRule(CgrConfig().GeneralCfg().RSRSep) != v2[i].dynVal.GetRule(CgrConfig().GeneralCfg().RSRSep) {
 			return false
 		}
 	}
@@ -325,6 +351,9 @@ func DynamicDecimalOptEqual(v1, v2 []*DynamicDecimalOpt) bool {
 		}
 		if !slices.Equal(v1[i].FilterIDs, v2[i].FilterIDs) ||
 			v1[i].value.Cmp(v2[i].value) != 0 {
+			return false
+		}
+		if v1[i].dynVal.GetRule(CgrConfig().GeneralCfg().RSRSep) != v2[i].dynVal.GetRule(CgrConfig().GeneralCfg().RSRSep) {
 			return false
 		}
 	}
@@ -385,7 +414,7 @@ func DynamicDurationPointerOptEqual(v1, v2 []*DynamicDurationPointerOpt) bool {
 	return true
 }
 
-func StringToDecimalBigDynamicOpts(strOpts []*DynamicStringOpt) (decOpts []*DynamicDecimalOpt, err error) {
+func StringToDecimalBigDynamicOpts(strOpts []*DynamicStringOptJson) (decOpts []*DynamicDecimalOpt, err error) {
 	decOpts = make([]*DynamicDecimalOpt, len(strOpts))
 	for index, opt := range strOpts {
 		decOpts[index] = &DynamicDecimalOpt{
@@ -407,40 +436,55 @@ func StringToDecimalBigDynamicOpts(strOpts []*DynamicStringOpt) (decOpts []*Dyna
 	return
 }
 
-func DecimalToStringDynamicOpts(decOpts []*DynamicDecimalOpt) (strOpts []*DynamicStringOpt) {
-	strOpts = make([]*DynamicStringOpt, len(decOpts))
+func DecimalToStringDynamicOpts(decOpts []*DynamicDecimalOpt) (strOpts []*DynamicStringOptJson) {
+	strOpts = make([]*DynamicStringOptJson, len(decOpts))
 	for index, opt := range decOpts {
-		strOpts[index] = &DynamicStringOpt{
+		strOpts[index] = &DynamicStringOptJson{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
-			Value:     opt.value.String(),
 		}
+		if opt.value == nil {
+			strOpts[index].Value = opt.dynVal.GetRule(CgrConfig().GeneralCfg().RSRSep)
+			continue
+		}
+		strOpts[index].Value = opt.value.String()
 	}
 	return
 }
 
-func StringToDurationDynamicOpts(strOpts []*DynamicStringOpt) (durOpts []*DynamicDurationOpt, err error) {
+func StringToDurationDynamicOpts(strOpts []*DynamicStringOptJson) (durOpts []*DynamicDurationOpt, err error) {
 	durOpts = make([]*DynamicDurationOpt, len(strOpts))
 	for index, opt := range strOpts {
 		durOpts[index] = &DynamicDurationOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
-		if durOpts[index].Value, err = utils.ParseDurationWithNanosecs(opt.Value); err != nil {
+		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
+			durOpts[index].dynVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if durOpts[index].value, err = utils.ParseDurationWithNanosecs(opt.Value); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func DurationToStringDynamicOpts(durOpts []*DynamicDurationOpt) (strOpts []*DynamicStringOpt) {
-	strOpts = make([]*DynamicStringOpt, len(durOpts))
+func DurationToStringDynamicOpts(durOpts []*DynamicDurationOpt) (strOpts []*DynamicStringOptJson) {
+	strOpts = make([]*DynamicStringOptJson, len(durOpts))
 	for index, opt := range durOpts {
-		strOpts[index] = &DynamicStringOpt{
+		strOpts[index] = &DynamicStringOptJson{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
-			Value:     opt.Value.String(),
 		}
+		if opt.dynVal != nil {
+			strOpts[index].Value = opt.dynVal.GetRule(CgrConfig().GeneralCfg().RSRSep)
+			continue
+		}
+		strOpts[index].Value = opt.value.String()
 	}
 	return
 }
@@ -469,7 +513,7 @@ func IntPointerToIntDynamicOpts(intPtOpts []*DynamicIntPointerOpt) (intOpts []*D
 	return
 }
 
-func StringToDurationPointerDynamicOpts(strOpts []*DynamicStringOpt) (durPtOpts []*DynamicDurationPointerOpt, err error) {
+func StringToDurationPointerDynamicOpts(strOpts []*DynamicStringOptJson) (durPtOpts []*DynamicDurationPointerOpt, err error) {
 	durPtOpts = make([]*DynamicDurationPointerOpt, len(strOpts))
 	for index, opt := range strOpts {
 		var durOpt time.Duration
@@ -485,16 +529,25 @@ func StringToDurationPointerDynamicOpts(strOpts []*DynamicStringOpt) (durPtOpts 
 	return
 }
 
-func DurationPointerToStringDynamicOpts(durPtOpts []*DynamicDurationPointerOpt) (strOpts []*DynamicStringOpt) {
-	strOpts = make([]*DynamicStringOpt, len(durPtOpts))
+func DurationPointerToStringDynamicOpts(durPtOpts []*DynamicDurationPointerOpt) (strOpts []*DynamicStringOptJson) {
+	strOpts = make([]*DynamicStringOptJson, len(durPtOpts))
 	for index, opt := range durPtOpts {
-		strOpts[index] = &DynamicStringOpt{
+		strOpts[index] = &DynamicStringOptJson{
 			FilterIDs: opt.FilterIDs,
 			Tenant:    opt.Tenant,
 			Value:     (*opt.Value).String(),
 		}
 	}
 	return
+}
+
+func NewDynamicDecimalOpt(filterIDs []string, tenant string, value *decimal.Big, dynValue RSRParsers) *DynamicDecimalOpt {
+	return &DynamicDecimalOpt{
+		FilterIDs: filterIDs,
+		Tenant:    tenant,
+		value:     value,
+		dynVal:    dynValue,
+	}
 }
 
 func (dynDec *DynamicDecimalOpt) Value(dP utils.DataProvider) (*decimal.Big, error) {
@@ -508,11 +561,52 @@ func (dynDec *DynamicDecimalOpt) Value(dP utils.DataProvider) (*decimal.Big, err
 	return dynDec.value, nil
 }
 
-func NewDynamicDecimalOpt(filterIDs []string, tenant string, value *decimal.Big, dynValue RSRParsers) *DynamicDecimalOpt {
-	return &DynamicDecimalOpt{
+func NewDynamicDurationOpt(filterIDs []string, tenant string, value time.Duration, dynValue RSRParsers) *DynamicDurationOpt {
+	return &DynamicDurationOpt{
 		FilterIDs: filterIDs,
 		Tenant:    tenant,
 		value:     value,
 		dynVal:    dynValue,
 	}
+}
+
+func (dynDur *DynamicDurationOpt) Value(dP utils.DataProvider) (time.Duration, error) {
+	if dynDur.dynVal != nil {
+		out, err := dynDur.dynVal.ParseDataProvider(dP)
+		if err != nil {
+			return 0, err
+		}
+		return utils.ParseDurationWithNanosecs(out)
+	}
+	return dynDur.value, nil
+}
+
+func JsonToDynamicStringOpts(in []*DynamicStringOptJson) (out []*DynamicStringOpt, err error) {
+	out = make([]*DynamicStringOpt, len(in))
+	for indx, opt := range in {
+		out[indx] = &DynamicStringOpt{
+			FilterIDs: opt.FilterIDs,
+			Tenant:    opt.Tenant,
+		}
+		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
+			out[indx].dynVal, err = NewRSRParsers(CgrConfig().GeneralCfg().RSRSep, opt.Value)
+			if err != nil {
+				return
+			}
+			continue
+		}
+		out[indx].value = opt.Value
+	}
+	return
+}
+
+func (dynStr *DynamicStringOpt) Value(dP utils.DataProvider) (string, error) {
+	if dynStr.dynVal != nil {
+		out, err := dynStr.dynVal.ParseDataProvider(dP)
+		if err != nil {
+			return "", err
+		}
+		return out, nil
+	}
+	return dynStr.value, nil
 }
