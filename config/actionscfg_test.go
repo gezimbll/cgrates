@@ -87,7 +87,7 @@ func TestActionoSLoadConfigFromJSONOpts(t *testing.T) {
 		},
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -99,7 +99,7 @@ func TestActionoSLoadConfigFromJSONOpts(t *testing.T) {
 		},
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -239,7 +239,7 @@ func TestDiffActionSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 		},
@@ -269,7 +269,7 @@ func TestDiffActionSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.nett",
-					Value:  true,
+					value:  true,
 				},
 			},
 		},
@@ -296,7 +296,7 @@ func TestDiffActionSJsonCfg(t *testing.T) {
 					Values: []string{"prf2"},
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicBoolOpt{
+			ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.nett",
 					Value:  true,
@@ -384,7 +384,7 @@ func TestDiffActionsOptsJsonCfg(t *testing.T) {
 	}
 	exp := &ActionsOptsJson{
 
-		PosterAttempts: []*DynamicIntOpt{{
+		PosterAttempts: []*DynamicInterfaceOpt{{
 			FilterIDs: []string{"fltr1"},
 		},
 		},

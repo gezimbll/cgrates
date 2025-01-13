@@ -92,9 +92,9 @@ func TestSessionSCfgloadFromJsonCfgCase1(t *testing.T) {
 			Privatekey_path:     utils.StringPointer("randomPath"),
 		},
 		Opts: &SessionsOptsJson{
-			DebitInterval: []*DynamicStringOpt{
+			DebitInterval: []*DynamicInterfaceOpt{
 				{
-					Value: (2 * time.Second).String(),
+					Value: 2 * time.Second,
 				},
 			},
 		},
@@ -162,7 +162,7 @@ func TestSessionSCfgloadFromJsonCfgCase1(t *testing.T) {
 			ForceUsage:             []*DynamicBoolOpt{},
 			DebitInterval: []*DynamicDurationOpt{
 				{
-					Value: 2 * time.Second,
+					value: 2 * time.Second,
 				},
 			},
 			TTLLastUsage: []*DynamicDurationPointerOpt{},
@@ -194,7 +194,7 @@ func TestSessionSCfgloadFromJsonCfgCase1(t *testing.T) {
 func TestSessionSCfgloadFromJsonCfgCase13(t *testing.T) {
 	cfgJSON := &SessionSJsonCfg{
 		Opts: &SessionsOptsJson{
-			TTL: []*DynamicStringOpt{
+			TTL: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.org",
 					Value:  "1c",
@@ -210,7 +210,7 @@ func TestSessionSCfgloadFromJsonCfgCase13(t *testing.T) {
 	cfgJSON.Opts.TTL = nil
 
 	/////
-	cfgJSON.Opts.DebitInterval = []*DynamicStringOpt{
+	cfgJSON.Opts.DebitInterval = []*DynamicInterfaceOpt{
 		{
 			Tenant: "cgrates.org",
 			Value:  "1c",
@@ -222,7 +222,7 @@ func TestSessionSCfgloadFromJsonCfgCase13(t *testing.T) {
 	cfgJSON.Opts.DebitInterval = nil
 
 	/////
-	cfgJSON.Opts.TTLLastUsage = []*DynamicStringOpt{
+	cfgJSON.Opts.TTLLastUsage = []*DynamicInterfaceOpt{
 		{
 			Tenant: "cgrates.org",
 			Value:  "1c",
@@ -234,7 +234,7 @@ func TestSessionSCfgloadFromJsonCfgCase13(t *testing.T) {
 	cfgJSON.Opts.TTLLastUsage = nil
 
 	/////
-	cfgJSON.Opts.TTLLastUsed = []*DynamicStringOpt{
+	cfgJSON.Opts.TTLLastUsed = []*DynamicInterfaceOpt{
 		{
 			Tenant: "cgrates.org",
 			Value:  "1c",
@@ -246,7 +246,7 @@ func TestSessionSCfgloadFromJsonCfgCase13(t *testing.T) {
 	cfgJSON.Opts.TTLLastUsed = nil
 
 	/////
-	cfgJSON.Opts.TTLUsage = []*DynamicStringOpt{
+	cfgJSON.Opts.TTLUsage = []*DynamicInterfaceOpt{
 		{
 			Tenant: "cgrates.org",
 			Value:  "1c",
@@ -258,7 +258,7 @@ func TestSessionSCfgloadFromJsonCfgCase13(t *testing.T) {
 	cfgJSON.Opts.TTLUsage = nil
 
 	/////
-	cfgJSON.Opts.TTLMaxDelay = []*DynamicStringOpt{
+	cfgJSON.Opts.TTLMaxDelay = []*DynamicInterfaceOpt{
 		{
 			Tenant: "cgrates.org",
 			Value:  "1c",
@@ -306,22 +306,22 @@ func TestSessionSCfgloadFromJsonCfgCase8(t *testing.T) {
 func TestSessionSCfgloadFromJsonCfgCase10(t *testing.T) {
 	cfgJSON := &SessionSJsonCfg{
 		Opts: &SessionsOptsJson{
-			TTLLastUsage: []*DynamicStringOpt{
+			TTLLastUsage: []*DynamicInterfaceOpt{
 				{
 					Value: "1",
 				},
 			},
-			TTLLastUsed: []*DynamicStringOpt{
+			TTLLastUsed: []*DynamicInterfaceOpt{
 				{
 					Value: "10",
 				},
 			},
-			TTLMaxDelay: []*DynamicStringOpt{
+			TTLMaxDelay: []*DynamicInterfaceOpt{
 				{
 					Value: "100",
 				},
 			},
-			TTLUsage: []*DynamicStringOpt{
+			TTLUsage: []*DynamicInterfaceOpt{
 				{
 					Value: "1",
 				},
@@ -392,22 +392,22 @@ func TestSessionSCfgloadFromJsonCfgCase10(t *testing.T) {
 			ForceUsage:             []*DynamicBoolOpt{},
 			TTLLastUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(1),
+					value: utils.DurationPointer(1),
 				},
 			},
 			TTLLastUsed: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(10),
+					value: utils.DurationPointer(10),
 				},
 			},
 			TTLMaxDelay: []*DynamicDurationOpt{
 				{
-					Value: 100,
+					value: 100,
 				},
 			},
 			TTLUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(1),
+					value: utils.DurationPointer(1),
 				},
 			},
 		},
@@ -587,7 +587,7 @@ func TestSessionSCfgAsMapInterfaceCase2(t *testing.T) {
 			"opts": {
 				"*ttl": [
 					{
-						"Value": "1s",
+						"value": "1s",
 					},
 				],
 				"*debitInterval": [
@@ -659,13 +659,13 @@ func TestSessionSCfgAsMapInterfaceCase2(t *testing.T) {
 			utils.MetaMaxUsageCfg:               []*DynamicBoolOpt{},
 			utils.MetaTTLCfg: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			utils.MetaChargeableCfg: []*DynamicBoolOpt{},
 			utils.MetaDebitIntervalCfg: []*DynamicDurationOpt{
 				{
-					Value: 8 * time.Second,
+					value: 8 * time.Second,
 				},
 			},
 			utils.MetaTTLLastUsageCfg: []*DynamicDurationPointerOpt{},
@@ -1496,32 +1496,32 @@ func TestSessionSCfgClone(t *testing.T) {
 		Opts: &SessionsOpts{
 			DebitInterval: []*DynamicDurationOpt{
 				{
-					Value: 2,
+					value: 2,
 				},
 			},
 			TTL: []*DynamicDurationOpt{
 				{
-					Value: 0,
+					value: 0,
 				},
 			},
 			TTLMaxDelay: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTLLastUsed: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 			TTLLastUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 			TTLUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 		},
@@ -1643,32 +1643,32 @@ func TestDiffSessionSJsonCfg(t *testing.T) {
 		Opts: &SessionsOpts{
 			DebitInterval: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTL: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTLMaxDelay: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTLLastUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 			TTLLastUsed: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 			TTLUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 		},
@@ -1713,32 +1713,32 @@ func TestDiffSessionSJsonCfg(t *testing.T) {
 		Opts: &SessionsOpts{
 			DebitInterval: []*DynamicDurationOpt{
 				{
-					Value: 2 * time.Second,
+					value: 2 * time.Second,
 				},
 			},
 			TTL: []*DynamicDurationOpt{
 				{
-					Value: 2 * time.Second,
+					value: 2 * time.Second,
 				},
 			},
 			TTLMaxDelay: []*DynamicDurationOpt{
 				{
-					Value: 2 * time.Second,
+					value: 2 * time.Second,
 				},
 			},
 			TTLLastUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(2 * time.Second),
+					value: utils.DurationPointer(2 * time.Second),
 				},
 			},
 			TTLLastUsed: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(2 * time.Second),
+					value: utils.DurationPointer(2 * time.Second),
 				},
 			},
 			TTLUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(2 * time.Second),
+					value: utils.DurationPointer(2 * time.Second),
 				},
 			},
 		},
@@ -1777,34 +1777,34 @@ func TestDiffSessionSJsonCfg(t *testing.T) {
 			Privatekey_path:     utils.StringPointer("/private/key/path/2"),
 		},
 		Opts: &SessionsOptsJson{
-			DebitInterval: []*DynamicStringOpt{
+			DebitInterval: []*DynamicInterfaceOpt{
 				{
-					Value: (2 * time.Second).String(),
+					Value: 2 * time.Second,
 				},
 			},
-			TTL: []*DynamicStringOpt{
+			TTL: []*DynamicInterfaceOpt{
 				{
-					Value: (2 * time.Second).String(),
+					Value: 2 * time.Second,
 				},
 			},
-			TTLMaxDelay: []*DynamicStringOpt{
+			TTLMaxDelay: []*DynamicInterfaceOpt{
 				{
-					Value: (2 * time.Second).String(),
+					Value: 2 * time.Second,
 				},
 			},
-			TTLLastUsage: []*DynamicStringOpt{
+			TTLLastUsage: []*DynamicInterfaceOpt{
 				{
-					Value: (2 * time.Second).String(),
+					Value: utils.DurationPointer(2 * time.Second),
 				},
 			},
-			TTLLastUsed: []*DynamicStringOpt{
+			TTLLastUsed: []*DynamicInterfaceOpt{
 				{
-					Value: (2 * time.Second).String(),
+					Value: utils.DurationPointer(2 * time.Second),
 				},
 			},
-			TTLUsage: []*DynamicStringOpt{
+			TTLUsage: []*DynamicInterfaceOpt{
 				{
-					Value: (2 * time.Second).String(),
+					Value: utils.DurationPointer(2 * time.Second),
 				},
 			},
 		},
@@ -1820,10 +1820,10 @@ func TestDiffSessionSJsonCfg(t *testing.T) {
 	v2.Opts.TTLLastUsage = nil
 	v2.Opts.TTLUsage = nil
 
-	expected.Opts.TTLMaxDelay = []*DynamicStringOpt{}
-	expected.Opts.TTLLastUsed = []*DynamicStringOpt{}
-	expected.Opts.TTLLastUsage = []*DynamicStringOpt{}
-	expected.Opts.TTLUsage = []*DynamicStringOpt{}
+	expected.Opts.TTLMaxDelay = []*DynamicInterfaceOpt{}
+	expected.Opts.TTLLastUsed = []*DynamicInterfaceOpt{}
+	expected.Opts.TTLLastUsage = []*DynamicInterfaceOpt{}
+	expected.Opts.TTLUsage = []*DynamicInterfaceOpt{}
 
 	rcv = diffSessionSJsonCfg(d, v1, v2)
 	if !reflect.DeepEqual(rcv, expected) {
@@ -1867,27 +1867,27 @@ func TestSessionSCloneSection(t *testing.T) {
 		Opts: &SessionsOpts{
 			DebitInterval: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTL: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTLMaxDelay: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTLLastUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 			TTLLastUsed: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 		},
@@ -1928,27 +1928,27 @@ func TestSessionSCloneSection(t *testing.T) {
 		Opts: &SessionsOpts{
 			DebitInterval: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTL: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTLMaxDelay: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			TTLLastUsage: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 			TTLLastUsed: []*DynamicDurationPointerOpt{
 				{
-					Value: utils.DurationPointer(time.Second),
+					value: utils.DurationPointer(time.Second),
 				},
 			},
 		},
@@ -1967,181 +1967,181 @@ func TestDiffSessionsOptsJsonCfg(t *testing.T) {
 		Accounts: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Attributes: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		CDRs: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Chargers: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Resources: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Routes: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Stats: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Thresholds: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Initiate: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Update: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Terminate: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		Message: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		AttributesDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		BlockerError: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		CDRsDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		ResourcesAuthorize: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		ResourcesAllocate: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		ResourcesRelease: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		ResourcesDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		RoutesDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		StatsDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		ThresholdsDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		MaxUsage: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		TTL: []*DynamicDurationOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  3 * time.Second,
+				value:  3 * time.Second,
 			},
 		},
 		Chargeable: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  false,
+				value:  false,
 			},
 		},
 		TTLLastUsage: []*DynamicDurationPointerOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  utils.DurationPointer(5 * time.Second),
+				value:  utils.DurationPointer(5 * time.Second),
 			},
 		},
 		TTLLastUsed: []*DynamicDurationPointerOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  utils.DurationPointer(5 * time.Second),
+				value:  utils.DurationPointer(5 * time.Second),
 			},
 		},
 		DebitInterval: []*DynamicDurationOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  3 * time.Second,
+				value:  3 * time.Second,
 			},
 		},
 		TTLMaxDelay: []*DynamicDurationOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  3 * time.Second,
+				value:  3 * time.Second,
 			},
 		},
 		TTLUsage: []*DynamicDurationPointerOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  utils.DurationPointer(5 * time.Second),
+				value:  utils.DurationPointer(5 * time.Second),
 			},
 		},
 	}
@@ -2150,365 +2150,365 @@ func TestDiffSessionsOptsJsonCfg(t *testing.T) {
 		Accounts: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Attributes: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		CDRs: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Chargers: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Resources: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Routes: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Stats: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Thresholds: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Initiate: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Update: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Terminate: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		Message: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		AttributesDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		BlockerError: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		CDRsDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		ResourcesAuthorize: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		ResourcesAllocate: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		ResourcesRelease: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		ResourcesDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		RoutesDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		StatsDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		ThresholdsDerivedReply: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		MaxUsage: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		TTL: []*DynamicDurationOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  4 * time.Second,
+				value:  4 * time.Second,
 			},
 		},
 		Chargeable: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  true,
+				value:  true,
 			},
 		},
 		TTLLastUsage: []*DynamicDurationPointerOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  utils.DurationPointer(6 * time.Second),
+				value:  utils.DurationPointer(6 * time.Second),
 			},
 		},
 		TTLLastUsed: []*DynamicDurationPointerOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  utils.DurationPointer(6 * time.Second),
+				value:  utils.DurationPointer(6 * time.Second),
 			},
 		},
 		DebitInterval: []*DynamicDurationOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  4 * time.Second,
+				value:  4 * time.Second,
 			},
 		},
 		TTLMaxDelay: []*DynamicDurationOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  4 * time.Second,
+				value:  4 * time.Second,
 			},
 		},
 		TTLUsage: []*DynamicDurationPointerOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  utils.DurationPointer(4 * time.Second),
+				value:  utils.DurationPointer(4 * time.Second),
 			},
 		},
 	}
 
 	expected := &SessionsOptsJson{
-		Accounts: []*DynamicBoolOpt{
+		Accounts: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Attributes: []*DynamicBoolOpt{
+		Attributes: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		CDRs: []*DynamicBoolOpt{
+		CDRs: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Chargers: []*DynamicBoolOpt{
+		Chargers: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Resources: []*DynamicBoolOpt{
+		Resources: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Routes: []*DynamicBoolOpt{
+		Routes: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Stats: []*DynamicBoolOpt{
+		Stats: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Thresholds: []*DynamicBoolOpt{
+		Thresholds: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Initiate: []*DynamicBoolOpt{
+		Initiate: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Update: []*DynamicBoolOpt{
+		Update: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Terminate: []*DynamicBoolOpt{
+		Terminate: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		Message: []*DynamicBoolOpt{
+		Message: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		AttributesDerivedReply: []*DynamicBoolOpt{
+		AttributesDerivedReply: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		BlockerError: []*DynamicBoolOpt{
+		BlockerError: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		CDRsDerivedReply: []*DynamicBoolOpt{
+		CDRsDerivedReply: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		ResourcesAuthorize: []*DynamicBoolOpt{
+		ResourcesAuthorize: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		ResourcesAllocate: []*DynamicBoolOpt{
+		ResourcesAllocate: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		ResourcesRelease: []*DynamicBoolOpt{
+		ResourcesRelease: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		ResourcesDerivedReply: []*DynamicBoolOpt{
+		ResourcesDerivedReply: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		RoutesDerivedReply: []*DynamicBoolOpt{
+		RoutesDerivedReply: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		StatsDerivedReply: []*DynamicBoolOpt{
+		StatsDerivedReply: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		ThresholdsDerivedReply: []*DynamicBoolOpt{
+		ThresholdsDerivedReply: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		MaxUsage: []*DynamicBoolOpt{
+		MaxUsage: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
 
-		TTL: []*DynamicStringOpt{
+		TTL: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  "4s",
+				Value:  4 * time.Second,
 			},
 		},
-		Chargeable: []*DynamicBoolOpt{
+		Chargeable: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
 				Value:  true,
 			},
 		},
-		TTLLastUsage: []*DynamicStringOpt{
+		TTLLastUsage: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  "6s",
+				Value:  utils.DurationPointer(6 * time.Second),
 			},
 		},
-		TTLLastUsed: []*DynamicStringOpt{
+		TTLLastUsed: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  "6s",
+				Value:  utils.DurationPointer(6 * time.Second),
 			},
 		},
-		DebitInterval: []*DynamicStringOpt{
+		DebitInterval: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  "4s",
+				Value:  4 * time.Second,
 			},
 		},
-		TTLMaxDelay: []*DynamicStringOpt{
+		TTLMaxDelay: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  "4s",
+				Value:  4 * time.Second,
 			},
 		},
-		TTLUsage: []*DynamicStringOpt{
+		TTLUsage: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.net",
-				Value:  "4s",
+				Value:  utils.DurationPointer(4 * time.Second),
 			},
 		},
 	}

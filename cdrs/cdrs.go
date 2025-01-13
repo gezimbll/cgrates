@@ -193,6 +193,7 @@ func (cdrS *CDRServer) processEvents(ctx *context.Context, evs []*utils.CGREvent
 			return nil, fmt.Errorf("retrieving %s option failed: %w", utils.MetaAttributes, err)
 		}
 		if !attrS {
+
 			continue
 		}
 		if err = cdrS.attrSProcessEvent(ctx, ev); err != nil {

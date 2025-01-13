@@ -680,7 +680,7 @@ func (rS *ResourceS) V1GetResourcesForEvent(ctx *context.Context, args *utils.CG
 
 	var ttl time.Duration
 	if ttl, err = GetDurationOpts(ctx, args.Tenant, args, rS.fltrS, rS.cfg.ResourceSCfg().Opts.UsageTTL,
-		config.ResourcesUsageTTLDftOpt, utils.OptsResourcesUsageTTL); err != nil {
+		utils.OptsResourcesUsageTTL); err != nil {
 		return
 	}
 	usageTTL := utils.DurationPointer(ttl)
@@ -738,13 +738,13 @@ func (rS *ResourceS) V1AuthorizeResources(ctx *context.Context, args *utils.CGRE
 
 	var units float64
 	if units, err = GetFloat64Opts(ctx, args.Tenant, args, rS.fltrS, rS.cfg.ResourceSCfg().Opts.Units,
-		config.ResourcesUnitsDftOpt, utils.OptsResourcesUnits); err != nil {
+		utils.OptsResourcesUnits); err != nil {
 		return
 	}
 
 	var ttl time.Duration
 	if ttl, err = GetDurationOpts(ctx, args.Tenant, args, rS.fltrS, rS.cfg.ResourceSCfg().Opts.UsageTTL,
-		config.ResourcesUsageTTLDftOpt, utils.OptsResourcesUsageTTL); err != nil {
+		utils.OptsResourcesUsageTTL); err != nil {
 		return
 	}
 	usageTTL := utils.DurationPointer(ttl)
@@ -814,13 +814,13 @@ func (rS *ResourceS) V1AllocateResources(ctx *context.Context, args *utils.CGREv
 
 	var units float64
 	if units, err = GetFloat64Opts(ctx, args.Tenant, args, rS.fltrS, rS.cfg.ResourceSCfg().Opts.Units,
-		config.ResourcesUnitsDftOpt, utils.OptsResourcesUnits); err != nil {
+		utils.OptsResourcesUnits); err != nil {
 		return
 	}
 
 	var ttl time.Duration
 	if ttl, err = GetDurationOpts(ctx, args.Tenant, args, rS.fltrS, rS.cfg.ResourceSCfg().Opts.UsageTTL,
-		config.ResourcesUsageTTLDftOpt, utils.OptsResourcesUsageTTL); err != nil {
+		utils.OptsResourcesUsageTTL); err != nil {
 		return
 	}
 	usageTTL := utils.DurationPointer(ttl)
@@ -894,7 +894,7 @@ func (rS *ResourceS) V1ReleaseResources(ctx *context.Context, args *utils.CGREve
 
 	var ttl time.Duration
 	if ttl, err = GetDurationOpts(ctx, args.Tenant, args, rS.fltrS, rS.cfg.ResourceSCfg().Opts.UsageTTL,
-		config.ResourcesUsageTTLDftOpt, utils.OptsResourcesUsageTTL); err != nil {
+		utils.OptsResourcesUsageTTL); err != nil {
 		return
 	}
 	usageTTL := utils.DurationPointer(ttl)

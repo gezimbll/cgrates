@@ -71,38 +71,38 @@ func TestResourceSLoadFromJSONOpts(t *testing.T) {
 	resOpts := &ResourcesOpts{
 		UsageID: []*DynamicStringOpt{
 			{
-				Value: utils.EmptyString,
+				value: utils.EmptyString,
 			},
 		},
 		UsageTTL: []*DynamicDurationOpt{
 			{
-				Value: 72 * time.Hour,
+				value: 72 * time.Hour,
 			},
 		},
 		Units: []*DynamicFloat64Opt{
 			{
-				Value: 1,
+				value: 1,
 			},
 		},
 	}
 
 	resOptsJson := &ResourcesOptsJson{
-		UsageID: []*DynamicStringOpt{
+		UsageID: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
 				Value:  "usg2",
 			},
 		},
-		UsageTTL: []*DynamicStringOpt{
+		UsageTTL: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
 				Value:  "error",
 			},
 		},
-		Units: []*DynamicFloat64Opt{
+		Units: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  2.5,
+				Value:  "2.5",
 			},
 		},
 	}
@@ -238,17 +238,17 @@ func TestDiffResourceSJsonCfg(t *testing.T) {
 		Opts: &ResourcesOpts{
 			UsageID: []*DynamicStringOpt{
 				{
-					Value: "usg1",
+					value: "usg1",
 				},
 			},
 			UsageTTL: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			Units: []*DynamicFloat64Opt{
 				{
-					Value: 1,
+					value: 1,
 				},
 			},
 		},
@@ -266,17 +266,17 @@ func TestDiffResourceSJsonCfg(t *testing.T) {
 		Opts: &ResourcesOpts{
 			UsageID: []*DynamicStringOpt{
 				{
-					Value: "usg2",
+					value: "usg2",
 				},
 			},
 			UsageTTL: []*DynamicDurationOpt{
 				{
-					Value: time.Minute,
+					value: time.Minute,
 				},
 			},
 			Units: []*DynamicFloat64Opt{
 				{
-					Value: 2,
+					value: 2,
 				},
 			},
 		},
@@ -292,19 +292,19 @@ func TestDiffResourceSJsonCfg(t *testing.T) {
 		Suffix_indexed_fields: &[]string{"*req.index33"},
 		Nested_fields:         utils.BoolPointer(true),
 		Opts: &ResourcesOptsJson{
-			UsageID: []*DynamicStringOpt{
+			UsageID: []*DynamicInterfaceOpt{
 				{
 					Value: "usg2",
 				},
 			},
-			UsageTTL: []*DynamicStringOpt{
+			UsageTTL: []*DynamicInterfaceOpt{
 				{
-					Value: "1m0s",
+					Value: time.Minute,
 				},
 			},
-			Units: []*DynamicFloat64Opt{
+			Units: []*DynamicInterfaceOpt{
 				{
-					Value: 2,
+					Value: float64(2),
 				},
 			},
 		},
@@ -338,17 +338,17 @@ func TestResourcesCloneSection(t *testing.T) {
 		Opts: &ResourcesOpts{
 			UsageID: []*DynamicStringOpt{
 				{
-					Value: "usg1",
+					value: "usg1",
 				},
 			},
 			UsageTTL: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			Units: []*DynamicFloat64Opt{
 				{
-					Value: 1,
+					value: 1,
 				},
 			},
 		},
@@ -366,17 +366,17 @@ func TestResourcesCloneSection(t *testing.T) {
 		Opts: &ResourcesOpts{
 			UsageID: []*DynamicStringOpt{
 				{
-					Value: "usg1",
+					value: "usg1",
 				},
 			},
 			UsageTTL: []*DynamicDurationOpt{
 				{
-					Value: time.Second,
+					value: time.Second,
 				},
 			},
 			Units: []*DynamicFloat64Opt{
 				{
-					Value: 1,
+					value: 1,
 				},
 			},
 		},

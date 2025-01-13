@@ -339,7 +339,7 @@ const CGRATES_CFG_JSON = `
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*attributes": [
@@ -353,56 +353,56 @@ const CGRATES_CFG_JSON = `
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*ees": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*rates": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*stats": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*thresholds": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*refund": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*rerate": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*store": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": true
+		// 		"Value": "true"
 		// 	}
 		// ]
 	}
@@ -1039,7 +1039,7 @@ const CGRATES_CFG_JSON = `
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": 1
+		// 		"Value": "1"
 		// 	}
 		// ],
 		// "*profileRuns": [			// number of runs a profile will process during the event
@@ -1237,14 +1237,14 @@ const CGRATES_CFG_JSON = `
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": 1
+		// 		"Value": "1"
 		// 	}
 		// ],
 		// "*ignoreErrors": [
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ],
 		// "*maxCost": [
@@ -1983,7 +1983,7 @@ const CGRATES_CFG_JSON = `
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": false
+		// 		"Value": "false"
 		// 	}
 		// ]
 	}
