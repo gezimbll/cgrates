@@ -82,37 +82,37 @@ func TestCdrsCfgloadFromJsonCfgOpt(t *testing.T) {
 	cdrsOpt := &CdrsOpts{
 		Accounts: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Attributes: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Chargers: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Export: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Rates: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Stats: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Thresholds: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -120,37 +120,37 @@ func TestCdrsCfgloadFromJsonCfgOpt(t *testing.T) {
 	exp := &CdrsOpts{
 		Accounts: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Attributes: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Chargers: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Export: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Rates: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Stats: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 		Thresholds: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -332,43 +332,43 @@ func TestDiffCdrsJsonCfg(t *testing.T) {
 			Accounts: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 			Attributes: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 			Chargers: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 			Export: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 			Rates: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 			Stats: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 			Thresholds: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 		},
@@ -396,43 +396,43 @@ func TestDiffCdrsJsonCfg(t *testing.T) {
 			Accounts: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 			Attributes: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 			Chargers: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 			Export: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 			Rates: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 			Stats: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 			Thresholds: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 		},
@@ -452,46 +452,46 @@ func TestDiffCdrsJsonCfg(t *testing.T) {
 		Rates_conns:          &[]string{"*birpc"},
 		Accounts_conns:       &[]string{"*birpc"},
 		Opts: &CdrsOptsJson{
-			Accounts: []*DynamicBoolOpt{
+			Accounts: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
-			Attributes: []*DynamicBoolOpt{
+			Attributes: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
-			Chargers: []*DynamicBoolOpt{
+			Chargers: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
-			Export: []*DynamicBoolOpt{
+			Export: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
-			Rates: []*DynamicBoolOpt{
+			Rates: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
-			Stats: []*DynamicBoolOpt{
+			Stats: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
-			Thresholds: []*DynamicBoolOpt{
+			Thresholds: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
 		},

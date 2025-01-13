@@ -77,40 +77,91 @@ func (cdrscfg *CdrsCfg) Load(ctx *context.Context, jsnCfg ConfigDB, _ *CGRConfig
 	return cdrscfg.loadFromJSONCfg(jsnCdrsCfg)
 }
 
-func (cdrsOpts *CdrsOpts) loadFromJSONCfg(jsnCfg *CdrsOptsJson) {
+func (cdrsOpts *CdrsOpts) loadFromJSONCfg(jsnCfg *CdrsOptsJson) (err error) {
 	if jsnCfg == nil {
 		return
 	}
 	if jsnCfg.Accounts != nil {
-		cdrsOpts.Accounts = append(cdrsOpts.Accounts, jsnCfg.Accounts...)
+		var accounts []*DynamicBoolOpt
+		accounts, err = StringToBoolDynamicOpts(jsnCfg.Accounts)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Accounts = append(cdrsOpts.Accounts, accounts...)
 	}
 	if jsnCfg.Attributes != nil {
-		cdrsOpts.Attributes = append(cdrsOpts.Attributes, jsnCfg.Attributes...)
+		var attributes []*DynamicBoolOpt
+		attributes, err = StringToBoolDynamicOpts(jsnCfg.Attributes)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Attributes = append(cdrsOpts.Attributes, attributes...)
 	}
 	if jsnCfg.Chargers != nil {
-		cdrsOpts.Chargers = append(cdrsOpts.Chargers, jsnCfg.Chargers...)
+		var chargers []*DynamicBoolOpt
+		chargers, err = StringToBoolDynamicOpts(jsnCfg.Attributes)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Chargers = append(cdrsOpts.Chargers, chargers...)
 	}
 	if jsnCfg.Export != nil {
-		cdrsOpts.Export = append(cdrsOpts.Export, jsnCfg.Export...)
+		var export []*DynamicBoolOpt
+		export, err = StringToBoolDynamicOpts(jsnCfg.Export)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Export = append(cdrsOpts.Export, export...)
 	}
 	if jsnCfg.Rates != nil {
-		cdrsOpts.Rates = append(cdrsOpts.Rates, jsnCfg.Rates...)
+		var rates []*DynamicBoolOpt
+		rates, err = StringToBoolDynamicOpts(jsnCfg.Rates)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Rates = append(cdrsOpts.Rates, rates...)
 	}
 	if jsnCfg.Stats != nil {
-		cdrsOpts.Stats = append(cdrsOpts.Stats, jsnCfg.Stats...)
+		var stats []*DynamicBoolOpt
+		stats, err = StringToBoolDynamicOpts(jsnCfg.Stats)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Stats = append(cdrsOpts.Stats, stats...)
 	}
 	if jsnCfg.Thresholds != nil {
-		cdrsOpts.Thresholds = append(cdrsOpts.Thresholds, jsnCfg.Thresholds...)
+		var thresholds []*DynamicBoolOpt
+		thresholds, err = StringToBoolDynamicOpts(jsnCfg.Thresholds)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Thresholds = append(cdrsOpts.Thresholds, thresholds...)
 	}
 	if jsnCfg.Refund != nil {
-		cdrsOpts.Refund = append(cdrsOpts.Refund, jsnCfg.Refund...)
+		var refund []*DynamicBoolOpt
+		refund, err = StringToBoolDynamicOpts(jsnCfg.Refund)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Refund = append(cdrsOpts.Refund, refund...)
 	}
 	if jsnCfg.Rerate != nil {
-		cdrsOpts.Rerate = append(cdrsOpts.Rerate, jsnCfg.Rerate...)
+		var rerate []*DynamicBoolOpt
+		rerate, err = StringToBoolDynamicOpts(jsnCfg.Rerate)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Rerate = append(cdrsOpts.Rerate, rerate...)
 	}
 	if jsnCfg.Store != nil {
-		cdrsOpts.Store = append(cdrsOpts.Store, jsnCfg.Store...)
+		var store []*DynamicBoolOpt
+		store, err = StringToBoolDynamicOpts(jsnCfg.Store)
+		if err != nil {
+			return
+		}
+		cdrsOpts.Store = append(cdrsOpts.Store, store...)
 	}
+	return
 }
 
 // loadFromJSONCfg loads Cdrs config from JsonCfg
@@ -309,16 +360,16 @@ func (cdrscfg CdrsCfg) Clone() (cln *CdrsCfg) {
 }
 
 type CdrsOptsJson struct {
-	Accounts   []*DynamicBoolOpt `json:"*accounts"`
-	Attributes []*DynamicBoolOpt `json:"*attributes"`
-	Chargers   []*DynamicBoolOpt `json:"*chargers"`
-	Export     []*DynamicBoolOpt `json:"*ees"`
-	Rates      []*DynamicBoolOpt `json:"*rates"`
-	Stats      []*DynamicBoolOpt `json:"*stats"`
-	Thresholds []*DynamicBoolOpt `json:"*thresholds"`
-	Refund     []*DynamicBoolOpt `json:"*refund"`
-	Rerate     []*DynamicBoolOpt `json:"*rerate"`
-	Store      []*DynamicBoolOpt `json:"*store"`
+	Accounts   []*DynamicStringOptJson `json:"*accounts"`
+	Attributes []*DynamicStringOptJson `json:"*attributes"`
+	Chargers   []*DynamicStringOptJson `json:"*chargers"`
+	Export     []*DynamicStringOptJson `json:"*ees"`
+	Rates      []*DynamicStringOptJson `json:"*rates"`
+	Stats      []*DynamicStringOptJson `json:"*stats"`
+	Thresholds []*DynamicStringOptJson `json:"*thresholds"`
+	Refund     []*DynamicStringOptJson `json:"*refund"`
+	Rerate     []*DynamicStringOptJson `json:"*rerate"`
+	Store      []*DynamicStringOptJson `json:"*store"`
 }
 
 // Cdrs config section
@@ -343,34 +394,34 @@ func diffCdrsOptsJsonCfg(d *CdrsOptsJson, v1, v2 *CdrsOpts) *CdrsOptsJson {
 		d = new(CdrsOptsJson)
 	}
 	if !DynamicBoolOptEqual(v1.Accounts, v2.Accounts) {
-		d.Accounts = v2.Accounts
+		d.Accounts = BoolToStringDynamicOpts(v2.Accounts)
 	}
 	if !DynamicBoolOptEqual(v1.Attributes, v2.Attributes) {
-		d.Attributes = v2.Attributes
+		d.Attributes = BoolToStringDynamicOpts(v2.Attributes)
 	}
 	if !DynamicBoolOptEqual(v1.Chargers, v2.Chargers) {
-		d.Chargers = v2.Chargers
+		d.Chargers = BoolToStringDynamicOpts(v2.Chargers)
 	}
 	if !DynamicBoolOptEqual(v1.Export, v2.Export) {
-		d.Export = v2.Export
+		d.Export = BoolToStringDynamicOpts(v2.Export)
 	}
 	if !DynamicBoolOptEqual(v1.Rates, v2.Rates) {
-		d.Rates = v2.Rates
+		d.Rates = BoolToStringDynamicOpts(v2.Rates)
 	}
 	if !DynamicBoolOptEqual(v1.Stats, v2.Stats) {
-		d.Stats = v2.Stats
+		d.Stats = BoolToStringDynamicOpts(v2.Stats)
 	}
 	if !DynamicBoolOptEqual(v1.Thresholds, v2.Thresholds) {
-		d.Thresholds = v2.Thresholds
+		d.Thresholds = BoolToStringDynamicOpts(v2.Thresholds)
 	}
 	if !DynamicBoolOptEqual(v1.Refund, v2.Refund) {
-		d.Refund = v2.Refund
+		d.Refund = BoolToStringDynamicOpts(v2.Refund)
 	}
 	if !DynamicBoolOptEqual(v1.Rerate, v2.Rerate) {
-		d.Rerate = v2.Rerate
+		d.Rerate = BoolToStringDynamicOpts(v2.Rerate)
 	}
 	if !DynamicBoolOptEqual(v1.Store, v2.Store) {
-		d.Store = v2.Store
+		d.Store = BoolToStringDynamicOpts(v2.Store)
 	}
 	return d
 }

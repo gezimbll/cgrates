@@ -50,7 +50,7 @@ func TestConfigSetGetConfig(t *testing.T) {
 	"opts": {
 		"*processRuns": [
 				{
-					"Value": 3,
+					"Value": "3",
 				},
 			],
 		},					
@@ -91,9 +91,7 @@ func TestConfigSetGetConfig(t *testing.T) {
 			utils.OptsCfg: map[string]any{
 				utils.MetaProfileIDs: []*config.DynamicStringSliceOpt{},
 				utils.MetaProcessRunsCfg: []*config.DynamicIntOpt{
-					{
-						Value: 3,
-					},
+					config.NewDynamicIntOpt(nil, "", 3, nil),
 				},
 				utils.MetaProfileRunsCfg:       []*config.DynamicIntOpt{},
 				utils.MetaProfileIgnoreFilters: []*config.DynamicBoolOpt{},
@@ -126,10 +124,8 @@ func TestConfigSetGetReloadConfig(t *testing.T) {
 				"exists_indexed_fields":    []string{},
 				"notexists_indexed_fields": []string{},
 				utils.OptsCfg: map[string]any{
-					utils.MetaProcessRunsCfg: []*config.DynamicIntOpt{
-						{
-							Value: 2,
-						},
+					utils.MetaProcessRunsCfg: []*config.DynamicStringOptJson{
+						{Value: "2"},
 					},
 				},
 			},
@@ -229,12 +225,12 @@ func TestConfigGetSetConfigFromJSONErr(t *testing.T) {
 		"*profileIDs": [],
 		"*processRuns": [
 			{
-				"Value": 2,
+				"Value": "2",
 			},
 		],
 		"*profileRuns": [
 			{
-				"Value": 0,
+				"Value": "0",
 			},
 		],
 	},

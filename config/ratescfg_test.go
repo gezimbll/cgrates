@@ -241,7 +241,7 @@ func TestDiffRateSJsonCfg(t *testing.T) {
 			StartTime: []*DynamicStringOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  "",
+					value:  "",
 				},
 			},
 			Usage: []*DynamicDecimalOpt{
@@ -253,7 +253,7 @@ func TestDiffRateSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 		},
@@ -282,7 +282,7 @@ func TestDiffRateSJsonCfg(t *testing.T) {
 			StartTime: []*DynamicStringOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  utils.MetaNow,
+					value:  utils.MetaNow,
 				},
 			},
 			Usage: []*DynamicDecimalOpt{
@@ -294,7 +294,7 @@ func TestDiffRateSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  true,
+					value:  true,
 				},
 			},
 		},
@@ -320,28 +320,28 @@ func TestDiffRateSJsonCfg(t *testing.T) {
 					Values: []string{"RP2"},
 				},
 			},
-			StartTime: []*DynamicStringOpt{
+			StartTime: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.org",
 					Value:  utils.MetaNow,
 				},
 			},
-			Usage: []*DynamicStringOpt{
+			Usage: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.org",
 					Value:  "3",
 				},
 			},
-			IntervalStart: []*DynamicStringOpt{
+			IntervalStart: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.org",
 					Value:  "3",
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicBoolOpt{
+			ProfileIgnoreFilters: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.org",
-					Value:  true,
+					Value:  "true",
 				},
 			},
 		},
@@ -422,7 +422,7 @@ func TestRatesOptsLoadFromJSON(t *testing.T) {
 		},
 		StartTime: []*DynamicStringOpt{
 			{
-				Value: utils.MetaNow,
+				value: utils.MetaNow,
 			},
 		},
 		Usage: []*DynamicDecimalOpt{
@@ -433,7 +433,7 @@ func TestRatesOptsLoadFromJSON(t *testing.T) {
 		},
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -450,7 +450,7 @@ func TestRatesOptsLoadFromJSON(t *testing.T) {
 				Values: []string{"RP2"},
 			},
 		},
-		Usage: []*DynamicStringOpt{
+		Usage: []*DynamicStringOptJson{
 			{
 				Tenant: "cgrates.org",
 				Value:  "error",
@@ -463,7 +463,7 @@ func TestRatesOptsLoadFromJSON(t *testing.T) {
 	}
 
 	jsnCfg = &RatesOptsJson{
-		IntervalStart: []*DynamicStringOpt{
+		IntervalStart: []*DynamicStringOptJson{
 			{
 				Tenant: "cgrates.org",
 				Value:  "error",

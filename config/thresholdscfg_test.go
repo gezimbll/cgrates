@@ -79,7 +79,7 @@ func TestThresholdSLoadFromJsonOpts(t *testing.T) {
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  true,
+				value:  true,
 			},
 		},
 	}
@@ -93,7 +93,7 @@ func TestThresholdSLoadFromJsonOpts(t *testing.T) {
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
 				Tenant: "cgrates.org",
-				Value:  true,
+				value:  true,
 			},
 		},
 	}
@@ -225,7 +225,7 @@ func TestDiffThresholdSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 		},
@@ -250,7 +250,7 @@ func TestDiffThresholdSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 		},
@@ -272,10 +272,10 @@ func TestDiffThresholdSJsonCfg(t *testing.T) {
 					Values: []string{"thsr_p2"},
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicBoolOpt{
+			ProfileIgnoreFilters: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
 		},

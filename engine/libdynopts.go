@@ -46,7 +46,7 @@ func GetFloat64Opts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS *Fi
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evDP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return 0, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evDP)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass
@@ -69,7 +69,7 @@ func GetDurationOpts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS *F
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evDP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return 0, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evDP)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass
@@ -92,7 +92,7 @@ func GetStringOpts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS *Fil
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evDP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return utils.EmptyString, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evDP)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass
@@ -116,7 +116,12 @@ func GetTimeOpts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS *Filte
 		if pass, err = fS.Pass(ctx, tnt, opt.FilterIDs, evDP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return
 		} else if pass {
-			return utils.ParseTimeDetectLayout(opt.Value, tmz)
+			var dur string
+			dur, err = opt.Value(evDP)
+			if err != nil {
+				return
+			}
+			return utils.ParseTimeDetectLayout(dur, tmz)
 		}
 	}
 	return utils.ParseTimeDetectLayout(dftOpt, tmz) // return the default value if there are no options and none of the filters pass
@@ -166,7 +171,7 @@ func GetIntOpts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS *Filter
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evDP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return 0, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evDP)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass
@@ -196,7 +201,7 @@ func GetBoolOpts(ctx *context.Context, tnt string, dP utils.DataProvider, fS *Fi
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, dP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return false, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(dP)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass
@@ -269,7 +274,7 @@ func GetIntPointerOpts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS 
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evDP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return nil, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evDP)
 		}
 	}
 	return nil, nil
@@ -302,7 +307,7 @@ func GetDurationPointerOptsFromMultipleMaps(ctx *context.Context, tnt string, ev
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evMS); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return nil, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evMS)
 		}
 	}
 	return nil, nil
@@ -335,7 +340,7 @@ func GetDurationOptsFromMultipleMaps(ctx *context.Context, tnt string, eventStar
 		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evMS); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return 0, err
 		} else if pass {
-			return opt.Value, nil
+			return opt.Value(evMS)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass

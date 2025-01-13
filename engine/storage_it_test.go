@@ -71,10 +71,10 @@ func TestSetGetRemoveConfigSectionsDrvRedis(t *testing.T) {
 					Values: []string{"value1"},
 				},
 			},
-			ProfileIgnoreFilters: []*config.DynamicBoolOpt{
+			ProfileIgnoreFilters: []*config.DynamicStringOptJson{
 				{
 					Tenant: "cgrates.org",
-					Value:  true,
+					Value:  "true",
 				},
 			},
 		},
@@ -93,19 +93,19 @@ func TestSetGetRemoveConfigSectionsDrvRedis(t *testing.T) {
 		Suffix_indexed_fields: &[]string{"*req.index33"},
 		Nested_fields:         utils.BoolPointer(true),
 		Opts: &config.ResourcesOptsJson{
-			UsageID: []*config.DynamicStringOpt{
+			UsageID: []*config.DynamicStringOptJson{
 				{
 					Value: "usg2",
 				},
 			},
-			UsageTTL: []*config.DynamicStringOpt{
+			UsageTTL: []*config.DynamicStringOptJson{
 				{
 					Value: "1m0s",
 				},
 			},
-			Units: []*config.DynamicFloat64Opt{
+			Units: []*config.DynamicStringOptJson{
 				{
-					Value: 2,
+					Value: "2",
 				},
 			},
 		},
@@ -190,10 +190,10 @@ func TestSetGetRemoveConfigSectionsDrvMongo(t *testing.T) {
 					Values: []string{"value1"},
 				},
 			},
-			ProfileIgnoreFilters: []*config.DynamicBoolOpt{
+			ProfileIgnoreFilters: []*config.DynamicStringOptJson{
 				{
 					Tenant: "cgrates.org",
-					Value:  true,
+					Value:  "true",
 				},
 			},
 		},
@@ -212,19 +212,19 @@ func TestSetGetRemoveConfigSectionsDrvMongo(t *testing.T) {
 		Suffix_indexed_fields: &[]string{"*req.index33"},
 		Nested_fields:         utils.BoolPointer(true),
 		Opts: &config.ResourcesOptsJson{
-			UsageID: []*config.DynamicStringOpt{
+			UsageID: []*config.DynamicStringOptJson{
 				{
 					Value: "usg2",
 				},
 			},
-			UsageTTL: []*config.DynamicStringOpt{
+			UsageTTL: []*config.DynamicStringOptJson{
 				{
 					Value: "1m0s",
 				},
 			},
-			Units: []*config.DynamicFloat64Opt{
+			Units: []*config.DynamicStringOptJson{
 				{
-					Value: 2,
+					Value: "2",
 				},
 			},
 		},
@@ -306,10 +306,10 @@ func TestSetGetRemoveConfigSectionsDrvInternal(t *testing.T) {
 					Values: []string{"value1"},
 				},
 			},
-			ProfileIgnoreFilters: []*config.DynamicBoolOpt{
+			ProfileIgnoreFilters: []*config.DynamicStringOptJson{
 				{
 					Tenant: "cgrates.org",
-					Value:  true,
+					Value:  "true",
 				},
 			},
 		},
@@ -328,19 +328,19 @@ func TestSetGetRemoveConfigSectionsDrvInternal(t *testing.T) {
 		Suffix_indexed_fields: &[]string{"*req.index33"},
 		Nested_fields:         utils.BoolPointer(true),
 		Opts: &config.ResourcesOptsJson{
-			UsageID: []*config.DynamicStringOpt{
+			UsageID: []*config.DynamicStringOptJson{
 				{
 					Value: "usg2",
 				},
 			},
-			UsageTTL: []*config.DynamicStringOpt{
+			UsageTTL: []*config.DynamicStringOptJson{
 				{
 					Value: "1m0s",
 				},
 			},
-			Units: []*config.DynamicFloat64Opt{
+			Units: []*config.DynamicStringOptJson{
 				{
-					Value: 2,
+					Value: "2",
 				},
 			},
 		},

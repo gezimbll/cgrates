@@ -80,7 +80,7 @@ func TestStatSCfgloadFromJsonCfgOptsNil(t *testing.T) {
 		},
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -93,7 +93,7 @@ func TestStatSCfgloadFromJsonCfgOptsNil(t *testing.T) {
 		},
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -243,13 +243,13 @@ func TestDiffStatServJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  false,
+					value:  false,
 				},
 			},
 			RoundingDecimals: []*DynamicIntOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  1,
+					value:  1,
 				},
 			},
 			PrometheusStatIDs: []*DynamicStringSliceOpt{
@@ -281,13 +281,13 @@ func TestDiffStatServJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					value:  true,
 				},
 			},
 			RoundingDecimals: []*DynamicIntOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  2,
+					value:  2,
 				},
 			},
 			PrometheusStatIDs: []*DynamicStringSliceOpt{
@@ -316,16 +316,16 @@ func TestDiffStatServJsonCfg(t *testing.T) {
 					Values: []string{"statsid2"},
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicBoolOpt{
+			ProfileIgnoreFilters: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  true,
+					Value:  "true",
 				},
 			},
-			RoundingDecimals: []*DynamicIntOpt{
+			RoundingDecimals: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  2,
+					Value:  "2",
 				},
 			},
 			PrometheusStatIDs: []*DynamicStringSliceOpt{

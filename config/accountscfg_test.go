@@ -92,7 +92,7 @@ func TestAccountSCfgLoadFromJSONCfgOptsErr(t *testing.T) {
 		},
 		ProfileIgnoreFilters: []*DynamicBoolOpt{
 			{
-				Value: false,
+				value: false,
 			},
 		},
 	}
@@ -101,14 +101,14 @@ func TestAccountSCfgLoadFromJSONCfgOptsErr(t *testing.T) {
 		ProfileIDs: []*DynamicStringSliceOpt{
 			{},
 		},
-		Usage: []*DynamicStringOpt{
+		Usage: []*DynamicStringOptJson{
 			{
 				Value: "error",
 			},
 		},
-		ProfileIgnoreFilters: []*DynamicBoolOpt{
+		ProfileIgnoreFilters: []*DynamicStringOptJson{
 			{
-				Value: false,
+				Value: "false",
 			},
 		},
 	}
@@ -252,7 +252,7 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  true,
+					value:  true,
 				},
 			},
 		},
@@ -283,7 +283,7 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 			ProfileIgnoreFilters: []*DynamicBoolOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  false,
+					value:  false,
 				},
 			},
 		},
@@ -308,17 +308,17 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 					Values: []string{"ACC2"},
 				},
 			},
-			Usage: []*DynamicStringOpt{
+			Usage: []*DynamicStringOptJson{
 				{
 					FilterIDs: []string{"fld1", "fld2"},
 					Tenant:    "cgrates.org",
 					Value:     "2",
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicBoolOpt{
+			ProfileIgnoreFilters: []*DynamicStringOptJson{
 				{
 					Tenant: "cgrates.net",
-					Value:  false,
+					Value:  "false",
 				},
 			},
 		},

@@ -1007,7 +1007,7 @@ func TestLoadSessionSCfgError(t *testing.T) {
 		},
     },
 }`
-	expected := "json: cannot unmarshal number into Go struct field DynamicStringOpt.Opts.*ttlUsage.Value of type string"
+	expected := "json: cannot unmarshal number into Go struct field DynamicStringOptJson.Opts.*ttlUsage.Value of type string"
 	cgrConfig := NewDefaultCGRConfig()
 	if cgrCfgJSON, err := NewCgrJsonCfgFromBytes([]byte(cfgJSONStr)); err != nil {
 		t.Error(err)
@@ -5923,7 +5923,7 @@ func TestSetCfgInDb(t *testing.T) {
 		Opts: &AttributesOpts{
 			ProcessRuns: []*DynamicIntOpt{
 				{
-					Value: 2,
+					value: 2,
 				},
 			},
 		},
@@ -5945,9 +5945,9 @@ func TestSetCfgInDb(t *testing.T) {
 				Exists_indexed_fields:    &[]string{"field2"},
 				Notexists_indexed_fields: &[]string{"field2"},
 				Opts: &AttributesOptsJson{
-					ProcessRuns: []*DynamicIntOpt{
+					ProcessRuns: []*DynamicStringOptJson{
 						{
-							Value: 3,
+							Value: "3",
 						},
 					},
 				},
@@ -5967,12 +5967,12 @@ func TestSetCfgInDb(t *testing.T) {
 		Exists_indexed_fields:    &[]string{"field2"},
 		Notexists_indexed_fields: &[]string{"field2"},
 		Opts: &AttributesOptsJson{
-			ProcessRuns: []*DynamicIntOpt{
+			ProcessRuns: []*DynamicStringOptJson{
 				{
-					Value: 2,
+					Value: "2",
 				},
 				{
-					Value: 3,
+					Value: "3",
 				},
 			},
 		},
@@ -6011,7 +6011,7 @@ func TestSetNilCfgInDb(t *testing.T) {
 			ProcessRuns: []*DynamicIntOpt{
 				{
 					FilterIDs: []string{},
-					Value:     2,
+					value:     2,
 				},
 			},
 		},
