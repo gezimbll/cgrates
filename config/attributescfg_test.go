@@ -383,22 +383,22 @@ func TestDiffAttributeSJsonCfg(t *testing.T) {
 					Values: []string{"prf2"},
 				},
 			},
-			ProcessRuns: []*DynamicStringOptJson{
+			ProcessRuns: []*DynamicInterfaceOpt{
 				{
 					FilterIDs: []string{},
-					Value:     "2",
+					Value:     2,
 				},
 			},
-			ProfileRuns: []*DynamicStringOptJson{
+			ProfileRuns: []*DynamicInterfaceOpt{
 				{
 					FilterIDs: []string{},
-					Value:     "2",
+					Value:     2,
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicStringOptJson{
+			ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
 		},

@@ -1544,7 +1544,7 @@ func TestReloadCfgInDb(t *testing.T) {
 		Exists_indexed_fields:    &[]string{"field2"},
 		Notexists_indexed_fields: &[]string{"field2"},
 		Opts: &AttributesOptsJson{
-			ProcessRuns: []*DynamicStringOptJson{
+			ProcessRuns: []*DynamicInterfaceOpt{
 				{
 					Value: "3",
 				},

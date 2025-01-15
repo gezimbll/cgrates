@@ -316,16 +316,16 @@ func TestDiffStatServJsonCfg(t *testing.T) {
 					Values: []string{"statsid2"},
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicStringOptJson{
+			ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
-			RoundingDecimals: []*DynamicStringOptJson{
+			RoundingDecimals: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "2",
+					Value:  2,
 				},
 			},
 			PrometheusStatIDs: []*DynamicStringSliceOpt{

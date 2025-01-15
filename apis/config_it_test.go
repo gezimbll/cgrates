@@ -191,7 +191,7 @@ func testCfgSetGetConfig(t *testing.T) {
 					"stats_conns":           []string{"*internal"},
 					"suffix_indexed_fields": []string{},
 					utils.OptsCfg: map[string]any{
-						utils.MetaProcessRunsCfg: []*config.DynamicStringOptJson{
+						utils.MetaProcessRunsCfg: []*config.DynamicInterfaceOpt{
 							{
 								Value: "2",
 							},
@@ -258,9 +258,9 @@ func testCfgSetEmptyReload(t *testing.T) {
 					"enabled":         true,
 					"indexed_selects": false,
 					utils.OptsCfg: map[string]any{
-						utils.MetaProcessRunsCfg: []*config.DynamicStringOptJson{
+						utils.MetaProcessRunsCfg: []*config.DynamicInterfaceOpt{
 							{
-								Value: "2",
+								Value: 2,
 							},
 						},
 					},
@@ -348,7 +348,7 @@ func testCfgSetJSONGetJSONConfig(t *testing.T) {
 	"opts":{
 		"*processRuns": [
 			{
-				"Value": "2",
+				"Value": 2,
 			},
 		],
 		},
@@ -584,9 +584,9 @@ func testCfgMdfSectConfigStore(t *testing.T) {
 		Suffix_indexed_fields: nil,
 		Nested_fields:         nil,
 		Opts: &config.AttributesOptsJson{
-			ProcessRuns: []*config.DynamicStringOptJson{
+			ProcessRuns: []*config.DynamicInterfaceOpt{
 				{
-					Value: "2",
+					Value: 2,
 				},
 			},
 		},

@@ -272,10 +272,10 @@ func TestDiffThresholdSJsonCfg(t *testing.T) {
 					Values: []string{"thsr_p2"},
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicStringOptJson{
+			ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
 		},

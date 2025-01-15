@@ -135,168 +135,195 @@ func (sesOpts *SessionsOpts) loadFromJSONCfg(jsnCfg *SessionsOptsJson) (err erro
 	}
 	if jsnCfg.Accounts != nil {
 		var accounts []*DynamicBoolOpt
-		accounts, err = StringToBoolDynamicOpts(jsnCfg.Accounts)
-		sesOpts.Accounts = append(sesOpts.Accounts, accounts...)
+		accounts, err = IfaceToBoolDynamicOpts(jsnCfg.Accounts)
+		populateDynOpts(&sesOpts.Accounts, accounts)
 	}
+	sesOpts.Accounts = append(sesOpts.Accounts, &DynamicBoolOpt{nil, "", SessionsAccountsDftOpt, nil})
 	if jsnCfg.Attributes != nil {
 		var attributes []*DynamicBoolOpt
-		attributes, err = StringToBoolDynamicOpts(jsnCfg.Attributes)
-		sesOpts.Attributes = append(sesOpts.Attributes, attributes...)
+		attributes, err = IfaceToBoolDynamicOpts(jsnCfg.Attributes)
+		populateDynOpts(&sesOpts.Attributes, attributes)
 	}
+	sesOpts.Attributes = append(sesOpts.Attributes, &DynamicBoolOpt{nil, "", SessionsAttributesDftOpt, nil})
 	if jsnCfg.CDRs != nil {
 		var cdrs []*DynamicBoolOpt
-		cdrs, err = StringToBoolDynamicOpts(jsnCfg.CDRs)
-		sesOpts.CDRs = append(sesOpts.CDRs, cdrs...)
+		cdrs, err = IfaceToBoolDynamicOpts(jsnCfg.CDRs)
+		populateDynOpts(&sesOpts.CDRs, cdrs)
 	}
+	sesOpts.CDRs = append(sesOpts.CDRs, &DynamicBoolOpt{nil, "", SessionsCDRsDftOpt, nil})
 	if jsnCfg.Chargers != nil {
 		var chargers []*DynamicBoolOpt
-		chargers, err = StringToBoolDynamicOpts(jsnCfg.Chargers)
-		sesOpts.Chargers = append(sesOpts.Chargers, chargers...)
+		chargers, err = IfaceToBoolDynamicOpts(jsnCfg.Chargers)
+		populateDynOpts(&sesOpts.Chargers, chargers)
 	}
+	sesOpts.Chargers = append(sesOpts.Chargers, &DynamicBoolOpt{nil, "", SessionsChargersDftOpt, nil})
 	if jsnCfg.Resources != nil {
 		var resources []*DynamicBoolOpt
-		resources, err = StringToBoolDynamicOpts(jsnCfg.Resources)
-		sesOpts.Resources = append(sesOpts.Resources, resources...)
+		resources, err = IfaceToBoolDynamicOpts(jsnCfg.Resources)
+		populateDynOpts(&sesOpts.Resources, resources)
 	}
+	sesOpts.Resources = append(sesOpts.Resources, &DynamicBoolOpt{nil, "", SessionsResourcesDftOpt, nil})
 	if jsnCfg.Routes != nil {
 		var routes []*DynamicBoolOpt
-		routes, err = StringToBoolDynamicOpts(jsnCfg.Chargers)
-		sesOpts.Routes = append(sesOpts.Routes, routes...)
+		routes, err = IfaceToBoolDynamicOpts(jsnCfg.Chargers)
+		populateDynOpts(&sesOpts.Routes, routes)
 	}
+	sesOpts.Routes = append(sesOpts.Routes, &DynamicBoolOpt{nil, "", SessionsRoutesDftOpt, nil})
 	if jsnCfg.Stats != nil {
 		var stats []*DynamicBoolOpt
-		stats, err = StringToBoolDynamicOpts(jsnCfg.Stats)
-		sesOpts.Stats = append(sesOpts.Stats, stats...)
+		stats, err = IfaceToBoolDynamicOpts(jsnCfg.Stats)
+		populateDynOpts(&sesOpts.Stats, stats)
 	}
+	sesOpts.Stats = append(sesOpts.Stats, &DynamicBoolOpt{nil, "", SessionsStatsDftOpt, nil})
 	if jsnCfg.Thresholds != nil {
 		var thresholds []*DynamicBoolOpt
-		thresholds, err = StringToBoolDynamicOpts(jsnCfg.Thresholds)
-		sesOpts.Thresholds = append(sesOpts.Thresholds, thresholds...)
+		thresholds, err = IfaceToBoolDynamicOpts(jsnCfg.Thresholds)
+		populateDynOpts(&sesOpts.Thresholds, thresholds)
 	}
+	sesOpts.Thresholds = append(sesOpts.Thresholds, &DynamicBoolOpt{nil, "", SessionsThresholdsDftOpt, nil})
 	if jsnCfg.Initiate != nil {
 		var initiate []*DynamicBoolOpt
-		initiate, err = StringToBoolDynamicOpts(jsnCfg.Initiate)
-		sesOpts.Initiate = append(sesOpts.Initiate, initiate...)
+		initiate, err = IfaceToBoolDynamicOpts(jsnCfg.Initiate)
+		populateDynOpts(&sesOpts.Initiate, initiate)
 	}
+	sesOpts.Initiate = append(sesOpts.Initiate, &DynamicBoolOpt{nil, "", SessionsInitiateDftOpt, nil})
 	if jsnCfg.Update != nil {
 		var update []*DynamicBoolOpt
-		update, err = StringToBoolDynamicOpts(jsnCfg.Update)
-		sesOpts.Update = append(sesOpts.Update, update...)
+		update, err = IfaceToBoolDynamicOpts(jsnCfg.Update)
+		populateDynOpts(&sesOpts.Update, update)
 	}
+	sesOpts.Update = append(sesOpts.Update, &DynamicBoolOpt{nil, "", SessionsUpdateDftOpt, nil})
 	if jsnCfg.Terminate != nil {
 		var terminate []*DynamicBoolOpt
-		terminate, err = StringToBoolDynamicOpts(jsnCfg.Terminate)
-		sesOpts.Terminate = append(sesOpts.Terminate, terminate...)
+		terminate, err = IfaceToBoolDynamicOpts(jsnCfg.Terminate)
+		populateDynOpts(&sesOpts.Terminate, terminate)
 	}
+	sesOpts.Terminate = append(sesOpts.Terminate, &DynamicBoolOpt{nil, "", SessionsTerminateDftOpt, nil})
 	if jsnCfg.Message != nil {
 		var message []*DynamicBoolOpt
-		message, err = StringToBoolDynamicOpts(jsnCfg.Message)
-		sesOpts.Message = append(sesOpts.Message, message...)
+		message, err = IfaceToBoolDynamicOpts(jsnCfg.Message)
+		populateDynOpts(&sesOpts.Message, message)
 	}
+	sesOpts.Message = append(sesOpts.Message, &DynamicBoolOpt{nil, "", SessionsMessageDftOpt, nil})
 	if jsnCfg.AttributesDerivedReply != nil {
 		var attrDerivedRpl []*DynamicBoolOpt
-		attrDerivedRpl, err = StringToBoolDynamicOpts(jsnCfg.AttributesDerivedReply)
-		sesOpts.AttributesDerivedReply = append(sesOpts.AttributesDerivedReply, attrDerivedRpl...)
+		attrDerivedRpl, err = IfaceToBoolDynamicOpts(jsnCfg.AttributesDerivedReply)
+		populateDynOpts(&sesOpts.AttributesDerivedReply, attrDerivedRpl)
 	}
+	sesOpts.AttributesDerivedReply = append(sesOpts.AttributesDerivedReply, &DynamicBoolOpt{nil, "", SessionsAttributesDerivedReplyDftOpt, nil})
 	if jsnCfg.BlockerError != nil {
 		var blockerErr []*DynamicBoolOpt
-		blockerErr, err = StringToBoolDynamicOpts(jsnCfg.BlockerError)
-		sesOpts.BlockerError = append(sesOpts.BlockerError, blockerErr...)
+		blockerErr, err = IfaceToBoolDynamicOpts(jsnCfg.BlockerError)
+		populateDynOpts(&sesOpts.BlockerError, blockerErr)
 	}
+	sesOpts.BlockerError = append(sesOpts.BlockerError, &DynamicBoolOpt{nil, "", SessionsBlockerErrorDftOpt, nil})
 	if jsnCfg.CDRsDerivedReply != nil {
 		var cdrsDerivedRpl []*DynamicBoolOpt
-		cdrsDerivedRpl, err = StringToBoolDynamicOpts(jsnCfg.CDRsDerivedReply)
-		sesOpts.CDRsDerivedReply = append(sesOpts.CDRsDerivedReply, cdrsDerivedRpl...)
+		cdrsDerivedRpl, err = IfaceToBoolDynamicOpts(jsnCfg.CDRsDerivedReply)
+		populateDynOpts(&sesOpts.CDRsDerivedReply, cdrsDerivedRpl)
 	}
+	sesOpts.CDRsDerivedReply = append(sesOpts.CDRsDerivedReply, &DynamicBoolOpt{nil, "", SessionsCDRsDerivedReplyDftOpt, nil})
 	if jsnCfg.ResourcesAuthorize != nil {
 		var resAuthorize []*DynamicBoolOpt
-		resAuthorize, err = StringToBoolDynamicOpts(jsnCfg.ResourcesAuthorize)
-		sesOpts.ResourcesAuthorize = append(sesOpts.ResourcesAuthorize, resAuthorize...)
+		resAuthorize, err = IfaceToBoolDynamicOpts(jsnCfg.ResourcesAuthorize)
+		populateDynOpts(&sesOpts.ResourcesAuthorize, resAuthorize)
 	}
+	sesOpts.ResourcesAuthorize = append(sesOpts.ResourcesAuthorize, &DynamicBoolOpt{nil, "", SessionsResourcesAuthorizeDftOpt, nil})
 	if jsnCfg.ResourcesAllocate != nil {
 		var resAlloc []*DynamicBoolOpt
-		resAlloc, err = StringToBoolDynamicOpts(jsnCfg.ResourcesAllocate)
-		sesOpts.ResourcesAllocate = append(sesOpts.ResourcesAllocate, resAlloc...)
+		resAlloc, err = IfaceToBoolDynamicOpts(jsnCfg.ResourcesAllocate)
+		populateDynOpts(&sesOpts.ResourcesAllocate, resAlloc)
 	}
+	sesOpts.ResourcesAllocate = append(sesOpts.ResourcesAllocate, &DynamicBoolOpt{nil, "", SessionsResourcesAllocateDftOpt, nil})
 	if jsnCfg.ResourcesRelease != nil {
 		var resRelease []*DynamicBoolOpt
-		resRelease, err = StringToBoolDynamicOpts(jsnCfg.ResourcesAllocate)
-		sesOpts.ResourcesRelease = append(sesOpts.ResourcesRelease, resRelease...)
+		resRelease, err = IfaceToBoolDynamicOpts(jsnCfg.ResourcesAllocate)
+		populateDynOpts(&sesOpts.ResourcesRelease, resRelease)
 	}
+	sesOpts.ResourcesRelease = append(sesOpts.ResourcesRelease, &DynamicBoolOpt{nil, "", SessionsResourcesReleaseDftOpt, nil})
 	if jsnCfg.ResourcesDerivedReply != nil {
 		var resDerivedRpl []*DynamicBoolOpt
-		resDerivedRpl, err = StringToBoolDynamicOpts(jsnCfg.ResourcesDerivedReply)
-		sesOpts.ResourcesDerivedReply = append(sesOpts.ResourcesDerivedReply, resDerivedRpl...)
+		resDerivedRpl, err = IfaceToBoolDynamicOpts(jsnCfg.ResourcesDerivedReply)
+		populateDynOpts(&sesOpts.ResourcesDerivedReply, resDerivedRpl)
 	}
+	sesOpts.ResourcesDerivedReply = append(sesOpts.ResourcesDerivedReply, &DynamicBoolOpt{nil, "", SessionsResourcesDerivedReplyDftOpt, nil})
 	if jsnCfg.RoutesDerivedReply != nil {
 		var routesDerivedRpl []*DynamicBoolOpt
-		routesDerivedRpl, err = StringToBoolDynamicOpts(jsnCfg.RoutesDerivedReply)
-		sesOpts.RoutesDerivedReply = append(sesOpts.RoutesDerivedReply, routesDerivedRpl...)
+		routesDerivedRpl, err = IfaceToBoolDynamicOpts(jsnCfg.RoutesDerivedReply)
+		populateDynOpts(&sesOpts.RoutesDerivedReply, routesDerivedRpl)
 	}
+	sesOpts.RoutesDerivedReply = append(sesOpts.RoutesDerivedReply, &DynamicBoolOpt{nil, "", SessionsRoutesDerivedReplyDftOpt, nil})
 	if jsnCfg.StatsDerivedReply != nil {
 		var statsDerivedRpl []*DynamicBoolOpt
-		statsDerivedRpl, err = StringToBoolDynamicOpts(jsnCfg.StatsDerivedReply)
-		sesOpts.StatsDerivedReply = append(sesOpts.StatsDerivedReply, statsDerivedRpl...)
+		statsDerivedRpl, err = IfaceToBoolDynamicOpts(jsnCfg.StatsDerivedReply)
+		populateDynOpts(&sesOpts.Stats, statsDerivedRpl)
 	}
+	sesOpts.StatsDerivedReply = append(sesOpts.StatsDerivedReply, &DynamicBoolOpt{nil, "", SessionsStatsDerivedReplyDftOpt, nil})
 	if jsnCfg.ThresholdsDerivedReply != nil {
 		var threshDerivedRpl []*DynamicBoolOpt
-		threshDerivedRpl, err = StringToBoolDynamicOpts(jsnCfg.ThresholdsDerivedReply)
-		sesOpts.ThresholdsDerivedReply = append(sesOpts.ThresholdsDerivedReply, threshDerivedRpl...)
+		threshDerivedRpl, err = IfaceToBoolDynamicOpts(jsnCfg.ThresholdsDerivedReply)
+		populateDynOpts(&sesOpts.ThresholdsDerivedReply, threshDerivedRpl)
 	}
+	sesOpts.ThresholdsDerivedReply = append(sesOpts.ThresholdsDerivedReply, &DynamicBoolOpt{nil, "", SessionsThresholdsDerivedReplyDftOpt, nil})
 	if jsnCfg.MaxUsage != nil {
 		var maxUsage []*DynamicBoolOpt
-		maxUsage, err = StringToBoolDynamicOpts(jsnCfg.MaxUsage)
+		maxUsage, err = IfaceToBoolDynamicOpts(jsnCfg.MaxUsage)
 		sesOpts.StatsDerivedReply = append(sesOpts.StatsDerivedReply, maxUsage...)
-		sesOpts.MaxUsage = append(sesOpts.MaxUsage, maxUsage...)
+		populateDynOpts(&sesOpts.MaxUsage, maxUsage)
 	}
+	sesOpts.MaxUsage = append(sesOpts.MaxUsage, &DynamicBoolOpt{nil, "", SessionsMaxUsageDftOpt, nil})
 	if jsnCfg.ForceUsage != nil {
 		var forceUsage []*DynamicBoolOpt
-		forceUsage, err = StringToBoolDynamicOpts(jsnCfg.ForceUsage)
+		forceUsage, err = IfaceToBoolDynamicOpts(jsnCfg.ForceUsage)
 		sesOpts.ForceUsage = append(sesOpts.ForceUsage, forceUsage...)
 	}
 	if jsnCfg.TTL != nil {
 		var ttl []*DynamicDurationOpt
-		if ttl, err = StringToDurationDynamicOpts(jsnCfg.TTL); err != nil {
+		if ttl, err = IfaceToDurationDynamicOpts(jsnCfg.TTL); err != nil {
 			return
 		}
-		sesOpts.TTL = append(sesOpts.TTL, ttl...)
+		populateDynOpts(&sesOpts.TTL, ttl)
 	}
+	sesOpts.TTL = append(sesOpts.TTL, &DynamicDurationOpt{nil, "", SessionsTTLDftOpt, nil})
 	if jsnCfg.Chargeable != nil {
 		var chargeable []*DynamicBoolOpt
-		chargeable, err = StringToBoolDynamicOpts(jsnCfg.Chargeable)
-		sesOpts.Chargeable = append(sesOpts.Chargeable, chargeable...)
+		chargeable, err = IfaceToBoolDynamicOpts(jsnCfg.Chargeable)
+		populateDynOpts(&sesOpts.Chargeable, chargeable)
 	}
+	sesOpts.Chargeable = append(sesOpts.Chargeable, &DynamicBoolOpt{nil, "", SessionsChargeableDftOpt, nil})
 	if jsnCfg.TTLLastUsage != nil {
 		var lastUsage []*DynamicDurationPointerOpt
-		if lastUsage, err = StringToDurationPointerDynamicOpts(jsnCfg.TTLLastUsage); err != nil {
+		if lastUsage, err = IfaceToDurationPointerDynamicOpts(jsnCfg.TTLLastUsage); err != nil {
 			return
 		}
 		sesOpts.TTLLastUsage = append(sesOpts.TTLLastUsage, lastUsage...)
 	}
 	if jsnCfg.TTLLastUsed != nil {
 		var lastUsed []*DynamicDurationPointerOpt
-		if lastUsed, err = StringToDurationPointerDynamicOpts(jsnCfg.TTLLastUsed); err != nil {
+		if lastUsed, err = IfaceToDurationPointerDynamicOpts(jsnCfg.TTLLastUsed); err != nil {
 			return
 		}
 		sesOpts.TTLLastUsed = append(sesOpts.TTLLastUsed, lastUsed...)
 	}
 	if jsnCfg.DebitInterval != nil {
 		var debitInterval []*DynamicDurationOpt
-		if debitInterval, err = StringToDurationDynamicOpts(jsnCfg.DebitInterval); err != nil {
+		if debitInterval, err = IfaceToDurationDynamicOpts(jsnCfg.DebitInterval); err != nil {
 			return
 		}
-		sesOpts.DebitInterval = append(sesOpts.DebitInterval, debitInterval...)
+		populateDynOpts(&sesOpts.DebitInterval, debitInterval)
 	}
+	sesOpts.DebitInterval = append(sesOpts.DebitInterval, &DynamicDurationOpt{nil, "", SessionsDebitIntervalDftOpt, nil})
 	if jsnCfg.TTLMaxDelay != nil {
 		var maxDelay []*DynamicDurationOpt
-		if maxDelay, err = StringToDurationDynamicOpts(jsnCfg.TTLMaxDelay); err != nil {
+		if maxDelay, err = IfaceToDurationDynamicOpts(jsnCfg.TTLMaxDelay); err != nil {
 			return
 		}
-		sesOpts.TTLMaxDelay = append(sesOpts.TTLMaxDelay, maxDelay...)
+		populateDynOpts(&sesOpts.TTLMaxDelay, maxDelay)
 	}
+	sesOpts.TTLMaxDelay = append(sesOpts.TTLMaxDelay, &DynamicDurationOpt{nil, "", SessionsTTLMaxDelayDftOpt, nil})
 	if jsnCfg.TTLUsage != nil {
 		var usage []*DynamicDurationPointerOpt
-		if usage, err = StringToDurationPointerDynamicOpts(jsnCfg.TTLUsage); err != nil {
+		if usage, err = IfaceToDurationPointerDynamicOpts(jsnCfg.TTLUsage); err != nil {
 			return
 		}
 		sesOpts.TTLUsage = append(sesOpts.TTLUsage, usage...)
@@ -821,37 +848,37 @@ func diffSTIRJsonCfg(d *STIRJsonCfg, v1, v2 *STIRcfg) *STIRJsonCfg {
 }
 
 type SessionsOptsJson struct {
-	Accounts               []*DynamicStringOptJson `json:"*accounts"`
-	Attributes             []*DynamicStringOptJson `json:"*attributes"`
-	CDRs                   []*DynamicStringOptJson `json:"*cdrs"`
-	Chargers               []*DynamicStringOptJson `json:"*chargers"`
-	Resources              []*DynamicStringOptJson `json:"*resources"`
-	Routes                 []*DynamicStringOptJson `json:"*routes"`
-	Stats                  []*DynamicStringOptJson `json:"*stats"`
-	Thresholds             []*DynamicStringOptJson `json:"*thresholds"`
-	Initiate               []*DynamicStringOptJson `json:"*initiate"`
-	Update                 []*DynamicStringOptJson `json:"*update"`
-	Terminate              []*DynamicStringOptJson `json:"*terminate"`
-	Message                []*DynamicStringOptJson `json:"*message"`
-	AttributesDerivedReply []*DynamicStringOptJson `json:"*attributesDerivedReply"`
-	BlockerError           []*DynamicStringOptJson `json:"*blockerError"`
-	CDRsDerivedReply       []*DynamicStringOptJson `json:"*cdrsDerivedReply"`
-	ResourcesAuthorize     []*DynamicStringOptJson `json:"*resourcesAuthorize"`
-	ResourcesAllocate      []*DynamicStringOptJson `json:"*resourcesAllocate"`
-	ResourcesRelease       []*DynamicStringOptJson `json:"*resourcesRelease"`
-	ResourcesDerivedReply  []*DynamicStringOptJson `json:"*resourcesDerivedReply"`
-	RoutesDerivedReply     []*DynamicStringOptJson `json:"*routesDerivedReply"`
-	StatsDerivedReply      []*DynamicStringOptJson `json:"*statsDerivedReply"`
-	ThresholdsDerivedReply []*DynamicStringOptJson `json:"*thresholdsDerivedReply"`
-	MaxUsage               []*DynamicStringOptJson `json:"*maxUsage"`
-	ForceUsage             []*DynamicStringOptJson `json:"*forceUsage"`
-	TTL                    []*DynamicStringOptJson `json:"*ttl"`
-	Chargeable             []*DynamicStringOptJson `json:"*chargeable"`
-	DebitInterval          []*DynamicStringOptJson `json:"*debitInterval"`
-	TTLLastUsage           []*DynamicStringOptJson `json:"*ttlLastUsage"`
-	TTLLastUsed            []*DynamicStringOptJson `json:"*ttlLastUsed"`
-	TTLMaxDelay            []*DynamicStringOptJson `json:"*ttlMaxDelay"`
-	TTLUsage               []*DynamicStringOptJson `json:"*ttlUsage"`
+	Accounts               []*DynamicInterfaceOpt `json:"*accounts"`
+	Attributes             []*DynamicInterfaceOpt `json:"*attributes"`
+	CDRs                   []*DynamicInterfaceOpt `json:"*cdrs"`
+	Chargers               []*DynamicInterfaceOpt `json:"*chargers"`
+	Resources              []*DynamicInterfaceOpt `json:"*resources"`
+	Routes                 []*DynamicInterfaceOpt `json:"*routes"`
+	Stats                  []*DynamicInterfaceOpt `json:"*stats"`
+	Thresholds             []*DynamicInterfaceOpt `json:"*thresholds"`
+	Initiate               []*DynamicInterfaceOpt `json:"*initiate"`
+	Update                 []*DynamicInterfaceOpt `json:"*update"`
+	Terminate              []*DynamicInterfaceOpt `json:"*terminate"`
+	Message                []*DynamicInterfaceOpt `json:"*message"`
+	AttributesDerivedReply []*DynamicInterfaceOpt `json:"*attributesDerivedReply"`
+	BlockerError           []*DynamicInterfaceOpt `json:"*blockerError"`
+	CDRsDerivedReply       []*DynamicInterfaceOpt `json:"*cdrsDerivedReply"`
+	ResourcesAuthorize     []*DynamicInterfaceOpt `json:"*resourcesAuthorize"`
+	ResourcesAllocate      []*DynamicInterfaceOpt `json:"*resourcesAllocate"`
+	ResourcesRelease       []*DynamicInterfaceOpt `json:"*resourcesRelease"`
+	ResourcesDerivedReply  []*DynamicInterfaceOpt `json:"*resourcesDerivedReply"`
+	RoutesDerivedReply     []*DynamicInterfaceOpt `json:"*routesDerivedReply"`
+	StatsDerivedReply      []*DynamicInterfaceOpt `json:"*statsDerivedReply"`
+	ThresholdsDerivedReply []*DynamicInterfaceOpt `json:"*thresholdsDerivedReply"`
+	MaxUsage               []*DynamicInterfaceOpt `json:"*maxUsage"`
+	ForceUsage             []*DynamicInterfaceOpt `json:"*forceUsage"`
+	TTL                    []*DynamicInterfaceOpt `json:"*ttl"`
+	Chargeable             []*DynamicInterfaceOpt `json:"*chargeable"`
+	DebitInterval          []*DynamicInterfaceOpt `json:"*debitInterval"`
+	TTLLastUsage           []*DynamicInterfaceOpt `json:"*ttlLastUsage"`
+	TTLLastUsed            []*DynamicInterfaceOpt `json:"*ttlLastUsed"`
+	TTLMaxDelay            []*DynamicInterfaceOpt `json:"*ttlMaxDelay"`
+	TTLUsage               []*DynamicInterfaceOpt `json:"*ttlUsage"`
 }
 
 // SessionSJsonCfg config section
@@ -887,97 +914,97 @@ func diffSessionsOptsJsonCfg(d *SessionsOptsJson, v1, v2 *SessionsOpts) *Session
 		d = new(SessionsOptsJson)
 	}
 	if !DynamicBoolOptEqual(v1.Accounts, v2.Accounts) {
-		d.Accounts = BoolToStringDynamicOpts(v2.Accounts)
+		d.Accounts = BoolToIfaceDynamicOpts(v2.Accounts)
 	}
 	if !DynamicBoolOptEqual(v1.Attributes, v2.Attributes) {
-		d.Attributes = BoolToStringDynamicOpts(v2.Attributes)
+		d.Attributes = BoolToIfaceDynamicOpts(v2.Attributes)
 	}
 	if !DynamicBoolOptEqual(v1.CDRs, v2.CDRs) {
-		d.CDRs = BoolToStringDynamicOpts(v2.CDRs)
+		d.CDRs = BoolToIfaceDynamicOpts(v2.CDRs)
 	}
 	if !DynamicBoolOptEqual(v1.Chargers, v2.Chargers) {
-		d.Chargers = BoolToStringDynamicOpts(v2.Chargers)
+		d.Chargers = BoolToIfaceDynamicOpts(v2.Chargers)
 	}
 	if !DynamicBoolOptEqual(v1.Resources, v2.Resources) {
-		d.Resources = BoolToStringDynamicOpts(v2.Resources)
+		d.Resources = BoolToIfaceDynamicOpts(v2.Resources)
 	}
 	if !DynamicBoolOptEqual(v1.Routes, v2.Routes) {
-		d.Routes = BoolToStringDynamicOpts(v2.Routes)
+		d.Routes = BoolToIfaceDynamicOpts(v2.Routes)
 	}
 	if !DynamicBoolOptEqual(v1.Stats, v2.Stats) {
-		d.Stats = BoolToStringDynamicOpts(v2.Stats)
+		d.Stats = BoolToIfaceDynamicOpts(v2.Stats)
 	}
 	if !DynamicBoolOptEqual(v1.Thresholds, v2.Thresholds) {
-		d.Thresholds = BoolToStringDynamicOpts(v2.Thresholds)
+		d.Thresholds = BoolToIfaceDynamicOpts(v2.Thresholds)
 	}
 	if !DynamicBoolOptEqual(v1.Initiate, v2.Initiate) {
-		d.Initiate = BoolToStringDynamicOpts(v2.Initiate)
+		d.Initiate = BoolToIfaceDynamicOpts(v2.Initiate)
 	}
 	if !DynamicBoolOptEqual(v1.Update, v2.Update) {
-		d.Update = BoolToStringDynamicOpts(v2.Update)
+		d.Update = BoolToIfaceDynamicOpts(v2.Update)
 	}
 	if !DynamicBoolOptEqual(v1.Terminate, v2.Terminate) {
-		d.Terminate = BoolToStringDynamicOpts(v2.Terminate)
+		d.Terminate = BoolToIfaceDynamicOpts(v2.Terminate)
 	}
 	if !DynamicBoolOptEqual(v1.Message, v2.Message) {
-		d.Message = BoolToStringDynamicOpts(v2.Message)
+		d.Message = BoolToIfaceDynamicOpts(v2.Message)
 	}
 	if !DynamicBoolOptEqual(v1.AttributesDerivedReply, v2.AttributesDerivedReply) {
-		d.AttributesDerivedReply = BoolToStringDynamicOpts(v2.AttributesDerivedReply)
+		d.AttributesDerivedReply = BoolToIfaceDynamicOpts(v2.AttributesDerivedReply)
 	}
 	if !DynamicBoolOptEqual(v1.BlockerError, v2.BlockerError) {
-		d.BlockerError = BoolToStringDynamicOpts(v2.BlockerError)
+		d.BlockerError = BoolToIfaceDynamicOpts(v2.BlockerError)
 	}
 	if !DynamicBoolOptEqual(v1.CDRsDerivedReply, v2.CDRsDerivedReply) {
-		d.CDRsDerivedReply = BoolToStringDynamicOpts(v2.CDRsDerivedReply)
+		d.CDRsDerivedReply = BoolToIfaceDynamicOpts(v2.CDRsDerivedReply)
 	}
 	if !DynamicBoolOptEqual(v1.ResourcesAuthorize, v2.ResourcesAuthorize) {
-		d.ResourcesAuthorize = BoolToStringDynamicOpts(v2.ResourcesAuthorize)
+		d.ResourcesAuthorize = BoolToIfaceDynamicOpts(v2.ResourcesAuthorize)
 	}
 	if !DynamicBoolOptEqual(v1.ResourcesAllocate, v2.ResourcesAllocate) {
-		d.ResourcesAllocate = BoolToStringDynamicOpts(v2.ResourcesAllocate)
+		d.ResourcesAllocate = BoolToIfaceDynamicOpts(v2.ResourcesAllocate)
 	}
 	if !DynamicBoolOptEqual(v1.ResourcesRelease, v2.ResourcesRelease) {
-		d.ResourcesRelease = BoolToStringDynamicOpts(v2.ResourcesRelease)
+		d.ResourcesRelease = BoolToIfaceDynamicOpts(v2.ResourcesRelease)
 	}
 	if !DynamicBoolOptEqual(v1.ResourcesDerivedReply, v2.ResourcesDerivedReply) {
-		d.ResourcesDerivedReply = BoolToStringDynamicOpts(v2.ResourcesDerivedReply)
+		d.ResourcesDerivedReply = BoolToIfaceDynamicOpts(v2.ResourcesDerivedReply)
 	}
 	if !DynamicBoolOptEqual(v1.RoutesDerivedReply, v2.RoutesDerivedReply) {
-		d.RoutesDerivedReply = BoolToStringDynamicOpts(v2.RoutesDerivedReply)
+		d.RoutesDerivedReply = BoolToIfaceDynamicOpts(v2.RoutesDerivedReply)
 	}
 	if !DynamicBoolOptEqual(v1.StatsDerivedReply, v2.StatsDerivedReply) {
-		d.StatsDerivedReply = BoolToStringDynamicOpts(v2.StatsDerivedReply)
+		d.StatsDerivedReply = BoolToIfaceDynamicOpts(v2.StatsDerivedReply)
 	}
 	if !DynamicBoolOptEqual(v1.ThresholdsDerivedReply, v2.ThresholdsDerivedReply) {
-		d.ThresholdsDerivedReply = BoolToStringDynamicOpts(v2.ThresholdsDerivedReply)
+		d.ThresholdsDerivedReply = BoolToIfaceDynamicOpts(v2.ThresholdsDerivedReply)
 	}
 	if !DynamicBoolOptEqual(v1.MaxUsage, v2.MaxUsage) {
-		d.MaxUsage = BoolToStringDynamicOpts(v2.MaxUsage)
+		d.MaxUsage = BoolToIfaceDynamicOpts(v2.MaxUsage)
 	}
 	if !DynamicBoolOptEqual(v1.ForceUsage, v2.ForceUsage) {
-		d.ForceUsage = BoolToStringDynamicOpts(v2.ForceUsage)
+		d.ForceUsage = BoolToIfaceDynamicOpts(v2.ForceUsage)
 	}
 	if !DynamicDurationOptEqual(v1.TTL, v2.TTL) {
-		d.TTL = DurationToStringDynamicOpts(v2.TTL)
+		d.TTL = DurationToIfaceDynamicOpts(v2.TTL)
 	}
 	if !DynamicBoolOptEqual(v1.Chargeable, v2.Chargeable) {
-		d.Chargeable = BoolToStringDynamicOpts(v2.Chargeable)
+		d.Chargeable = BoolToIfaceDynamicOpts(v2.Chargeable)
 	}
 	if !DynamicDurationPointerOptEqual(v1.TTLLastUsage, v2.TTLLastUsage) {
-		d.TTLLastUsage = DurationPointerToStringDynamicOpts(v2.TTLLastUsage)
+		d.TTLLastUsage = DurationPointerToIfaceDynamicOpts(v2.TTLLastUsage)
 	}
 	if !DynamicDurationPointerOptEqual(v1.TTLLastUsed, v2.TTLLastUsed) {
-		d.TTLLastUsed = DurationPointerToStringDynamicOpts(v2.TTLLastUsed)
+		d.TTLLastUsed = DurationPointerToIfaceDynamicOpts(v2.TTLLastUsed)
 	}
 	if !DynamicDurationOptEqual(v1.DebitInterval, v2.DebitInterval) {
-		d.DebitInterval = DurationToStringDynamicOpts(v2.DebitInterval)
+		d.DebitInterval = DurationToIfaceDynamicOpts(v2.DebitInterval)
 	}
 	if !DynamicDurationOptEqual(v1.TTLMaxDelay, v2.TTLMaxDelay) {
-		d.TTLMaxDelay = DurationToStringDynamicOpts(v2.TTLMaxDelay)
+		d.TTLMaxDelay = DurationToIfaceDynamicOpts(v2.TTLMaxDelay)
 	}
 	if !DynamicDurationPointerOptEqual(v1.TTLUsage, v2.TTLUsage) {
-		d.TTLUsage = DurationPointerToStringDynamicOpts(v2.TTLUsage)
+		d.TTLUsage = DurationPointerToIfaceDynamicOpts(v2.TTLUsage)
 	}
 	return d
 }

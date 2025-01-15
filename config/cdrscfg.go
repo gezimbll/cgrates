@@ -83,84 +83,94 @@ func (cdrsOpts *CdrsOpts) loadFromJSONCfg(jsnCfg *CdrsOptsJson) (err error) {
 	}
 	if jsnCfg.Accounts != nil {
 		var accounts []*DynamicBoolOpt
-		accounts, err = StringToBoolDynamicOpts(jsnCfg.Accounts)
+		accounts, err = IfaceToBoolDynamicOpts(jsnCfg.Accounts)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Accounts = append(cdrsOpts.Accounts, accounts...)
+		populateDynOpts(&cdrsOpts.Accounts, accounts)
 	}
+	cdrsOpts.Accounts = append(cdrsOpts.Accounts, &DynamicBoolOpt{nil, "", CDRsAccountsDftOpt, nil})
 	if jsnCfg.Attributes != nil {
 		var attributes []*DynamicBoolOpt
-		attributes, err = StringToBoolDynamicOpts(jsnCfg.Attributes)
+		attributes, err = IfaceToBoolDynamicOpts(jsnCfg.Attributes)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Attributes = append(cdrsOpts.Attributes, attributes...)
+		populateDynOpts(&cdrsOpts.Attributes, attributes)
 	}
+	cdrsOpts.Attributes = append(cdrsOpts.Attributes, &DynamicBoolOpt{nil, "", CDRsAttributesDftOpt, nil})
 	if jsnCfg.Chargers != nil {
 		var chargers []*DynamicBoolOpt
-		chargers, err = StringToBoolDynamicOpts(jsnCfg.Attributes)
+		chargers, err = IfaceToBoolDynamicOpts(jsnCfg.Attributes)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Chargers = append(cdrsOpts.Chargers, chargers...)
+		populateDynOpts(&cdrsOpts.Chargers, chargers)
 	}
+	cdrsOpts.Chargers = append(cdrsOpts.Chargers, &DynamicBoolOpt{nil, "", CDRsChargersDftOpt, nil})
 	if jsnCfg.Export != nil {
 		var export []*DynamicBoolOpt
-		export, err = StringToBoolDynamicOpts(jsnCfg.Export)
+		export, err = IfaceToBoolDynamicOpts(jsnCfg.Export)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Export = append(cdrsOpts.Export, export...)
+		populateDynOpts(&cdrsOpts.Export, export)
 	}
+	cdrsOpts.Export = append(cdrsOpts.Export, &DynamicBoolOpt{nil, "", CDRsExportDftOpt, nil})
 	if jsnCfg.Rates != nil {
 		var rates []*DynamicBoolOpt
-		rates, err = StringToBoolDynamicOpts(jsnCfg.Rates)
+		rates, err = IfaceToBoolDynamicOpts(jsnCfg.Rates)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Rates = append(cdrsOpts.Rates, rates...)
+		populateDynOpts(&cdrsOpts.Rates, rates)
 	}
+	cdrsOpts.Rates = append(cdrsOpts.Rates, &DynamicBoolOpt{nil, "", CDRsRatesDftOpt, nil})
 	if jsnCfg.Stats != nil {
 		var stats []*DynamicBoolOpt
-		stats, err = StringToBoolDynamicOpts(jsnCfg.Stats)
+		stats, err = IfaceToBoolDynamicOpts(jsnCfg.Stats)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Stats = append(cdrsOpts.Stats, stats...)
+		populateDynOpts(&cdrsOpts.Stats, stats)
 	}
+	cdrsOpts.Stats = append(cdrsOpts.Stats, &DynamicBoolOpt{nil, "", CDRsStatsDftOpt, nil})
 	if jsnCfg.Thresholds != nil {
 		var thresholds []*DynamicBoolOpt
-		thresholds, err = StringToBoolDynamicOpts(jsnCfg.Thresholds)
+		thresholds, err = IfaceToBoolDynamicOpts(jsnCfg.Thresholds)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Thresholds = append(cdrsOpts.Thresholds, thresholds...)
+		populateDynOpts(&cdrsOpts.Thresholds, thresholds)
 	}
+	cdrsOpts.Thresholds = append(cdrsOpts.Thresholds, &DynamicBoolOpt{nil, "", CDRsThresholdsDftOpt, nil})
 	if jsnCfg.Refund != nil {
 		var refund []*DynamicBoolOpt
-		refund, err = StringToBoolDynamicOpts(jsnCfg.Refund)
+		refund, err = IfaceToBoolDynamicOpts(jsnCfg.Refund)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Refund = append(cdrsOpts.Refund, refund...)
+		populateDynOpts(&cdrsOpts.Refund, refund)
 	}
+	cdrsOpts.Refund = append(cdrsOpts.Refund, &DynamicBoolOpt{nil, "", CDRsRefundDftOpt, nil})
 	if jsnCfg.Rerate != nil {
 		var rerate []*DynamicBoolOpt
-		rerate, err = StringToBoolDynamicOpts(jsnCfg.Rerate)
+		rerate, err = IfaceToBoolDynamicOpts(jsnCfg.Rerate)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Rerate = append(cdrsOpts.Rerate, rerate...)
+		populateDynOpts(&cdrsOpts.Rerate, rerate)
 	}
+	cdrsOpts.Rerate = append(cdrsOpts.Rerate, &DynamicBoolOpt{nil, "", CDRsRerateDftOpt, nil})
 	if jsnCfg.Store != nil {
 		var store []*DynamicBoolOpt
-		store, err = StringToBoolDynamicOpts(jsnCfg.Store)
+		store, err = IfaceToBoolDynamicOpts(jsnCfg.Store)
 		if err != nil {
 			return
 		}
-		cdrsOpts.Store = append(cdrsOpts.Store, store...)
+		populateDynOpts(&cdrsOpts.Store, store)
 	}
+	cdrsOpts.Store = append(cdrsOpts.Store, &DynamicBoolOpt{nil, "", CDRsStoreDftOpt, nil})
 	return
 }
 
@@ -360,16 +370,16 @@ func (cdrscfg CdrsCfg) Clone() (cln *CdrsCfg) {
 }
 
 type CdrsOptsJson struct {
-	Accounts   []*DynamicStringOptJson `json:"*accounts"`
-	Attributes []*DynamicStringOptJson `json:"*attributes"`
-	Chargers   []*DynamicStringOptJson `json:"*chargers"`
-	Export     []*DynamicStringOptJson `json:"*ees"`
-	Rates      []*DynamicStringOptJson `json:"*rates"`
-	Stats      []*DynamicStringOptJson `json:"*stats"`
-	Thresholds []*DynamicStringOptJson `json:"*thresholds"`
-	Refund     []*DynamicStringOptJson `json:"*refund"`
-	Rerate     []*DynamicStringOptJson `json:"*rerate"`
-	Store      []*DynamicStringOptJson `json:"*store"`
+	Accounts   []*DynamicInterfaceOpt `json:"*accounts"`
+	Attributes []*DynamicInterfaceOpt `json:"*attributes"`
+	Chargers   []*DynamicInterfaceOpt `json:"*chargers"`
+	Export     []*DynamicInterfaceOpt `json:"*ees"`
+	Rates      []*DynamicInterfaceOpt `json:"*rates"`
+	Stats      []*DynamicInterfaceOpt `json:"*stats"`
+	Thresholds []*DynamicInterfaceOpt `json:"*thresholds"`
+	Refund     []*DynamicInterfaceOpt `json:"*refund"`
+	Rerate     []*DynamicInterfaceOpt `json:"*rerate"`
+	Store      []*DynamicInterfaceOpt `json:"*store"`
 }
 
 // Cdrs config section
@@ -394,34 +404,34 @@ func diffCdrsOptsJsonCfg(d *CdrsOptsJson, v1, v2 *CdrsOpts) *CdrsOptsJson {
 		d = new(CdrsOptsJson)
 	}
 	if !DynamicBoolOptEqual(v1.Accounts, v2.Accounts) {
-		d.Accounts = BoolToStringDynamicOpts(v2.Accounts)
+		d.Accounts = BoolToIfaceDynamicOpts(v2.Accounts)
 	}
 	if !DynamicBoolOptEqual(v1.Attributes, v2.Attributes) {
-		d.Attributes = BoolToStringDynamicOpts(v2.Attributes)
+		d.Attributes = BoolToIfaceDynamicOpts(v2.Attributes)
 	}
 	if !DynamicBoolOptEqual(v1.Chargers, v2.Chargers) {
-		d.Chargers = BoolToStringDynamicOpts(v2.Chargers)
+		d.Chargers = BoolToIfaceDynamicOpts(v2.Chargers)
 	}
 	if !DynamicBoolOptEqual(v1.Export, v2.Export) {
-		d.Export = BoolToStringDynamicOpts(v2.Export)
+		d.Export = BoolToIfaceDynamicOpts(v2.Export)
 	}
 	if !DynamicBoolOptEqual(v1.Rates, v2.Rates) {
-		d.Rates = BoolToStringDynamicOpts(v2.Rates)
+		d.Rates = BoolToIfaceDynamicOpts(v2.Rates)
 	}
 	if !DynamicBoolOptEqual(v1.Stats, v2.Stats) {
-		d.Stats = BoolToStringDynamicOpts(v2.Stats)
+		d.Stats = BoolToIfaceDynamicOpts(v2.Stats)
 	}
 	if !DynamicBoolOptEqual(v1.Thresholds, v2.Thresholds) {
-		d.Thresholds = BoolToStringDynamicOpts(v2.Thresholds)
+		d.Thresholds = BoolToIfaceDynamicOpts(v2.Thresholds)
 	}
 	if !DynamicBoolOptEqual(v1.Refund, v2.Refund) {
-		d.Refund = BoolToStringDynamicOpts(v2.Refund)
+		d.Refund = BoolToIfaceDynamicOpts(v2.Refund)
 	}
 	if !DynamicBoolOptEqual(v1.Rerate, v2.Rerate) {
-		d.Rerate = BoolToStringDynamicOpts(v2.Rerate)
+		d.Rerate = BoolToIfaceDynamicOpts(v2.Rerate)
 	}
 	if !DynamicBoolOptEqual(v1.Store, v2.Store) {
-		d.Store = BoolToStringDynamicOpts(v2.Store)
+		d.Store = BoolToIfaceDynamicOpts(v2.Store)
 	}
 	return d
 }

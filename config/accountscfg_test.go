@@ -101,12 +101,12 @@ func TestAccountSCfgLoadFromJSONCfgOptsErr(t *testing.T) {
 		ProfileIDs: []*DynamicStringSliceOpt{
 			{},
 		},
-		Usage: []*DynamicStringOptJson{
+		Usage: []*DynamicInterfaceOpt{
 			{
 				Value: "error",
 			},
 		},
-		ProfileIgnoreFilters: []*DynamicStringOptJson{
+		ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 			{
 				Value: "false",
 			},
@@ -308,17 +308,17 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 					Values: []string{"ACC2"},
 				},
 			},
-			Usage: []*DynamicStringOptJson{
+			Usage: []*DynamicInterfaceOpt{
 				{
 					FilterIDs: []string{"fld1", "fld2"},
 					Tenant:    "cgrates.org",
 					Value:     "2",
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicStringOptJson{
+			ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "false",
+					Value:  false,
 				},
 			},
 		},

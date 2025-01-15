@@ -73,15 +73,16 @@ func (sqOpts *StatsOpts) loadFromJSONCfg(jsnCfg *StatsOptsJson) (err error) {
 	}
 	if jsnCfg.ProfileIgnoreFilters != nil {
 		var prfIgnFltrs []*DynamicBoolOpt
-		prfIgnFltrs, err = StringToBoolDynamicOpts(jsnCfg.ProfileIgnoreFilters)
+		prfIgnFltrs, err = IfaceToBoolDynamicOpts(jsnCfg.ProfileIgnoreFilters)
 		if err != nil {
 			return
 		}
-		sqOpts.ProfileIgnoreFilters = append(sqOpts.ProfileIgnoreFilters, prfIgnFltrs...)
+		populateDynOpts(&sqOpts.ProfileIgnoreFilters, prfIgnFltrs)
 	}
+	sqOpts.ProfileIgnoreFilters = append(sqOpts.ProfileIgnoreFilters, &DynamicBoolOpt{nil, "", StatsProfileIgnoreFilters, nil})
 	if jsnCfg.RoundingDecimals != nil {
 		var roundDec []*DynamicIntOpt
-		roundDec, err = StringToIntDynamicOpts(jsnCfg.RoundingDecimals)
+		roundDec, err = IfaceToIntDynamicOpts(jsnCfg.RoundingDecimals)
 		sqOpts.RoundingDecimals = append(sqOpts.RoundingDecimals, roundDec...)
 	}
 	if jsnCfg.PrometheusStatIDs != nil {
@@ -252,8 +253,8 @@ func (st StatSCfg) Clone() (cln *StatSCfg) {
 
 type StatsOptsJson struct {
 	ProfileIDs           []*DynamicStringSliceOpt `json:"*profileIDs"`
-	ProfileIgnoreFilters []*DynamicStringOptJson  `json:"*profileIgnoreFilters"`
-	RoundingDecimals     []*DynamicStringOptJson  `json:"*roundingDecimals"`
+	ProfileIgnoreFilters []*DynamicInterfaceOpt   `json:"*profileIgnoreFilters"`
+	RoundingDecimals     []*DynamicInterfaceOpt   `json:"*roundingDecimals"`
 	PrometheusStatIDs    []*DynamicStringSliceOpt `json:"*prometheusStatIDs"`
 }
 
@@ -283,10 +284,10 @@ func diffStatsOptsJsonCfg(d *StatsOptsJson, v1, v2 *StatsOpts) *StatsOptsJson {
 		d.ProfileIDs = v2.ProfileIDs
 	}
 	if !DynamicBoolOptEqual(v1.ProfileIgnoreFilters, v2.ProfileIgnoreFilters) {
-		d.ProfileIgnoreFilters = BoolToStringDynamicOpts(v2.ProfileIgnoreFilters)
+		d.ProfileIgnoreFilters = BoolToIfaceDynamicOpts(v2.ProfileIgnoreFilters)
 	}
 	if !DynamicIntOptEqual(v1.RoundingDecimals, v2.RoundingDecimals) {
-		d.RoundingDecimals = IntToStringDynamicOpts(v2.RoundingDecimals)
+		d.RoundingDecimals = IntToIfaceDynamicOpts(v2.RoundingDecimals)
 	}
 	if !DynamicStringSliceOptEqual(v1.PrometheusStatIDs, v2.PrometheusStatIDs) {
 		d.PrometheusStatIDs = v2.PrometheusStatIDs

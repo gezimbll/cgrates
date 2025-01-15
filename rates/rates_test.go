@@ -1058,7 +1058,7 @@ func TestCDRProcessRatesCostForEvent(t *testing.T) {
 					{
 						"Tenant": "cgrates.org",
 						"FilterIDs": [],
-						"Value": "true",
+						"Value": true,
 					},			
 				],					
 			},	

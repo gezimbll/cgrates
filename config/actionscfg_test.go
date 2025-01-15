@@ -296,10 +296,10 @@ func TestDiffActionSJsonCfg(t *testing.T) {
 					Values: []string{"prf2"},
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicBoolOpt{
+			ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.nett",
-					value:  true,
+					Value:  true,
 				},
 			},
 		},
@@ -384,7 +384,7 @@ func TestDiffActionsOptsJsonCfg(t *testing.T) {
 	}
 	exp := &ActionsOptsJson{
 
-		PosterAttempts: []*DynamicIntOpt{{
+		PosterAttempts: []*DynamicInterfaceOpt{{
 			FilterIDs: []string{"fltr1"},
 		},
 		},

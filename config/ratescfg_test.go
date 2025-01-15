@@ -320,28 +320,28 @@ func TestDiffRateSJsonCfg(t *testing.T) {
 					Values: []string{"RP2"},
 				},
 			},
-			StartTime: []*DynamicStringOptJson{
+			StartTime: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.org",
 					Value:  utils.MetaNow,
 				},
 			},
-			Usage: []*DynamicStringOptJson{
+			Usage: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.org",
 					Value:  "3",
 				},
 			},
-			IntervalStart: []*DynamicStringOptJson{
+			IntervalStart: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.org",
 					Value:  "3",
 				},
 			},
-			ProfileIgnoreFilters: []*DynamicStringOptJson{
+			ProfileIgnoreFilters: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.org",
-					Value:  "true",
+					Value:  true,
 				},
 			},
 		},
@@ -450,7 +450,7 @@ func TestRatesOptsLoadFromJSON(t *testing.T) {
 				Values: []string{"RP2"},
 			},
 		},
-		Usage: []*DynamicStringOptJson{
+		Usage: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
 				Value:  "error",
@@ -463,7 +463,7 @@ func TestRatesOptsLoadFromJSON(t *testing.T) {
 	}
 
 	jsnCfg = &RatesOptsJson{
-		IntervalStart: []*DynamicStringOptJson{
+		IntervalStart: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
 				Value:  "error",

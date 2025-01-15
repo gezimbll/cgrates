@@ -124,7 +124,7 @@ func TestConfigSetGetReloadConfig(t *testing.T) {
 				"exists_indexed_fields":    []string{},
 				"notexists_indexed_fields": []string{},
 				utils.OptsCfg: map[string]any{
-					utils.MetaProcessRunsCfg: []*config.DynamicStringOptJson{
+					utils.MetaProcessRunsCfg: []*config.DynamicInterfaceOpt{
 						{Value: "2"},
 					},
 				},

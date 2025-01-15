@@ -609,8 +609,8 @@ func TestDynamicInterfaceOptEqual(t *testing.T) {
 	}
 }
 
-func TestStringToDecimalBigDynamicOpts(t *testing.T) {
-	dsOpt := []*DynamicStringOptJson{
+func TestIfaceToDecimalBigDynamicOpts(t *testing.T) {
+	dsOpt := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"fld1", "fld2"},
 			Tenant:    "cgrates.org",
@@ -622,7 +622,7 @@ func TestStringToDecimalBigDynamicOpts(t *testing.T) {
 		NewDynamicDecimalOpt([]string{"fld1", "fld2"}, "cgrates.org", decimal.WithContext(utils.DecimalContext).SetUint64(200), nil),
 	}
 
-	rcv, err := StringToDecimalBigDynamicOpts(dsOpt)
+	rcv, err := IfaceToDecimalBigDynamicOpts(dsOpt)
 	if err != nil {
 		t.Error(err)
 	}
@@ -633,7 +633,7 @@ func TestStringToDecimalBigDynamicOpts(t *testing.T) {
 	//Check conversion error
 	errExpect := "can't convert <this_is_definitely_a_decimal_big> to decimal"
 	dsOpt[0].Value = "this_is_definitely_a_decimal_big"
-	if _, err := StringToDecimalBigDynamicOpts(dsOpt); err == nil || err.Error() != errExpect {
+	if _, err := IfaceToDecimalBigDynamicOpts(dsOpt); err == nil || err.Error() != errExpect {
 		t.Error(err)
 	}
 }
@@ -744,7 +744,7 @@ func TestDecimalBigToStringDynamicOpts(t *testing.T) {
 		NewDynamicDecimalOpt([]string{"test_filter", "test_filter2"}, "cgrates.org", decimal.WithContext(utils.DecimalContext).SetUint64(300), nil),
 	}
 
-	exp := []*DynamicStringOptJson{
+	exp := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"test_filter", "test_filter2"},
 			Tenant:    "cgrates.org",
@@ -752,14 +752,14 @@ func TestDecimalBigToStringDynamicOpts(t *testing.T) {
 		},
 	}
 
-	rcv := DecimalToStringDynamicOpts(dbOpt)
+	rcv := DecimalToIfaceDynamicOpts(dbOpt)
 	if !reflect.DeepEqual(rcv, exp) {
 		t.Errorf("Expected %v \n but received \n %v", utils.ToJSON(exp), utils.ToJSON(rcv))
 	}
 }
 
-func TestStringToDurationDynamicOpts(t *testing.T) {
-	sOpts := []*DynamicStringOptJson{
+func TestIfaceToDurationDynamicOpts(t *testing.T) {
+	sOpts := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"test_filter", "test_filter2"},
 			Tenant:    "cgrates.org",
@@ -775,7 +775,7 @@ func TestStringToDurationDynamicOpts(t *testing.T) {
 		},
 	}
 
-	rcv, err := StringToDurationDynamicOpts(sOpts)
+	rcv, err := IfaceToDurationDynamicOpts(sOpts)
 	if err != nil {
 		t.Error(err)
 	}
@@ -786,17 +786,17 @@ func TestStringToDurationDynamicOpts(t *testing.T) {
 	//Check conversion error
 	errExpect := `time: unknown unit "c" in duration "50c"`
 	sOpts[0].Value = "50c"
-	if _, err := StringToDurationDynamicOpts(sOpts); err == nil || err.Error() != errExpect {
+	if _, err := IfaceToDurationDynamicOpts(sOpts); err == nil || err.Error() != errExpect {
 		t.Error(err)
 	}
 }
 
-func TestDurationToStringDynamicOpts(t *testing.T) {
-	exp := []*DynamicStringOptJson{
+func TestDurationToIfaceDynamicOpts(t *testing.T) {
+	exp := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"test_filter", "test_filter2"},
 			Tenant:    "cgrates.org",
-			Value:     "50s",
+			Value:     50 * time.Second,
 		},
 	}
 
@@ -808,14 +808,14 @@ func TestDurationToStringDynamicOpts(t *testing.T) {
 		},
 	}
 
-	rcv := DurationToStringDynamicOpts(sOpts)
+	rcv := DurationToIfaceDynamicOpts(sOpts)
 	if !reflect.DeepEqual(rcv, exp) {
 		t.Errorf("Expected %v \n but received \n %v", exp, rcv)
 	}
 }
 
 func TestIntToIntPointerDynamicOpts(t *testing.T) {
-	iOpts := []*DynamicStringOptJson{
+	iOpts := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"test_filter", "test_filter2"},
 			Tenant:    "cgrates.org",
@@ -829,7 +829,7 @@ func TestIntToIntPointerDynamicOpts(t *testing.T) {
 			value:     utils.IntPointer(50),
 		},
 	}
-	rcv, err := StringToIntPointerDynamicOpts(iOpts)
+	rcv, err := IfaceToIntPointerDynamicOpts(iOpts)
 	if err != nil {
 		t.Error(err)
 	}
@@ -839,11 +839,11 @@ func TestIntToIntPointerDynamicOpts(t *testing.T) {
 }
 
 func TestIntPointerToIntDynamicOpts(t *testing.T) {
-	exp := []*DynamicStringOptJson{
+	exp := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"test_filter", "test_filter2"},
 			Tenant:    "cgrates.org",
-			Value:     "50",
+			Value:     utils.IntPointer(50),
 		},
 	}
 
@@ -855,14 +855,14 @@ func TestIntPointerToIntDynamicOpts(t *testing.T) {
 		},
 	}
 
-	rcv := IntPointerToStringDynamicOpts(iOpts)
+	rcv := IntPointerToIfaceDynamicOpts(iOpts)
 	if !reflect.DeepEqual(rcv, exp) {
 		t.Errorf("Expected %v \n but received \n %v", exp, rcv)
 	}
 }
 
 func TestStringToDurationPointerDynamicOpts(t *testing.T) {
-	sOpts := []*DynamicStringOptJson{
+	sOpts := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"test_filter", "test_filter2"},
 			Tenant:    "cgrates.org",
@@ -878,7 +878,7 @@ func TestStringToDurationPointerDynamicOpts(t *testing.T) {
 		},
 	}
 
-	rcv, err := StringToDurationPointerDynamicOpts(sOpts)
+	rcv, err := IfaceToDurationPointerDynamicOpts(sOpts)
 	if err != nil {
 		t.Error(err)
 	}
@@ -889,16 +889,16 @@ func TestStringToDurationPointerDynamicOpts(t *testing.T) {
 
 	errExpect := `time: unknown unit "c" in duration "50c"`
 	sOpts[0].Value = "50c"
-	if _, err := StringToDurationPointerDynamicOpts(sOpts); err == nil || err.Error() != errExpect {
+	if _, err := IfaceToDurationPointerDynamicOpts(sOpts); err == nil || err.Error() != errExpect {
 		t.Error(err)
 	}
 }
-func TestDurationPointerToStringDynamicOpts(t *testing.T) {
-	exp := []*DynamicStringOptJson{
+func TestDurationPointerToIfaceDynamicOpts(t *testing.T) {
+	exp := []*DynamicInterfaceOpt{
 		{
 			FilterIDs: []string{"test_filter", "test_filter2"},
 			Tenant:    "cgrates.org",
-			Value:     "50s",
+			Value:     utils.DurationPointer(50 * time.Second),
 		},
 	}
 
@@ -910,7 +910,7 @@ func TestDurationPointerToStringDynamicOpts(t *testing.T) {
 		},
 	}
 
-	rcv := DurationPointerToStringDynamicOpts(dpOpts)
+	rcv := DurationPointerToIfaceDynamicOpts(dpOpts)
 	if !reflect.DeepEqual(rcv, exp) {
 		t.Errorf("Expected %v \n but received \n %v", exp, rcv)
 	}

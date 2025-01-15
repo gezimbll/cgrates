@@ -452,46 +452,46 @@ func TestDiffCdrsJsonCfg(t *testing.T) {
 		Rates_conns:          &[]string{"*birpc"},
 		Accounts_conns:       &[]string{"*birpc"},
 		Opts: &CdrsOptsJson{
-			Accounts: []*DynamicStringOptJson{
+			Accounts: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
-			Attributes: []*DynamicStringOptJson{
+			Attributes: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
-			Chargers: []*DynamicStringOptJson{
+			Chargers: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
-			Export: []*DynamicStringOptJson{
+			Export: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
-			Rates: []*DynamicStringOptJson{
+			Rates: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
-			Stats: []*DynamicStringOptJson{
+			Stats: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
-			Thresholds: []*DynamicStringOptJson{
+			Thresholds: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.net",
-					Value:  "true",
+					Value:  true,
 				},
 			},
 		},

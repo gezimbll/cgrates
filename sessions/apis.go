@@ -364,7 +364,7 @@ func (sS *SessionS) BiRPCv1InitiateSession(ctx *context.Context,
 		}
 		var dbtItvl time.Duration
 		if dbtItvl, err = engine.GetDurationOpts(ctx, args.Tenant, args, sS.fltrS, sS.cfg.SessionSCfg().Opts.DebitInterval,
-			config.SessionsDebitIntervalDftOpt, utils.OptsSesDebitInterval); err != nil {
+			utils.OptsSesDebitInterval); err != nil {
 			return
 		}
 		if dbtItvl > 0 { //active debit

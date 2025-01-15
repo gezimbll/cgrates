@@ -139,7 +139,7 @@ func (aS *AccountS) accountsDebit(ctx *context.Context, acnts []*utils.AccountWi
 	cgrEv *utils.CGREvent, concretes, store bool) (ec *utils.EventCharges, err error) {
 	var usage *decimal.Big // total event usage
 	if usage, err = engine.GetDecimalBigOpts(ctx, cgrEv.Tenant, cgrEv, aS.fltrS, aS.cfg.AccountSCfg().Opts.Usage,
-		config.AccountsUsageDftOpt, utils.OptsAccountsUsage, utils.MetaUsage); err != nil {
+		utils.OptsAccountsUsage, utils.MetaUsage); err != nil {
 		return
 	}
 	dbted := decimal.New(0, 0) // amount debited so far

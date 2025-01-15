@@ -76,7 +76,7 @@ func TestRouteSCfgloadFromJsonCfg(t *testing.T) {
 		t.Errorf("Expected %+v \n, received %+v", utils.ToJSON(expected), utils.ToJSON(jsonCfg.routeSCfg))
 	}
 
-	cfgJSON.Opts.Usage = []*DynamicStringOptJson{
+	cfgJSON.Opts.Usage = []*DynamicInterfaceOpt{
 		{
 			Tenant: "cgrates.org",
 			Value:  "error",
@@ -359,14 +359,14 @@ func TestDiffRouteSJsonCfg(t *testing.T) {
 		Accounts_conns:        &[]string{"*birpc"},
 		Default_ratio:         utils.IntPointer(3),
 		Opts: &RoutesOptsJson{
-			Context: []*DynamicStringOptJson{
+			Context: []*DynamicInterfaceOpt{
 				{
 					Value: utils.MetaSessionS,
 				},
 			},
-			IgnoreErrors: []*DynamicStringOptJson{
+			IgnoreErrors: []*DynamicInterfaceOpt{
 				{
-					Value: "false",
+					Value: false,
 				},
 			},
 			MaxCost: []*DynamicInterfaceOpt{
@@ -374,32 +374,32 @@ func TestDiffRouteSJsonCfg(t *testing.T) {
 					Value: 6,
 				},
 			},
-			Limit: []*DynamicStringOptJson{
+			Limit: []*DynamicInterfaceOpt{
 				{
-					Value: "3",
+					Value: utils.IntPointer(3),
 				},
 			},
-			Offset: []*DynamicStringOptJson{
+			Offset: []*DynamicInterfaceOpt{
 				{
-					Value: "3",
+					Value: utils.IntPointer(3),
 				},
 			},
-			ProfileCount: []*DynamicStringOptJson{
+			ProfileCount: []*DynamicInterfaceOpt{
 				{
-					Value: "2",
+					Value: utils.IntPointer(2),
 				},
 			},
-			Usage: []*DynamicStringOptJson{
+			Usage: []*DynamicInterfaceOpt{
 				{
 					Tenant: "cgrates.org",
 					Value:  "2",
 				},
 			},
-			MaxItems: []*DynamicStringOptJson{
+			MaxItems: []*DynamicInterfaceOpt{
 				{
 					FilterIDs: []string{"id2"},
 					Tenant:    "cgrates.org",
-					Value:     "2",
+					Value:     utils.IntPointer(2),
 				},
 			},
 		},

@@ -346,7 +346,7 @@ const CGRATES_CFG_JSON = `
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": "false"
+		// 		"Value": false
 		// 	}
 		// ],
 		// "*chargers": [

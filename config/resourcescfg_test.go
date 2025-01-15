@@ -87,19 +87,19 @@ func TestResourceSLoadFromJSONOpts(t *testing.T) {
 	}
 
 	resOptsJson := &ResourcesOptsJson{
-		UsageID: []*DynamicStringOptJson{
+		UsageID: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
 				Value:  "usg2",
 			},
 		},
-		UsageTTL: []*DynamicStringOptJson{
+		UsageTTL: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
 				Value:  "error",
 			},
 		},
-		Units: []*DynamicStringOptJson{
+		Units: []*DynamicInterfaceOpt{
 			{
 				Tenant: "cgrates.org",
 				Value:  "2.5",
@@ -292,19 +292,19 @@ func TestDiffResourceSJsonCfg(t *testing.T) {
 		Suffix_indexed_fields: &[]string{"*req.index33"},
 		Nested_fields:         utils.BoolPointer(true),
 		Opts: &ResourcesOptsJson{
-			UsageID: []*DynamicStringOptJson{
+			UsageID: []*DynamicInterfaceOpt{
 				{
 					Value: "usg2",
 				},
 			},
-			UsageTTL: []*DynamicStringOptJson{
+			UsageTTL: []*DynamicInterfaceOpt{
 				{
-					Value: "1m0s",
+					Value: time.Minute,
 				},
 			},
-			Units: []*DynamicStringOptJson{
+			Units: []*DynamicInterfaceOpt{
 				{
-					Value: "2",
+					Value: float64(2),
 				},
 			},
 		},

@@ -3,7 +3,7 @@ name: integration
 on:
   push:
     branches:
-      - 1.0
+      - newbr
     paths-ignore:
       - 'docs/**'
       - README.md

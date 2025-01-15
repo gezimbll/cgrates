@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 package config
 
 import (
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -26,12 +27,6 @@ import (
 	"github.com/cgrates/cgrates/utils"
 	"github.com/ericlagergren/decimal"
 )
-
-type DynamicStringOptJson struct {
-	FilterIDs []string `json:",omitempty"`
-	Tenant    string
-	Value     string
-}
 
 type DynamicStringSliceOpt struct {
 	FilterIDs []string
@@ -209,7 +204,7 @@ func CloneDynamicIntPointerOpt(in []*DynamicIntPointerOpt) (cl []*DynamicIntPoin
 		cl[i] = &DynamicIntPointerOpt{
 			Tenant:    val.Tenant,
 			FilterIDs: slices.Clone(val.FilterIDs),
-			value:     utils.IntPointer(*val.value),
+			value:     val.value,
 			rsVal:     val.rsVal,
 		}
 	}
@@ -431,29 +426,30 @@ func DynamicDurationPointerOptEqual(v1, v2 []*DynamicDurationPointerOpt) bool {
 	return true
 }
 
-func JsonStringToDynamicStringOpts(strJsOpts []*DynamicStringOptJson) (strOpts []*DynamicStringOpt, err error) {
+func InterfaceToDynamicStringOpts(strJsOpts []*DynamicInterfaceOpt) (strOpts []*DynamicStringOpt, err error) {
 	strOpts = make([]*DynamicStringOpt, len(strJsOpts))
 	for indx, opt := range strJsOpts {
 		strOpts[indx] = &DynamicStringOpt{
 			FilterIDs: opt.FilterIDs,
 			Tenant:    opt.Tenant,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			strOpts[indx].rsVal, err = NewRSRParsers(CgrConfig().GeneralCfg().RSRSep, opt.Value)
+		strval := utils.IfaceAsString(opt.Value)
+		if strings.HasPrefix(strval, utils.DynamicDataPrefix) {
+			strOpts[indx].rsVal, err = NewRSRParsers(CgrConfig().GeneralCfg().RSRSep, strval)
 			if err != nil {
 				return
 			}
 			continue
 		}
-		strOpts[indx].value = opt.Value
+		strOpts[indx].value = strval
 	}
 	return
 }
 
-func DynamicStringToJsonStringOpts(strOpts []*DynamicStringOpt) (strJsOpts []*DynamicStringOptJson) {
-	strJsOpts = make([]*DynamicStringOptJson, len(strOpts))
+func DynamicStringToInterfaceOpts(strOpts []*DynamicStringOpt) (strJsOpts []*DynamicInterfaceOpt) {
+	strJsOpts = make([]*DynamicInterfaceOpt, len(strOpts))
 	for index, opt := range strOpts {
-		strJsOpts[index] = &DynamicStringOptJson{
+		strJsOpts[index] = &DynamicInterfaceOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
@@ -466,22 +462,23 @@ func DynamicStringToJsonStringOpts(strOpts []*DynamicStringOpt) (strJsOpts []*Dy
 	return
 }
 
-func StringToFloat64DynamicOpts(strJsOpts []*DynamicStringOptJson) (flOpts []*DynamicFloat64Opt, err error) {
+func InterfaceToFloat64DynamicOpts(strJsOpts []*DynamicInterfaceOpt) (flOpts []*DynamicFloat64Opt, err error) {
 	flOpts = make([]*DynamicFloat64Opt, len(strJsOpts))
 	for index, opt := range strJsOpts {
 		flOpts[index] = &DynamicFloat64Opt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			flOpts[index].rsVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+		strVal := utils.IfaceAsString(opt.Value)
+		if strings.HasPrefix(strVal, utils.DynamicDataPrefix) {
+			flOpts[index].rsVal, err = NewRSRParsers(strVal, CgrConfig().GeneralCfg().RSRSep)
 			if err != nil {
 				return nil, err
 			}
 			continue
 		}
 		var flVal float64
-		flVal, err = strconv.ParseFloat(strJsOpts[index].Value, 64)
+		flVal, err = strconv.ParseFloat(strVal, 64)
 		if err != nil {
 			return
 		}
@@ -490,34 +487,35 @@ func StringToFloat64DynamicOpts(strJsOpts []*DynamicStringOptJson) (flOpts []*Dy
 	return
 }
 
-func Float64ToStringDynamicOpts(flOpts []*DynamicFloat64Opt) (strJsOpts []*DynamicStringOptJson) {
-	strJsOpts = make([]*DynamicStringOptJson, len(flOpts))
+func Float64ToInterfaceDynamicOpts(flOpts []*DynamicFloat64Opt) (strJsOpts []*DynamicInterfaceOpt) {
+	strJsOpts = make([]*DynamicInterfaceOpt, len(flOpts))
 	for index, opt := range flOpts {
-		strJsOpts[index] = &DynamicStringOptJson{
+		strJsOpts[index] = &DynamicInterfaceOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
-			Value:     utils.IfaceAsString(opt.value),
+			Value:     opt.value,
 		}
 	}
 	return
 }
 
-func StringToIntDynamicOpts(strJsOpts []*DynamicStringOptJson) (intPtOpts []*DynamicIntOpt, err error) {
+func IfaceToIntDynamicOpts(strJsOpts []*DynamicInterfaceOpt) (intPtOpts []*DynamicIntOpt, err error) {
 	intPtOpts = make([]*DynamicIntOpt, len(strJsOpts))
 	for index, opt := range strJsOpts {
 		intPtOpts[index] = &DynamicIntOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			intPtOpts[index].rsVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+		strval := utils.IfaceAsString(opt.Value)
+		if strings.HasPrefix(strval, utils.DynamicDataPrefix) {
+			intPtOpts[index].rsVal, err = NewRSRParsers(strval, CgrConfig().GeneralCfg().RSRSep)
 			if err != nil {
 				return nil, err
 			}
 			continue
 		}
 		var intVal int
-		intVal, err = strconv.Atoi(opt.Value)
+		intVal, err = strconv.Atoi(strval)
 		if err != nil {
 			return
 		}
@@ -526,43 +524,44 @@ func StringToIntDynamicOpts(strJsOpts []*DynamicStringOptJson) (intPtOpts []*Dyn
 	return
 }
 
-func IntToStringDynamicOpts(intPtOpts []*DynamicIntOpt) (strJsOpts []*DynamicStringOptJson) {
-	strJsOpts = make([]*DynamicStringOptJson, len(intPtOpts))
+func IntToIfaceDynamicOpts(intPtOpts []*DynamicIntOpt) (strJsOpts []*DynamicInterfaceOpt) {
+	strJsOpts = make([]*DynamicInterfaceOpt, len(intPtOpts))
 	for index, opt := range intPtOpts {
-		strJsOpts[index] = &DynamicStringOptJson{
+		strJsOpts[index] = &DynamicInterfaceOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
-			Value:     utils.IfaceAsString(opt.value),
+			Value:     opt.value,
 		}
 	}
 	return
 }
 
-func StringToDecimalBigDynamicOpts(strOpts []*DynamicStringOptJson) (decOpts []*DynamicDecimalOpt, err error) {
+func IfaceToDecimalBigDynamicOpts(strOpts []*DynamicInterfaceOpt) (decOpts []*DynamicDecimalOpt, err error) {
 	decOpts = make([]*DynamicDecimalOpt, len(strOpts))
 	for index, opt := range strOpts {
 		decOpts[index] = &DynamicDecimalOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			decOpts[index].rsVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+		strVal := utils.IfaceAsString(opt.Value)
+		if strings.HasPrefix(strVal, utils.DynamicDataPrefix) {
+			decOpts[index].rsVal, err = NewRSRParsers(strVal, CgrConfig().GeneralCfg().RSRSep)
 			if err != nil {
 				return nil, err
 			}
 			continue
 		}
-		if decOpts[index].value, err = utils.StringAsBig(opt.Value); err != nil {
+		if decOpts[index].value, err = utils.StringAsBig(strVal); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func DecimalToStringDynamicOpts(decOpts []*DynamicDecimalOpt) (strOpts []*DynamicStringOptJson) {
-	strOpts = make([]*DynamicStringOptJson, len(decOpts))
+func DecimalToIfaceDynamicOpts(decOpts []*DynamicDecimalOpt) (strOpts []*DynamicInterfaceOpt) {
+	strOpts = make([]*DynamicInterfaceOpt, len(decOpts))
 	for index, opt := range decOpts {
-		strOpts[index] = &DynamicStringOptJson{
+		strOpts[index] = &DynamicInterfaceOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
@@ -575,31 +574,32 @@ func DecimalToStringDynamicOpts(decOpts []*DynamicDecimalOpt) (strOpts []*Dynami
 	return
 }
 
-func StringToDurationDynamicOpts(strOpts []*DynamicStringOptJson) (durOpts []*DynamicDurationOpt, err error) {
-	durOpts = make([]*DynamicDurationOpt, len(strOpts))
-	for index, opt := range strOpts {
+func IfaceToDurationDynamicOpts(ifOpts []*DynamicInterfaceOpt) (durOpts []*DynamicDurationOpt, err error) {
+	durOpts = make([]*DynamicDurationOpt, len(ifOpts))
+	for index, opt := range ifOpts {
 		durOpts[index] = &DynamicDurationOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			durOpts[index].rsVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+		strVal := utils.IfaceAsString(opt.Value)
+		if strings.HasPrefix(strVal, utils.DynamicDataPrefix) {
+			durOpts[index].rsVal, err = NewRSRParsers(strVal, CgrConfig().GeneralCfg().RSRSep)
 			if err != nil {
 				return nil, err
 			}
 			continue
 		}
-		if durOpts[index].value, err = utils.ParseDurationWithNanosecs(opt.Value); err != nil {
+		if durOpts[index].value, err = utils.ParseDurationWithNanosecs(strVal); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func DurationToStringDynamicOpts(durOpts []*DynamicDurationOpt) (strOpts []*DynamicStringOptJson) {
-	strOpts = make([]*DynamicStringOptJson, len(durOpts))
+func DurationToIfaceDynamicOpts(durOpts []*DynamicDurationOpt) (strOpts []*DynamicInterfaceOpt) {
+	strOpts = make([]*DynamicInterfaceOpt, len(durOpts))
 	for index, opt := range durOpts {
-		strOpts[index] = &DynamicStringOptJson{
+		strOpts[index] = &DynamicInterfaceOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
@@ -607,27 +607,28 @@ func DurationToStringDynamicOpts(durOpts []*DynamicDurationOpt) (strOpts []*Dyna
 			strOpts[index].Value = opt.rsVal.GetRule(CgrConfig().GeneralCfg().RSRSep)
 			continue
 		}
-		strOpts[index].Value = opt.value.String()
+		strOpts[index].Value = opt.value
 	}
 	return
 }
 
-func StringToIntPointerDynamicOpts(strJsOpts []*DynamicStringOptJson) (intPtOpts []*DynamicIntPointerOpt, err error) {
-	intPtOpts = make([]*DynamicIntPointerOpt, len(strJsOpts))
-	for index, opt := range strJsOpts {
+func IfaceToIntPointerDynamicOpts(ifOpts []*DynamicInterfaceOpt) (intPtOpts []*DynamicIntPointerOpt, err error) {
+	intPtOpts = make([]*DynamicIntPointerOpt, len(ifOpts))
+	for index, opt := range ifOpts {
 		intPtOpts[index] = &DynamicIntPointerOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			intPtOpts[index].rsVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+		strval := utils.IfaceAsString(opt.Value)
+		if strings.HasPrefix(strval, utils.DynamicDataPrefix) {
+			intPtOpts[index].rsVal, err = NewRSRParsers(strval, CgrConfig().GeneralCfg().RSRSep)
 			if err != nil {
 				return nil, err
 			}
 			continue
 		}
 		var intVal int
-		intVal, err = strconv.Atoi(opt.Value)
+		intVal, err = strconv.Atoi(strval)
 		if err != nil {
 			return
 		}
@@ -636,34 +637,35 @@ func StringToIntPointerDynamicOpts(strJsOpts []*DynamicStringOptJson) (intPtOpts
 	return
 }
 
-func IntPointerToStringDynamicOpts(intPtOpts []*DynamicIntPointerOpt) (strJsOpts []*DynamicStringOptJson) {
-	strJsOpts = make([]*DynamicStringOptJson, len(intPtOpts))
+func IntPointerToIfaceDynamicOpts(intPtOpts []*DynamicIntPointerOpt) (strJsOpts []*DynamicInterfaceOpt) {
+	strJsOpts = make([]*DynamicInterfaceOpt, len(intPtOpts))
 	for index, opt := range intPtOpts {
-		strJsOpts[index] = &DynamicStringOptJson{
+		strJsOpts[index] = &DynamicInterfaceOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
-			Value:     utils.IfaceAsString(opt.value),
+			Value:     opt.value,
 		}
 	}
 	return
 }
 
-func StringToDurationPointerDynamicOpts(strOpts []*DynamicStringOptJson) (durPtOpts []*DynamicDurationPointerOpt, err error) {
-	durPtOpts = make([]*DynamicDurationPointerOpt, len(strOpts))
-	for index, opt := range strOpts {
+func IfaceToDurationPointerDynamicOpts(ifOpts []*DynamicInterfaceOpt) (durPtOpts []*DynamicDurationPointerOpt, err error) {
+	durPtOpts = make([]*DynamicDurationPointerOpt, len(ifOpts))
+	for index, opt := range ifOpts {
 		durPtOpts[index] = &DynamicDurationPointerOpt{
 			Tenant:    opt.Tenant,
 			FilterIDs: opt.FilterIDs,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			durPtOpts[index].rsVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+		strVal := utils.IfaceAsString(opt.Value)
+		if strings.HasPrefix(strVal, utils.DynamicDataPrefix) {
+			durPtOpts[index].rsVal, err = NewRSRParsers(strVal, CgrConfig().GeneralCfg().RSRSep)
 			if err != nil {
 				return nil, err
 			}
 			continue
 		}
 		var durOpt time.Duration
-		if durOpt, err = utils.ParseDurationWithNanosecs(opt.Value); err != nil {
+		if durOpt, err = utils.ParseDurationWithNanosecs(strVal); err != nil {
 			return
 		}
 		durPtOpts[index].value = utils.DurationPointer(durOpt)
@@ -671,27 +673,27 @@ func StringToDurationPointerDynamicOpts(strOpts []*DynamicStringOptJson) (durPtO
 	return
 }
 
-func DurationPointerToStringDynamicOpts(durPtOpts []*DynamicDurationPointerOpt) (strOpts []*DynamicStringOptJson) {
-	strOpts = make([]*DynamicStringOptJson, len(durPtOpts))
+func DurationPointerToIfaceDynamicOpts(durPtOpts []*DynamicDurationPointerOpt) (strOpts []*DynamicInterfaceOpt) {
+	strOpts = make([]*DynamicInterfaceOpt, len(durPtOpts))
 	for index, opt := range durPtOpts {
-		strOpts[index] = &DynamicStringOptJson{
+		strOpts[index] = &DynamicInterfaceOpt{
 			FilterIDs: opt.FilterIDs,
 			Tenant:    opt.Tenant,
-			Value:     (*opt.value).String(),
+			Value:     opt.value,
 		}
 	}
 	return
 }
 
-func StringToBoolDynamicOpts(strOpts []*DynamicStringOptJson) (boolOpts []*DynamicBoolOpt, err error) {
+func IfaceToBoolDynamicOpts(strOpts []*DynamicInterfaceOpt) (boolOpts []*DynamicBoolOpt, err error) {
 	boolOpts = make([]*DynamicBoolOpt, len(strOpts))
 	for index, opt := range strOpts {
 		boolOpts[index] = &DynamicBoolOpt{
 			FilterIDs: opt.FilterIDs,
 			Tenant:    opt.Tenant,
 		}
-		if strings.HasPrefix(opt.Value, utils.DynamicDataPrefix) {
-			boolOpts[index].rsVal, err = NewRSRParsers(opt.Value, CgrConfig().GeneralCfg().RSRSep)
+		if dynVal := utils.IfaceAsString(opt.Value); strings.HasPrefix(dynVal, utils.DynamicDataPrefix) {
+			boolOpts[index].rsVal, err = NewRSRParsers(dynVal, CgrConfig().GeneralCfg().RSRSep)
 			if err != nil {
 				return
 			}
@@ -707,13 +709,13 @@ func StringToBoolDynamicOpts(strOpts []*DynamicStringOptJson) (boolOpts []*Dynam
 	return
 }
 
-func BoolToStringDynamicOpts(boolOpts []*DynamicBoolOpt) (strOpts []*DynamicStringOptJson) {
-	strOpts = make([]*DynamicStringOptJson, len(boolOpts))
+func BoolToIfaceDynamicOpts(boolOpts []*DynamicBoolOpt) (strOpts []*DynamicInterfaceOpt) {
+	strOpts = make([]*DynamicInterfaceOpt, len(boolOpts))
 	for index, opt := range boolOpts {
-		strOpts[index] = &DynamicStringOptJson{
+		strOpts[index] = &DynamicInterfaceOpt{
 			FilterIDs: opt.FilterIDs,
 			Tenant:    opt.Tenant,
-			Value:     utils.IfaceAsString(opt.value),
+			Value:     opt.value,
 		}
 	}
 	return
@@ -836,13 +838,14 @@ func (dynFlt *DynamicBoolOpt) Value(dP utils.DataProvider) (bool, error) {
 }
 
 func (dynDec *DynamicDecimalOpt) Value(dP utils.DataProvider) (*decimal.Big, error) {
-	if dynDec.value == nil {
+	if dynDec.rsVal != nil {
 		out, err := dynDec.rsVal.ParseDataProvider(dP)
 		if err != nil {
 			return nil, err
 		}
 		return utils.StringAsBig(out)
 	}
+	fmt.Println(dynDec.value)
 	return dynDec.value, nil
 }
 
@@ -885,4 +888,11 @@ func (dynFlt *DynamicDurationPointerOpt) Value(dP utils.DataProvider) (*time.Dur
 		return utils.DurationPointer(durPnt), nil
 	}
 	return dynFlt.value, nil
+}
+
+func populateDynOpts[T any](dynOpts *[]T, dynOptsItems []T) {
+	if len(*dynOpts) > 0 {
+		*dynOpts = (*dynOpts)[:len(*dynOpts)-1]
+	}
+	*dynOpts = append(*dynOpts, dynOptsItems...)
 }

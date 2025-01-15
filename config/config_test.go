@@ -995,27 +995,6 @@ func TestLoadCdrsCfgError(t *testing.T) {
 	}
 }
 
-func TestLoadSessionSCfgError(t *testing.T) {
-	cfgJSONStr := `{
-	"sessions": {
-		"opts": {
-			"*ttlUsage": [
-				{
-					"Value": 1,
-				},
-			],
-		},
-    },
-}`
-	expected := "json: cannot unmarshal number into Go struct field DynamicStringOptJson.Opts.*ttlUsage.Value of type string"
-	cgrConfig := NewDefaultCGRConfig()
-	if cgrCfgJSON, err := NewCgrJsonCfgFromBytes([]byte(cfgJSONStr)); err != nil {
-		t.Error(err)
-	} else if err := cgrConfig.sessionSCfg.Load(context.Background(), cgrCfgJSON, cgrCfg); err == nil || err.Error() != expected {
-		t.Errorf("Expected %+v, received %+v", expected, err)
-	}
-}
-
 func TestLoadFreeswitchAgentCfgError(t *testing.T) {
 	cfgJSONStr := `{
 	"freeswitch_agent": {
@@ -5923,7 +5902,7 @@ func TestSetCfgInDb(t *testing.T) {
 		Opts: &AttributesOpts{
 			ProcessRuns: []*DynamicIntOpt{
 				{
-					value: 2,
+					value: int(2),
 				},
 			},
 		},
@@ -5945,9 +5924,9 @@ func TestSetCfgInDb(t *testing.T) {
 				Exists_indexed_fields:    &[]string{"field2"},
 				Notexists_indexed_fields: &[]string{"field2"},
 				Opts: &AttributesOptsJson{
-					ProcessRuns: []*DynamicStringOptJson{
+					ProcessRuns: []*DynamicInterfaceOpt{
 						{
-							Value: "3",
+							Value: int(3),
 						},
 					},
 				},
@@ -5967,12 +5946,12 @@ func TestSetCfgInDb(t *testing.T) {
 		Exists_indexed_fields:    &[]string{"field2"},
 		Notexists_indexed_fields: &[]string{"field2"},
 		Opts: &AttributesOptsJson{
-			ProcessRuns: []*DynamicStringOptJson{
+			ProcessRuns: []*DynamicInterfaceOpt{
 				{
-					Value: "2",
+					Value: float64(2),
 				},
 				{
-					Value: "3",
+					Value: float64(3),
 				},
 			},
 		},
