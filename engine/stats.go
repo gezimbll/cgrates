@@ -379,7 +379,7 @@ func (sS *StatS) processEvent(ctx *context.Context, tnt string, args *utils.CGRE
 	}
 	var ignFilters bool
 	if ignFilters, err = GetBoolOpts(ctx, tnt, evNm, sS.fltrS, sS.cfg.StatSCfg().Opts.ProfileIgnoreFilters,
-		config.StatsProfileIgnoreFilters, utils.MetaProfileIgnoreFilters); err != nil {
+		utils.MetaProfileIgnoreFilters); err != nil {
 		return
 	}
 	matchSQs, err := sS.matchingStatQueuesForEvent(ctx, tnt, sqIDs, evNm, ignFilters)
@@ -474,7 +474,7 @@ func (sS *StatS) V1GetStatQueuesForEvent(ctx *context.Context, args *utils.CGREv
 	evDp := args.AsDataProvider()
 	var ignFilters bool
 	if ignFilters, err = GetBoolOpts(ctx, tnt, evDp, sS.fltrS, sS.cfg.StatSCfg().Opts.ProfileIgnoreFilters,
-		config.StatsProfileIgnoreFilters, utils.MetaProfileIgnoreFilters); err != nil {
+		utils.MetaProfileIgnoreFilters); err != nil {
 		return
 	}
 	var sQs StatQueues

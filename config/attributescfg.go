@@ -75,9 +75,8 @@ func (attrOpts *AttributesOpts) loadFromJSONCfg(jsnCfg *AttributesOptsJson) (err
 	if jsnCfg.ProcessRuns != nil {
 		var procRuns []*DynamicIntOpt
 		procRuns, err = IfaceToIntDynamicOpts(jsnCfg.ProcessRuns)
-		addDynOpts(&attrOpts.ProcessRuns, procRuns)
+		attrOpts.ProcessRuns = append(procRuns, attrOpts.ProcessRuns...)
 	}
-	attrOpts.ProcessRuns = append(attrOpts.ProcessRuns, &DynamicIntOpt{nil, "", AttributesProcessRunsDftOpt, nil})
 	if jsnCfg.ProfileRuns != nil {
 		var profRuns []*DynamicIntOpt
 		profRuns, err = IfaceToIntDynamicOpts(jsnCfg.ProfileRuns)

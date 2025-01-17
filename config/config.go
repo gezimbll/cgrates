@@ -188,9 +188,9 @@ func newCGRConfig(config []byte) (cfg *CGRConfig, err error) {
 		janusAgentCfg: new(JanusAgentCfg),
 		attributeSCfg: &AttributeSCfg{Opts: &AttributesOpts{
 			ProfileIDs:           []*DynamicStringSliceOpt{},
-			ProcessRuns:          []*DynamicIntOpt{},
+			ProcessRuns:          []*DynamicIntOpt{{value: 1}},
 			ProfileRuns:          []*DynamicIntOpt{},
-			ProfileIgnoreFilters: []*DynamicBoolOpt{},
+			ProfileIgnoreFilters: []*DynamicBoolOpt{{value: false}},
 		}},
 		chargerSCfg: new(ChargerSCfg),
 		resourceSCfg: &ResourceSConfig{Opts: &ResourcesOpts{

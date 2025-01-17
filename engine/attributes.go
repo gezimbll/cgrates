@@ -159,7 +159,7 @@ func (alS *AttributeS) processEvent(ctx *context.Context, tnt string, args *util
 	}
 	var ignFilters bool
 	if ignFilters, err = GetBoolOpts(ctx, tnt, evNm, alS.fltrS, alS.cfg.AttributeSCfg().Opts.ProfileIgnoreFilters,
-		config.AttributesProfileIgnoreFiltersDftOpt, utils.MetaProfileIgnoreFilters); err != nil {
+		utils.MetaProfileIgnoreFilters); err != nil {
 		return
 	}
 	var attrPrf *AttributeProfile
@@ -261,7 +261,7 @@ func (alS *AttributeS) V1GetAttributeForEvent(ctx *context.Context, args *utils.
 	}
 	var ignFilters bool
 	if ignFilters, err = GetBoolOpts(ctx, tnt, evNM, alS.fltrS, alS.cfg.AttributeSCfg().Opts.ProfileIgnoreFilters,
-		config.AttributesProfileIgnoreFiltersDftOpt, utils.MetaProfileIgnoreFilters); err != nil {
+		utils.MetaProfileIgnoreFilters); err != nil {
 		return
 	}
 	attrPrf, err := alS.attributeProfileForEvent(ctx, tnt, attrIDs, evNM,

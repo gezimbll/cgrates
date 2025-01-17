@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 package config
 
 import (
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -685,9 +684,9 @@ func DurationPointerToIfaceDynamicOpts(durPtOpts []*DynamicDurationPointerOpt) (
 	return
 }
 
-func IfaceToBoolDynamicOpts(strOpts []*DynamicInterfaceOpt) (boolOpts []*DynamicBoolOpt, err error) {
-	boolOpts = make([]*DynamicBoolOpt, len(strOpts))
-	for index, opt := range strOpts {
+func IfaceToBoolDynamicOpts(ifOpts []*DynamicInterfaceOpt) (boolOpts []*DynamicBoolOpt, err error) {
+	boolOpts = make([]*DynamicBoolOpt, len(ifOpts))
+	for index, opt := range ifOpts {
 		boolOpts[index] = &DynamicBoolOpt{
 			FilterIDs: opt.FilterIDs,
 			Tenant:    opt.Tenant,
@@ -730,15 +729,6 @@ func NewDynamicStringOpt(filterIDs []string, tenant string, value string, dynVal
 	}
 }
 
-func NewDynamicIntOpt(filterIDs []string, tenant string, value int, dynValue RSRParsers) *DynamicIntOpt {
-	return &DynamicIntOpt{
-		FilterIDs: filterIDs,
-		Tenant:    tenant,
-		value:     value,
-		rsVal:     dynValue,
-	}
-}
-
 func NewDynamicFloat64Opt(filterIDs []string, tenant string, value float64, dynValue RSRParsers) *DynamicFloat64Opt {
 	return &DynamicFloat64Opt{
 		FilterIDs: filterIDs,
@@ -750,33 +740,6 @@ func NewDynamicFloat64Opt(filterIDs []string, tenant string, value float64, dynV
 
 func NewDynamicDecimalOpt(filterIDs []string, tenant string, value *decimal.Big, dynValue RSRParsers) *DynamicDecimalOpt {
 	return &DynamicDecimalOpt{
-		FilterIDs: filterIDs,
-		Tenant:    tenant,
-		value:     value,
-		rsVal:     dynValue,
-	}
-}
-
-func NewDynamicDurationOpt(filterIDs []string, tenant string, value time.Duration, dynValue RSRParsers) *DynamicDurationOpt {
-	return &DynamicDurationOpt{
-		FilterIDs: filterIDs,
-		Tenant:    tenant,
-		value:     value,
-		rsVal:     dynValue,
-	}
-}
-
-func NewDynamicBoolOpt(filterIDs []string, tenant string, value bool, dynValue RSRParsers) *DynamicBoolOpt {
-	return &DynamicBoolOpt{
-		FilterIDs: filterIDs,
-		Tenant:    tenant,
-		value:     value,
-		rsVal:     dynValue,
-	}
-}
-
-func NewDynamicIntPointerOpt(filterIDs []string, tenant string, value *int, dynValue RSRParsers) *DynamicIntPointerOpt {
-	return &DynamicIntPointerOpt{
 		FilterIDs: filterIDs,
 		Tenant:    tenant,
 		value:     value,
@@ -845,7 +808,6 @@ func (dynDec *DynamicDecimalOpt) Value(dP utils.DataProvider) (*decimal.Big, err
 		}
 		return utils.StringAsBig(out)
 	}
-	fmt.Println(dynDec.value)
 	return dynDec.value, nil
 }
 

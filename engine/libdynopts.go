@@ -179,8 +179,7 @@ func GetIntOpts(ctx *context.Context, tnt string, ev *utils.CGREvent, fS *Filter
 
 // GetBoolOpts checks the specified option names in order among the keys in APIOpts returning the first value it finds as bool, otherwise it
 // returns the config option if at least one filter passes or the default value if none of them do
-func GetBoolOpts(ctx *context.Context, tnt string, dP utils.DataProvider, fS *FilterS, dynOpts []*config.DynamicBoolOpt,
-	dftOpt bool, optNames ...string) (cfgOpt bool, err error) {
+func GetBoolOpts(ctx *context.Context, tnt string, dP utils.DataProvider, fS *FilterS, dynOpts []*config.DynamicBoolOpt, optNames ...string) (cfgOpt bool, err error) {
 	values, err := dP.FieldAsInterface([]string{utils.MetaOpts})
 	if err != nil {
 		return false, err
@@ -204,7 +203,7 @@ func GetBoolOpts(ctx *context.Context, tnt string, dP utils.DataProvider, fS *Fi
 			return opt.Value(dP)
 		}
 	}
-	return dftOpt, nil // return the default value if there are no options and none of the filters pass
+	return // return the default value if there are no options and none of the filters pass
 }
 
 // GetDecimalBigOpts checks the specified option names in order among the keys in APIOpts returning the first value it finds as *decimal.Big, otherwise it

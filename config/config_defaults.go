@@ -1039,7 +1039,7 @@ const CGRATES_CFG_JSON = `
 		// 	{
 		// 		"Tenant": "*any",
 		// 		"FilterIDs": [],
-		// 		"Value": "1"
+		// 		"Value": 1
 		// 	}
 		// ],
 		// "*profileRuns": [			// number of runs a profile will process during the event
