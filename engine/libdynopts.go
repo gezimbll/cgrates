@@ -261,32 +261,35 @@ func GetIntPointerOpts(ctx *context.Context, tnt string, dP utils.DataProvider, 
 
 // GetDurationPointerOptsFromMultipleMaps checks the specified option names in order among the keys in APIOpts, then in startOpts, returning the first value it finds as *time.Duration,
 // otherwise it returns the config option if at least one filter passes or NOT_FOUND if none of them do
-func GetDurationPointerOptsFromMultipleMaps(ctx *context.Context, tnt string, eventStart, apiOpts, startOpts map[string]any, fS *FilterS,
+func GetDurationPointerOptsFromMultipleMaps(ctx *context.Context, tnt string, dp utils.DataProvider, extraOpts map[string]any, fS *FilterS,
 	dynOpts []*config.DynamicDurationPointerOpt, optName string) (cfgOpt *time.Duration, err error) {
-	var value time.Duration
-	if opt, has := apiOpts[optName]; has {
+	if extraOpts != nil {
+		if opt, has := extraOpts[optName]; has {
+			var value time.Duration
+			if value, err = utils.IfaceAsDuration(opt); err != nil {
+				return nil, err
+			}
+			return utils.DurationPointer(value), nil
+		}
+	}
+	if opt, err := optIfaceFromDP(dp, []string{optName}); err == nil {
+		var value time.Duration
 		if value, err = utils.IfaceAsDuration(opt); err != nil {
 			return nil, err
 		}
 		return utils.DurationPointer(value), nil
-	} else if opt, has = startOpts[optName]; has {
-		if value, err = utils.IfaceAsDuration(opt); err != nil {
-			return nil, err
-		}
-		return utils.DurationPointer(value), nil
+	} else if !errors.Is(err, utils.ErrNotFound) {
+		return nil, err
 	}
-	evMS := utils.MapStorage{
-		utils.MetaOpts: apiOpts,
-		utils.MetaReq:  eventStart,
-	}
+
 	for _, opt := range dynOpts { // iterate through the options
 		if !slices.Contains([]string{utils.EmptyString, utils.MetaAny, tnt}, opt.Tenant) {
 			continue
 		}
-		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evMS); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
+		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, dp); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return nil, err
 		} else if pass {
-			return opt.Value(evMS)
+			return opt.Value(dp)
 		}
 	}
 	return nil, nil
@@ -294,32 +297,26 @@ func GetDurationPointerOptsFromMultipleMaps(ctx *context.Context, tnt string, ev
 
 // GetDurationOptsFromMultipleMaps checks the specified option names in order among the keys in APIOpts, then in startOpts, returning the first value it finds as time.Duration,
 // otherwise it returns the config option if at least one filter passes or the default one if none of them do
-func GetDurationOptsFromMultipleMaps(ctx *context.Context, tnt string, eventStart, apiOpts, startOpts map[string]any, fS *FilterS, dynOpts []*config.DynamicDurationOpt,
+func GetDurationOptsFromMultipleMaps(ctx *context.Context, tnt string, dP utils.DataProvider, extraOpts map[string]any, fS *FilterS, dynOpts []*config.DynamicDurationOpt,
 	dftOpt time.Duration, optName string) (cfgOpt time.Duration, err error) {
-	var value time.Duration
-	if opt, has := apiOpts[optName]; has {
-		if value, err = utils.IfaceAsDuration(opt); err != nil {
-			return 0, err
+	if extraOpts != nil {
+		if opt, has := extraOpts[optName]; has {
+			return utils.IfaceAsDuration(opt)
 		}
-		return value, nil
-	} else if opt, has = startOpts[optName]; has {
-		if value, err = utils.IfaceAsDuration(opt); err != nil {
-			return 0, err
-		}
-		return value, nil
 	}
-	evMS := utils.MapStorage{
-		utils.MetaOpts: apiOpts,
-		utils.MetaReq:  eventStart,
+	if opt, err := optIfaceFromDP(dP, []string{optName}); err == nil {
+		return utils.IfaceAsDuration(opt)
+	} else if !errors.Is(err, utils.ErrNotFound) {
+		return 0, err
 	}
 	for _, opt := range dynOpts { // iterate through the options
 		if !slices.Contains([]string{utils.EmptyString, utils.MetaAny, tnt}, opt.Tenant) {
 			continue
 		}
-		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, evMS); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
+		if pass, err := fS.Pass(ctx, tnt, opt.FilterIDs, dP); err != nil { // check if the filter is passing for the DataProvider and return the option if it does
 			return 0, err
 		} else if pass {
-			return opt.Value(evMS)
+			return opt.Value(dP)
 		}
 	}
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass
