@@ -504,6 +504,13 @@ const CGRATES_CFG_JSON = `
 	"attributes_conns":[],				// RPC Connections IDs
 	"cache": {
 		"*file_csv": {"limit": -1, "ttl": "5s", "static_ttl": false},
+		"*nats_json_map": {"limit": -1, "ttl": "5s", "static_ttl": false},
+		"*amqp_json_map": {"limit": -1, "ttl": "5s", "static_ttl": false},
+		"*amqpv1_json_map": {"limit": -1, "ttl": "5s", "static_ttl": false},
+		"*s3_json_map": {"limit": -1, "ttl": "5s", "static_ttl": false},
+		"*sqs_json_map": {"limit": -1, "ttl": "5s", "static_ttl": false},
+		"*sql": {"limit": -1, "ttl": "5s", "static_ttl": false},
+		"*els": {"limit": -1, "ttl": "5s", "static_ttl": false},
 	},
 	"exporters": [
 		{
