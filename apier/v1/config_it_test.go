@@ -399,7 +399,7 @@ func testConfigSSetConfigEEs(t *testing.T) {
 	exp := map[string]any{
 		"enabled":          true,
 		"attributes_conns": []any{},
-		"cache":            map[string]any{"*file_csv": map[string]any{"limit": -1., "precache": false, "replicate": false, "static_ttl": false, "remote": false, "ttl": "5s"}},
+		"cache":            map[string]any{"*file_csv": map[string]any{"limit": -1., "precache": false, "replicate": false, "static_ttl": false, "remote": false, "ttl": ""}},
 		"exporters":        []any{eporter},
 	}
 	exp = map[string]any{
