@@ -79,6 +79,7 @@ func (eeS *EventExporterS) SetupExporterCache() error {
 
 	// Initialize cache.
 	for chID, chCfg := range eesCfg.Cache {
+		utils.Logger.Debug(chID)
 		if chCfg.Limit == 0 {
 			continue // skip if caching is disabled
 		}

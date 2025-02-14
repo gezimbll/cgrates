@@ -111,6 +111,8 @@ func TestSQLExporterCached(t *testing.T) {
 
 "ees": {
     "enabled": true,
+	"cache":{
+	},
     "exporters": [
       {
                 "id": "SQLExporter1",
@@ -136,9 +138,10 @@ func TestSQLExporterCached(t *testing.T) {
 		ConfigJSON: content,
 		LogBuffer:  &buf,
 	}
+	time.Sleep(100 * time.Millisecond)
 	client, _ := ng.Run(t)
 	sendEvents := func() {
-		n := 1500
+		n := 3000
 		var wg sync.WaitGroup
 		wg.Add(n)
 

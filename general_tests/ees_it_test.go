@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 package general_tests
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"testing"
@@ -367,6 +368,9 @@ func TestEEsReplayFailedPosts(t *testing.T) {
 
 "ees": {
 	"enabled": true,
+	"cache":{
+	"*file_csv": {"limit": -1, "ttl": "5s", "static_ttl": false}
+	},
 	"exporters": [
 		{
 			"id": "nats_exporter",										
@@ -390,7 +394,9 @@ func TestEEsReplayFailedPosts(t *testing.T) {
 
 	ng := engine.TestEngine{
 		ConfigJSON: content,
+		LogBuffer:  bytes.NewBuffer(nil),
 	}
+	defer fmt.Println(ng.LogBuffer)
 	client, _ := ng.Run(t)
 
 	// helper to sort slices
@@ -451,7 +457,6 @@ func TestEEsReplayFailedPosts(t *testing.T) {
 			t.Errorf("unexpected nats messages received over channel (-want +got): \n%s", diff)
 		}
 	})
-
 	t.Run("replay failed nats export", func(t *testing.T) {
 		var exportReply map[string]map[string]any
 		for i := range count {

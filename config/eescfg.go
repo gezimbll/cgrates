@@ -52,13 +52,15 @@ func (eeS *EEsCfg) loadFromJSONCfg(jsnCfg *EEsJsonCfg, msgTemplates map[string][
 		eeS.Enabled = *jsnCfg.Enabled
 	}
 	if jsnCfg.Cache != nil {
+		tmpCacheMP := make(map[string]*CacheParamCfg, len(*jsnCfg.Cache))
 		for kJsn, vJsn := range *jsnCfg.Cache {
 			val := new(CacheParamCfg)
 			if err := val.loadFromJSONCfg(vJsn); err != nil {
 				return err
 			}
-			eeS.Cache[kJsn] = val
+			tmpCacheMP[kJsn] = val
 		}
+		eeS.Cache = tmpCacheMP
 	}
 	if jsnCfg.Attributes_conns != nil {
 		eeS.AttributeSConns = make([]string, len(*jsnCfg.Attributes_conns))
