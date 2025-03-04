@@ -106,6 +106,9 @@ func TestCacheLimitedProfiles(t *testing.T) {
 		"attributes": {
 			"enabled": true,
 		},
+		"apiers"	: {
+			"enabled": true,	
+		},
 		}
 		`
 
@@ -158,26 +161,39 @@ DR_10015,*any,RT_1,*up,0,0,
 			utils.RatesCsv: `#Id,ConnectFee,Rate,RateUnit,RateIncrement,GroupIntervalStart
 RT_1,0,2,1s,1s,0s`,
 			utils.RatingPlansCsv: `#Id,DestinationRatesId,TimingTag,Weight
-RP_ANY,DR_1001,*any,10
-RP_ANY,DR_1002,*any,10
-RP_ANY,DR_1003,*any,10
-RP_ANY,DR_1004,*any,10
-RP_ANY,DR_1005,*any,10
-RP_ANY,DR_1006,*any,10
-RP_ANY,DR_1007,*any,10
-RP_ANY,DR_1008,*any,10
-RP_ANY,DR_1009,*any,10
-RP_ANY,DR_10010,*any,10
-RP_ANY,DR_10011,*any,10
-RP_ANY,DR_10012,*any,10
-RP_ANY,DR_10013,*any,10
-RP_ANY,DR_10014,*any,10
-RP_ANY,DR_10015,*any,10`,
+RP_1,DR_1001,*any,10
+RP_2,DR_1002,*any,10
+RP_3,DR_1003,*any,10
+RP_4,DR_1004,*any,10
+RP_5,DR_1005,*any,10
+RP_6,DR_1006,*any,10
+RP_7,DR_1007,*any,10
+RP_8,DR_1008,*any,10
+RP_9,DR_1009,*any,10
+RP_10,DR_10010,*any,10
+RP_11,DR_10011,*any,10
+RP_12,DR_10012,*any,10
+RP_13,DR_10013,*any,10
+RP_14,DR_10014,*any,10
+RP_15,DR_10015,*any,10`,
 			utils.RatingProfilesCsv: `#Tenant,Category,Subject,ActivationTime,RatingPlanId,RatesFallbackSubject
-cgrates.org,call,5555,,RP_ANY,`,
+cgrates.org,call,5551,,RP_1,
+cgrates.org,call,5552,,RP_2,
+cgrates.org,call,5553,,RP_3,
+cgrates.org,call,5554,,RP_4,
+cgrates.org,call,5555,,RP_5,
+cgrates.org,call,5556,,RP_6,
+cgrates.org,call,5557,,RP_7,
+cgrates.org,call,5558,,RP_8,
+cgrates.org,call,5559,,RP_9,
+cgrates.org,call,55510,,RP_10,
+cgrates.org,call,55511,,RP_11,
+cgrates.org,call,55512,,RP_12,
+cgrates.org,call,55513,,RP_13,
+cgrates.org,call,55514,,RP_14,
+cgrates.org,call,55515,,RP_15,`,
 		},
 	}
-	t.SkipNow()
 	client, _ := ng.Run(t)
 	t.Run("ProcessCDR", func(t *testing.T) {
 		for i := 1; i <= 15; i++ {
@@ -195,7 +211,7 @@ cgrates.org,call,5555,,RP_ANY,`,
 							utils.ToR:          "*voice",
 							utils.OriginID:     uuidStr,
 							utils.RequestType:  "*rated",
-							utils.AccountField: "5555",
+							utils.AccountField: fmt.Sprintf("555%d", i),
 							utils.Destination:  fmt.Sprintf("100%d", i),
 							utils.SetupTime:    time.Date(2024, time.February, 2, 16, 14, 50, 0, time.UTC),
 							utils.AnswerTime:   time.Date(2024, time.February, 2, 16, 15, 0, 0, time.UTC),
@@ -222,7 +238,19 @@ cgrates.org,call,5555,,RP_ANY,`,
 		var reply *[]string
 		if err := client.Call(context.Background(), utils.CacheSv1GetItemIDs, args, &reply); err != nil {
 			t.Error(err)
-		} else if len(*reply) != 15 {
+		} else if len(*reply) != 10 {
+			t.Errorf("expected 15 items, got %d", len(*reply))
+		}
+		args.CacheID = utils.MetaRatingPlans
+		if err := client.Call(context.Background(), utils.CacheSv1GetItemIDs, args, &reply); err != nil {
+			t.Error(err)
+		} else if len(*reply) != 10 {
+			t.Errorf("expected 15 items, got %d", len(*reply))
+		}
+		args.CacheID = utils.MetaRatingProfiles
+		if err := client.Call(context.Background(), utils.CacheSv1GetItemIDs, args, &reply); err != nil {
+			t.Error(err)
+		} else if len(*reply) != 10 {
 			t.Errorf("expected 15 items, got %d", len(*reply))
 		}
 	})

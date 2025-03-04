@@ -91,7 +91,7 @@ func initDB(t *testing.T) {
 	})
 }
 func sendEvents(client *birpc.Client, t *testing.T) {
-	n := 500
+	n := 1000
 	var wg sync.WaitGroup
 	wg.Add(n)
 
@@ -158,6 +158,7 @@ func TestSQLExporterCached(t *testing.T) {
                 "id": "SQLExporter1",
                 "type": "*sql",
                 "filters": [],
+				"synchronous": true,
                 "export_path": "mysql://cgrates:CGRateS.org@localhost:3306",
                 "attempts": 3,
                 "opts": {
@@ -223,6 +224,7 @@ func TestExporterNotCached(t *testing.T) {
 						"id": "SQLExporter1",
 						"type": "*sql",
 						"filters": [],
+						"synchronous": true,
 						"cache":{
 						"*sql": {"limit": 0, "ttl": "", "static_ttl": false},
 						},
@@ -251,7 +253,7 @@ func TestExporterNotCached(t *testing.T) {
 		sendEvents(client, t)
 		regex := regexp.MustCompile(`Error 1040`)
 		if !regex.Match(buf.Bytes()) {
-			t.Error("Dint detected 'Too many connections' error as expected")
+			t.Error("Din't detect 'Too many connections' error as expected")
 		}
 	})
 }
