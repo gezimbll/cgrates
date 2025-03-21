@@ -32,6 +32,7 @@ import (
 	"github.com/cgrates/cgrates/config"
 	"github.com/cgrates/cgrates/utils"
 	"github.com/cgrates/cron"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // NewFilterS initializtes the filter service
@@ -754,6 +755,161 @@ func (fltr *FilterRule) passActivationInterval(dDp utils.DataProvider) (bool, er
 		return false, err
 	}
 	return startTime.Before(timeVal), nil
+}
+
+func (fltr *FilterRule) ElementItems() []string {
+	return strings.Split(fltr.Element, utils.NestingSep)
+}
+
+func (fltr *FilterRule) FilterToMongoQuery() (bson.M, error) {
+	not := strings.HasPrefix(fltr.Type, utils.MetaNot)
+	elementItems := fltr.ElementItems()[1:]
+	var field string
+	if len(elementItems) > 1 {
+		field = elementItems[0] + "." + strings.Join(elementItems[1:], ".")
+	} else {
+		field = elementItems[0]
+	}
+
+	if len(fltr.Values) == 0 {
+		switch fltr.Type {
+		case utils.MetaExists, utils.MetaNotExists:
+			if not {
+				return bson.M{field: bson.M{"$exists": false}}, nil
+			}
+			return bson.M{field: bson.M{"$exists": true}}, nil
+		case utils.MetaEmpty, utils.MetaNotEmpty:
+			if not {
+				return bson.M{field: bson.M{"$ne": ""}}, nil
+			}
+
+			return bson.M{field: ""}, nil
+		default:
+			return nil, fmt.Errorf("unsupported filter type for empty values: %s", fltr.Type)
+		}
+	}
+
+	var conditions []bson.M
+	for _, value := range fltr.Values {
+		var cond bson.M
+		switch fltr.Type {
+		case utils.MetaString, utils.MetaEqual:
+			cond = bson.M{field: value}
+		case utils.MetaNotString, utils.MetaNotEqual:
+			cond = bson.M{field: bson.M{"$ne": value}}
+		case utils.MetaGreaterThan:
+			cond = bson.M{field: bson.M{"$gt": value}}
+		case utils.MetaGreaterOrEqual:
+			cond = bson.M{field: bson.M{"$gte": value}}
+		case utils.MetaLessThan:
+			cond = bson.M{field: bson.M{"$lt": value}}
+		case utils.MetaLessOrEqual:
+			cond = bson.M{field: bson.M{"$lte": value}}
+		case utils.MetaPrefix, utils.MetaNotPrefix:
+			if not {
+				cond = bson.M{field: bson.M{"$not": bson.M{"$regex": "^" + value}}}
+			}
+			cond = bson.M{field: bson.M{"$regex": "^" + value}}
+		case utils.MetaSuffix, utils.MetaNotSuffix:
+			if not {
+				cond = bson.M{field: bson.M{"$not": bson.M{"$regex": value + "$"}}}
+			}
+			cond = bson.M{field: bson.M{"$regex": value + "$"}}
+		case utils.MetaRegex, utils.MetaNotRegex:
+			if not {
+				cond = bson.M{field: bson.M{"$not": bson.M{"$regex": value}}}
+			}
+			cond = bson.M{field: bson.M{"$regex": value}}
+		default:
+			return nil, fmt.Errorf("unsupported filter type: %s", fltr.Type)
+		}
+		conditions = append(conditions, cond)
+	}
+
+	if len(conditions) == 1 {
+		return conditions[0], nil
+	}
+	return bson.M{"$or": conditions}, nil
+}
+
+func (fltr *FilterRule) FilterToRedisQuery() (conditions []string, err error) {
+	var keyPath string
+	not := strings.HasPrefix(fltr.Type, utils.MetaNot)
+	elementItems := fltr.ElementItems()[1:] // exclude first item: ~*req
+
+	keyPath = strings.Join(elementItems, ":")
+
+	if len(fltr.Values) == 0 {
+		switch fltr.Type {
+		case utils.MetaExists, utils.MetaNotExists:
+			if not {
+				conditions = append(conditions, fmt.Sprintf("EXISTS %s", keyPath))
+				return
+			}
+			conditions = append(conditions, fmt.Sprintf("!EXISTS %s", keyPath))
+		case utils.MetaEmpty, utils.MetaNotEmpty:
+			if not {
+				conditions = append(conditions, fmt.Sprintf("GET %s != \"\"", keyPath))
+				return
+			}
+			conditions = append(conditions, fmt.Sprintf("GET %s = \"\"", keyPath))
+		}
+		return
+	}
+
+	for _, value := range fltr.Values {
+		switch value {
+		case "true":
+			value = "1"
+		case "false":
+			value = "0"
+		}
+
+		var cond string
+		switch fltr.Type {
+		case utils.MetaString, utils.MetaNotString, utils.MetaEqual, utils.MetaNotEqual:
+			if not {
+				conditions = append(conditions, fmt.Sprintf("GET %s != \"%s\"", keyPath, value))
+				continue
+			}
+			cond = fmt.Sprintf("GET %s = \"%s\"", keyPath, value)
+
+		case utils.MetaLessThan, utils.MetaLessOrEqual, utils.MetaGreaterThan, utils.MetaGreaterOrEqual:
+			parsedValAny := utils.StringToInterface(value)
+			if fltr.Type == utils.MetaGreaterOrEqual {
+				cond = fmt.Sprintf("GET %s >= %v", keyPath, parsedValAny)
+			} else if fltr.Type == utils.MetaGreaterThan {
+				cond = fmt.Sprintf("GET %s > %v", keyPath, parsedValAny)
+			} else if fltr.Type == utils.MetaLessOrEqual {
+				cond = fmt.Sprintf("GET %s <= %v", keyPath, parsedValAny)
+			} else if fltr.Type == utils.MetaLessThan {
+				cond = fmt.Sprintf("GET %s < %v", keyPath, parsedValAny)
+			}
+
+		case utils.MetaPrefix, utils.MetaNotPrefix:
+			if not {
+				conditions = append(conditions, fmt.Sprintf("!MATCH %s %s*", keyPath, value))
+				continue
+			}
+			cond = fmt.Sprintf("MATCH %s %s*", keyPath, value)
+
+		case utils.MetaSuffix, utils.MetaNotSuffix:
+			if not {
+				conditions = append(conditions, fmt.Sprintf("!MATCH %s *%s", keyPath, value))
+				continue
+			}
+			cond = fmt.Sprintf("MATCH %s *%s", keyPath, value)
+		case utils.MetaRegex, utils.MetaNotRegex:
+			if not {
+				conditions = append(conditions, fmt.Sprintf("!SCAN %s MATCH \"%s\"", keyPath, value))
+				continue
+			}
+			cond = fmt.Sprintf("SCAN %s MATCH \"%s\"", keyPath, value)
+
+		}
+		conditions = append(conditions, cond)
+	}
+	return
 }
 
 func verifyInlineFilterS(fltrs []string) (err error) {

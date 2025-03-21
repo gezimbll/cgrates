@@ -351,6 +351,21 @@ func (dm *DataManager) GetFilter(ctx *context.Context, tenant, id string, cacheR
 	}
 	return
 }
+func (dm *DataManager) FilterItems(cacheID string, filterIDs []string) ([]string, error) {
+	var filtersObjList []*Filter
+	for _, fltr := range filterIDs {
+		resultFilter, err := dm.GetFilter(context.Background(), config.CgrConfig().GeneralCfg().DefaultTenant, fltr, true, false, "")
+		if err != nil {
+			return nil, err
+		}
+		filtersObjList = append(filtersObjList, resultFilter)
+	}
+	items, err := dm.DataDB().FilterItemsDrv(context.Background(), cacheID, filtersObjList)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 func (dm *DataManager) SetFilter(ctx *context.Context, fltr *Filter, withIndex bool) (err error) {
 	if dm == nil {
@@ -1099,6 +1114,7 @@ func (dm *DataManager) GetTrendProfile(ctx *context.Context, tenant, id string, 
 		}
 	}
 	if cacheWrite {
+		utils.Logger.Debug("Threshold")
 		if errCh := Cache.Set(ctx, utils.CacheTrendProfiles, tntID, trp, nil,
 			cacheCommit(transactionID), transactionID); errCh != nil {
 			return nil, errCh
@@ -1558,6 +1574,7 @@ func (dm *DataManager) GetResourceProfile(ctx *context.Context, tenant, id strin
 		}
 	}
 	if cacheWrite {
+		utils.Logger.Debug("here set")
 		if errCh := Cache.Set(ctx, utils.CacheResourceProfiles, tntID, rp, nil,
 			cacheCommit(transactionID), transactionID); errCh != nil {
 			return nil, errCh

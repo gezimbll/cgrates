@@ -22,6 +22,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -1057,4 +1058,58 @@ func (rs *RedisStorage) RemoveConfigSectionsDrv(ctx *context.Context, nodeID str
 		return
 	}
 	return
+}
+
+func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, filtersObjList []*Filter) ([]string, error) {
+	prefix, has := utils.CacheInstanceToPrefix[cacheID]
+	if !has {
+		return nil, fmt.Errorf("not allowed to filter items for this type of cache instance %s", cacheID)
+	}
+	var redisConditions []string
+	for _, filterObj := range filtersObjList {
+		var filterConds []string
+		for _, rule := range filterObj.Rules {
+
+			if strings.HasPrefix(rule.Element, utils.MetaDynReq+utils.NestingSep) {
+
+				cond, err := rule.FilterToRedisQuery()
+				if err != nil {
+					return nil, fmt.Errorf("error converting filter [%s] to redis query: %w", rule.Element, err)
+				}
+				filterConds = append(filterConds, cond...)
+			}
+		}
+		if len(filterConds) > 0 {
+			if len(filterConds) == 1 {
+				redisConditions = append(redisConditions, filterConds[0])
+			} else {
+				redisConditions = append(redisConditions, fmt.Sprintf("(%s)", strings.Join(filterConds, " | ")))
+			}
+		}
+	}
+
+	var query string
+	if len(redisConditions) == 0 {
+		query = "*"
+	} else {
+		query = strings.Join(redisConditions, " ")
+	}
+
+	var result []map[string]any
+	err := rs.FlatCmd(&result, query, prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys []string
+	for _, item := range result {
+		key, ok := item["id"]
+		if ok {
+			// Optionally, trim any prefix from the key if needed.
+
+			keys = append(keys, key.(string))
+		}
+	}
+
+	return keys, nil
 }

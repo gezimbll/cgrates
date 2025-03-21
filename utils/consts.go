@@ -1939,13 +1939,14 @@ const (
 
 // ItemOpt
 const (
-	APIKeyCfg    = "api_key"
-	RouteIDCfg   = "route_id"
-	RemoteCfg    = "remote"
-	ReplicateCfg = "replicate"
-	TTLCfg       = "ttl"
-	LimitCfg     = "limit"
-	StaticTTLCfg = "static_ttl"
+	APIKeyCfg          = "api_key"
+	RouteIDCfg         = "route_id"
+	RemoteCfg          = "remote"
+	ReplicateCfg       = "replicate"
+	TTLCfg             = "ttl"
+	LimitCfg           = "limit"
+	StaticTTLCfg       = "static_ttl"
+	PrecacheFiltersCfg = "precache_filters"
 )
 
 // Tls

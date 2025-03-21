@@ -104,6 +104,7 @@ type DataDB interface {
 	GetConfigSectionsDrv(*context.Context, string, []string) (map[string][]byte, error)
 	SetConfigSectionsDrv(*context.Context, string, map[string][]byte) error
 	RemoveConfigSectionsDrv(*context.Context, string, []string) error
+	FilterItemsDrv(*context.Context, string, []*Filter) ([]string, error)
 }
 
 // DataDBDriver used as a DataDB but also as a ConfigProvider

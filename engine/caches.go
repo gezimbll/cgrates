@@ -268,10 +268,20 @@ func (chS *CacheS) Precache(shutdown *utils.SyncedChan) {
 			continue
 		}
 		go func(cacheID string) {
-			err := chS.dm.CacheDataFromDB(context.TODO(),
+			var err error
+			items := []string{utils.MetaAny}
+			if len(cacheCfg.PrecacheFilters) != 0 {
+				if items, err = chS.dm.FilterItems(cacheID, cacheCfg.PrecacheFilters); err != nil {
+					utils.Logger.Crit(fmt.Sprintf("error filtering items for cacheID <%s>: %s", cacheID, err))
+					shutdown.CloseOnce()
+					return
+				}
+			}
+			err = chS.dm.CacheDataFromDB(context.TODO(),
 				utils.CacheInstanceToPrefix[cacheID],
-				[]string{utils.MetaAny},
+				items,
 				false)
+
 			if err != nil && err != context.Canceled {
 				utils.Logger.Crit(fmt.Sprintf("<%s> precaching cacheID <%s>, got error: %s", utils.CacheS, cacheID, err))
 				shutdown.CloseOnce()
