@@ -106,7 +106,7 @@ func (dm *DataManager) DataDB() DataDB {
 	return nil
 }
 
-func (dm *DataManager) CacheDataFromDB(ctx *context.Context, prfx string, ids []string, mustBeCached bool) (err error) {
+func (dm *DataManager) CacheDataFromDB(ctx *context.Context, prfx string, ids, filterIDs []string, mustBeCached bool) (err error) {
 	if dm == nil {
 		return utils.ErrNoDatabaseConn
 	}
@@ -119,29 +119,45 @@ func (dm *DataManager) CacheDataFromDB(ctx *context.Context, prfx string, ids []
 	if dm.cfg.CacheCfg().Partitions[utils.CachePrefixToInstance[prfx]].Limit == 0 {
 		return
 	}
-	// *apiban and *dispatchers are not stored in database
-	if prfx == utils.MetaAPIBan || prfx == utils.MetaSentryPeer { // no need for ids in this case
-		ids = []string{utils.EmptyString}
-	} else if len(ids) != 0 && ids[0] == utils.MetaAny {
-		if mustBeCached {
-			ids = Cache.GetItemIDs(utils.CachePrefixToInstance[prfx], utils.EmptyString)
-		} else {
-			if ids, err = dm.DataDB().GetKeysForPrefix(ctx, prfx); err != nil {
-				return utils.NewCGRError(utils.DataManager,
-					utils.ServerErrorCaps,
-					err.Error(),
-					fmt.Sprintf("DataManager error <%s> querying keys for prefix: <%s>", err.Error(), prfx))
+	if len(filterIDs) != 0 {
+		var filtersObjList []*Filter
+		for _, fltr := range filterIDs {
+			resultFilter, err := dm.GetFilter(context.Background(), config.CgrConfig().GeneralCfg().DefaultTenant, fltr, true, false, "")
+			if err != nil {
+				return err
 			}
-			if cCfg, has := dm.cfg.CacheCfg().Partitions[utils.CachePrefixToInstance[prfx]]; has &&
-				cCfg.Limit >= 0 &&
-				cCfg.Limit < len(ids) {
-				ids = ids[:cCfg.Limit]
-			}
-			for i := range ids {
-				ids[i] = strings.TrimPrefix(ids[i], prfx)
+			filtersObjList = append(filtersObjList, resultFilter)
+		}
+		ids, err = dm.DataDB().FilterItemsDrv(context.Background(), prfx, filtersObjList)
+		if err != nil {
+			return err
+		}
+	} else {
+		// *apiban and *dispatchers are not stored in database
+		if prfx == utils.MetaAPIBan || prfx == utils.MetaSentryPeer { // no need for ids in this case
+			ids = []string{utils.EmptyString}
+		} else if len(ids) != 0 && ids[0] == utils.MetaAny {
+			if mustBeCached {
+				ids = Cache.GetItemIDs(utils.CachePrefixToInstance[prfx], utils.EmptyString)
+			} else {
+				if ids, err = dm.DataDB().GetKeysForPrefix(ctx, prfx); err != nil {
+					return utils.NewCGRError(utils.DataManager,
+						utils.ServerErrorCaps,
+						err.Error(),
+						fmt.Sprintf("DataManager error <%s> querying keys for prefix: <%s>", err.Error(), prfx))
+				}
+				if cCfg, has := dm.cfg.CacheCfg().Partitions[utils.CachePrefixToInstance[prfx]]; has &&
+					cCfg.Limit >= 0 &&
+					cCfg.Limit < len(ids) {
+					ids = ids[:cCfg.Limit]
+				}
+				for i := range ids {
+					ids[i] = strings.TrimPrefix(ids[i], prfx)
+				}
 			}
 		}
 	}
+
 	for _, dataID := range ids {
 		if mustBeCached &&
 			!Cache.HasItem(utils.CachePrefixToInstance[prfx], dataID) { // only cache if previously there
@@ -350,6 +366,21 @@ func (dm *DataManager) GetFilter(ctx *context.Context, tenant, id string, cacheR
 		}
 	}
 	return
+}
+func (dm *DataManager) FilterItems(cacheID string, filterIDs []string) ([]string, error) {
+	var filtersObjList []*Filter
+	for _, fltr := range filterIDs {
+		resultFilter, err := dm.GetFilter(context.Background(), config.CgrConfig().GeneralCfg().DefaultTenant, fltr, true, false, "")
+		if err != nil {
+			return nil, err
+		}
+		filtersObjList = append(filtersObjList, resultFilter)
+	}
+	items, err := dm.DataDB().FilterItemsDrv(context.Background(), cacheID, filtersObjList)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 func (dm *DataManager) SetFilter(ctx *context.Context, fltr *Filter, withIndex bool) (err error) {
@@ -1099,6 +1130,7 @@ func (dm *DataManager) GetTrendProfile(ctx *context.Context, tenant, id string, 
 		}
 	}
 	if cacheWrite {
+		utils.Logger.Debug("Threshold")
 		if errCh := Cache.Set(ctx, utils.CacheTrendProfiles, tntID, trp, nil,
 			cacheCommit(transactionID), transactionID); errCh != nil {
 			return nil, errCh

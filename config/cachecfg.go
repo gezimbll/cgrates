@@ -30,12 +30,13 @@ import (
 
 // CacheParamCfg represents the config of a single cache partition
 type CacheParamCfg struct {
-	Limit     int
-	TTL       time.Duration
-	StaticTTL bool
-	Precache  bool
-	Remote    bool
-	Replicate bool
+	Limit           int
+	TTL             time.Duration
+	StaticTTL       bool
+	Precache        bool
+	PrecacheFilters []string
+	Remote          bool
+	Replicate       bool
 }
 
 func (cParam *CacheParamCfg) loadFromJSONCfg(jsnCfg *CacheParamJsonCfg) (err error) {
@@ -60,6 +61,12 @@ func (cParam *CacheParamCfg) loadFromJSONCfg(jsnCfg *CacheParamJsonCfg) (err err
 	if jsnCfg.Ttl != nil {
 		cParam.TTL, err = utils.ParseDurationWithNanosecs(*jsnCfg.Ttl)
 	}
+	if jsnCfg.Precache_filters != nil {
+		cParam.PrecacheFilters = make([]string, len(*jsnCfg.Precache_filters))
+		for idx, val := range *jsnCfg.Precache_filters {
+			cParam.PrecacheFilters[idx] = *val
+		}
+	}
 	return
 }
 
@@ -75,12 +82,15 @@ func (cParam *CacheParamCfg) AsMapInterface() (initialMP map[string]any) {
 	if cParam.TTL != 0 {
 		initialMP[utils.TTLCfg] = cParam.TTL.String()
 	}
+	if cParam.PrecacheFilters != nil {
+		initialMP[utils.PrecacheFiltersCfg] = cParam.PrecacheFilters
+	}
 	return
 }
 
 // Clone returns a deep copy of CacheParamCfg
 func (cParam CacheParamCfg) Clone() (cln *CacheParamCfg) {
-	return &CacheParamCfg{
+	cln = &CacheParamCfg{
 		Limit:     cParam.Limit,
 		TTL:       cParam.TTL,
 		StaticTTL: cParam.StaticTTL,
@@ -88,6 +98,10 @@ func (cParam CacheParamCfg) Clone() (cln *CacheParamCfg) {
 		Remote:    cParam.Remote,
 		Replicate: cParam.Replicate,
 	}
+	if cParam.PrecacheFilters != nil {
+		cln.PrecacheFilters = slices.Clone(cParam.PrecacheFilters)
+	}
+	return
 }
 
 // CacheCfg used to store the cache config
@@ -185,12 +199,13 @@ func (cCfg CacheCfg) Clone() (cln *CacheCfg) {
 }
 
 type CacheParamJsonCfg struct {
-	Limit      *int
-	Ttl        *string
-	Static_ttl *bool
-	Precache   *bool
-	Remote     *bool
-	Replicate  *bool
+	Limit            *int
+	Ttl              *string
+	Static_ttl       *bool
+	Precache         *bool
+	Remote           *bool
+	Replicate        *bool
+	Precache_filters *[]*string
 }
 
 func diffCacheParamsJsonCfg(d map[string]*CacheParamJsonCfg, v2 map[string]*CacheParamCfg) map[string]*CacheParamJsonCfg {

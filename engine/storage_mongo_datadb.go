@@ -79,27 +79,46 @@ const (
 )
 
 var (
-	MetaOriginLow  = strings.ToLower(utils.MetaOriginID)
-	RunIDLow       = strings.ToLower(utils.RunID)
-	OrderIDLow     = strings.ToLower(utils.OrderID)
-	OriginHostLow  = strings.ToLower(utils.OriginHost)
-	OriginIDLow    = strings.ToLower(utils.OriginID)
-	ToRLow         = strings.ToLower(utils.ToR)
-	CDRHostLow     = strings.ToLower(utils.OriginHost)
-	CDRSourceLow   = strings.ToLower(utils.Source)
-	RequestTypeLow = strings.ToLower(utils.RequestType)
-	TenantLow      = strings.ToLower(utils.Tenant)
-	CategoryLow    = strings.ToLower(utils.Category)
-	AccountLow     = strings.ToLower(utils.AccountField)
-	SubjectLow     = strings.ToLower(utils.Subject)
-	SetupTimeLow   = strings.ToLower(utils.SetupTime)
-	AnswerTimeLow  = strings.ToLower(utils.AnswerTime)
-	CreatedAtLow   = strings.ToLower(utils.CreatedAt)
-	UpdatedAtLow   = strings.ToLower(utils.UpdatedAt)
-	UsageLow       = strings.ToLower(utils.Usage)
-	DestinationLow = strings.ToLower(utils.Destination)
-	CostLow        = strings.ToLower(utils.Cost)
-	CostSourceLow  = strings.ToLower(utils.CostSource)
+	MetaOriginLow      = strings.ToLower(utils.MetaOriginID)
+	RunIDLow           = strings.ToLower(utils.RunID)
+	OrderIDLow         = strings.ToLower(utils.OrderID)
+	OriginHostLow      = strings.ToLower(utils.OriginHost)
+	OriginIDLow        = strings.ToLower(utils.OriginID)
+	ToRLow             = strings.ToLower(utils.ToR)
+	CDRHostLow         = strings.ToLower(utils.OriginHost)
+	CDRSourceLow       = strings.ToLower(utils.Source)
+	RequestTypeLow     = strings.ToLower(utils.RequestType)
+	TenantLow          = strings.ToLower(utils.Tenant)
+	CategoryLow        = strings.ToLower(utils.Category)
+	AccountLow         = strings.ToLower(utils.AccountField)
+	SubjectLow         = strings.ToLower(utils.Subject)
+	SetupTimeLow       = strings.ToLower(utils.SetupTime)
+	AnswerTimeLow      = strings.ToLower(utils.AnswerTime)
+	CreatedAtLow       = strings.ToLower(utils.CreatedAt)
+	UpdatedAtLow       = strings.ToLower(utils.UpdatedAt)
+	UsageLow           = strings.ToLower(utils.Usage)
+	DestinationLow     = strings.ToLower(utils.Destination)
+	CostLow            = strings.ToLower(utils.Cost)
+	CostSourceLow      = strings.ToLower(utils.CostSource)
+	CacheInstanceToCol = map[string]string{
+		utils.ResourceProfilesPrefix: ColRsP,
+		utils.ResourcesPrefix:        ColRes,
+		utils.StatQueueProfilePrefix: ColSqp,
+		utils.StatQueuePrefix:        ColSqs,
+		utils.TrendProfilePrefix:     ColTrs,
+		utils.TrendPrefix:            ColTrd,
+		utils.ThresholdProfilePrefix: ColTps,
+		utils.ThresholdPrefix:        ColThs,
+		utils.FilterPrefix:           ColFlt,
+		utils.RouteProfilePrefix:     ColRts,
+		utils.RankingProfilePrefix:   ColRgp,
+		utils.RankingPrefix:          ColRnk,
+		utils.AttributeProfilePrefix: ColAttr,
+		utils.ChargerProfilePrefix:   ColCpp,
+		utils.RateProfilePrefix:      ColRpf,
+		utils.ActionProfilePrefix:    ColAct,
+		utils.AccountPrefix:          ColAcc,
+	}
 )
 
 func decimalEncoder(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
@@ -1292,6 +1311,64 @@ func (ms *MongoStorage) SetRateProfileDrv(ctx *context.Context, rpp *utils.RateP
 		)
 		return err
 	})
+}
+
+func (ms *MongoStorage) FilterItemsDrv(ctx *context.Context, cacheID string, filtersObjList []*Filter) ([]string, error) {
+	col, has := CacheInstanceToCol[cacheID]
+	if !has {
+		return nil, fmt.Errorf("not allowed to filter items for this type of cache instance %s", cacheID)
+	}
+	var mongoConditions []bson.M
+	for _, filterObj := range filtersObjList {
+		var filterConds []bson.M
+		for _, rule := range filterObj.Rules {
+			// Only process rules with the dynamic prefix (e.g. "~*req")
+			if strings.HasPrefix(rule.Element, utils.MetaDynReq+utils.NestingSep) {
+				conds, err := FilterToMongoQuery(rule)
+				if err != nil {
+					return nil, fmt.Errorf("error converting filter [%s] to mongo query: %w", rule.Element, err)
+				}
+				if len(conds) == 1 {
+					filterConds = append(filterConds, conds[0])
+				} else if len(conds) > 1 {
+					filterConds = append(filterConds, bson.M{"$or": conds})
+				}
+			}
+		}
+		// Within this filter object, combine all rule conditions with OR.
+		if len(filterConds) == 1 {
+			mongoConditions = append(mongoConditions, filterConds[0])
+		} else if len(filterConds) > 1 {
+			mongoConditions = append(mongoConditions, bson.M{"$or": filterConds})
+		}
+	}
+
+	// Combine all filter object conditions with AND.
+	var mongoQuery bson.M
+	if len(mongoConditions) == 0 {
+		mongoQuery = bson.M{}
+	} else if len(mongoConditions) == 1 {
+		mongoQuery = mongoConditions[0]
+	} else {
+		mongoQuery = bson.M{"$and": mongoConditions}
+	}
+	cursor, err := ms.client.Database(ms.db).Collection(col).Find(ctx, mongoQuery)
+	if err != nil {
+		return nil, err
+	}
+	var items []string
+	for cursor.Next(ctx) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			return nil, err
+		}
+		key := doc["id"].(string)
+		items = append(items, key)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 func (ms *MongoStorage) RemoveRateProfileDrv(ctx *context.Context, tenant, id string, rateIDs *[]string) (err error) {

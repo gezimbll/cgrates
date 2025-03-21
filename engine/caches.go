@@ -270,7 +270,7 @@ func (chS *CacheS) Precache(shutdown *utils.SyncedChan) {
 		go func(cacheID string) {
 			err := chS.dm.CacheDataFromDB(context.TODO(),
 				utils.CacheInstanceToPrefix[cacheID],
-				[]string{utils.MetaAny},
+				[]string{utils.MetaAny}, cacheCfg.PrecacheFilters,
 				false)
 			if err != nil && err != context.Canceled {
 				utils.Logger.Crit(fmt.Sprintf("<%s> precaching cacheID <%s>, got error: %s", utils.CacheS, cacheID, err))
@@ -417,7 +417,7 @@ func (chS *CacheS) cacheDataFromDB(ctx *context.Context, attrs *utils.AttrReload
 	argCache := attrs.Map()
 	for key, ids := range argCache {
 		if prfx, has := utils.CacheInstanceToPrefix[key]; has {
-			if err = chS.dm.CacheDataFromDB(ctx, prfx, ids, mustBeCached); err != nil {
+			if err = chS.dm.CacheDataFromDB(ctx, prfx, ids, nil, mustBeCached); err != nil {
 				return
 			}
 		}

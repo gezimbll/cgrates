@@ -22,7 +22,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -1057,4 +1059,89 @@ func (rs *RedisStorage) RemoveConfigSectionsDrv(ctx *context.Context, nodeID str
 		return
 	}
 	return
+}
+
+func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, filtersObjList []*Filter) ([]string, error) {
+	prfx := cacheID + config.CgrConfig().GeneralCfg().DefaultTenant + utils.InInFieldSep
+	var redisConditions []string
+	var lazyFilters []Filter
+	for _, filterObj := range filtersObjList {
+		var lazyFltr bool
+		for _, rule := range filterObj.Rules {
+			if strings.HasPrefix(rule.Element, utils.MetaDynReq) {
+				if slices.Contains([]string{utils.MetaString, utils.MetaNotString, utils.MetaPrefix, utils.MetaNotPrefix, utils.MetaSuffix, utils.MetaNotSuffix}, rule.Type) {
+					cond, err := FilterToRedisQuery(rule, prfx)
+					if err != nil {
+						return nil, fmt.Errorf("error converting filter [%s] to redis query: %w", rule.Element, err)
+					}
+					redisConditions = append(redisConditions, cond...)
+					continue
+				}
+			}
+			if !lazyFltr {
+				lazyFilters = append(lazyFilters, *filterObj)
+				lazyFltr = true
+			}
+		}
+	}
+	if len(redisConditions) == 0 {
+		return nil, fmt.Errorf("no filter to prefix elements")
+	}
+	var keys []string
+	for _, cond := range redisConditions {
+		scan := radix.NewScanner(rs.client, radix.ScanOpts{
+			Command: redisSCAN,
+			Pattern: cond,
+		})
+		var key string
+		for scan.Next(&key) {
+			keys = append(keys, key)
+		}
+		if err := scan.Close(); err != nil {
+			return nil, err
+		}
+	}
+	if len(lazyFilters) == 0 {
+		return keys, nil
+	}
+	var filteredKeys []string
+	// if we have lazy filters, we need to check them
+	for _, key := range keys {
+		var values []byte
+		if err := rs.Cmd(&values, redisGET, key); err != nil {
+			return nil, err
+		} else if len(values) == 0 {
+			return nil, utils.ErrNotFound
+		}
+		switch cacheID {
+		case utils.ResourceProfilesPrefix:
+			var rp ResourceProfile
+			err := rs.ms.Unmarshal(values, &rp)
+			if err != nil {
+				return nil, err
+			}
+			var allProfilesPass = true
+			for _, filterObj := range lazyFilters {
+				var profilePass bool
+				for _, rule := range filterObj.Rules {
+					pass, err := rule.Pass(context.Background(), &rp)
+					if err != nil {
+						return nil, err
+					}
+					if pass {
+						profilePass = true
+						break
+					}
+				}
+				if !profilePass {
+					allProfilesPass = false
+					break
+				}
+			}
+			if allProfilesPass {
+				filteredKeys = append(filteredKeys, key)
+			}
+		}
+	}
+	return filteredKeys, nil
 }

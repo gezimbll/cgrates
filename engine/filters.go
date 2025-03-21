@@ -32,6 +32,7 @@ import (
 	"github.com/cgrates/cgrates/config"
 	"github.com/cgrates/cgrates/utils"
 	"github.com/cgrates/cron"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // NewFilterS initializtes the filter service
@@ -754,6 +755,93 @@ func (fltr *FilterRule) passActivationInterval(dDp utils.DataProvider) (bool, er
 		return false, err
 	}
 	return startTime.Before(timeVal), nil
+}
+
+func (fltr *FilterRule) ElementItems() []string {
+	return strings.Split(fltr.Element, utils.NestingSep)
+}
+
+func FilterToMongoQuery(fltr *FilterRule) ([]bson.M, error) {
+	not := strings.HasPrefix(fltr.Type, utils.MetaNot)
+	elementItems := fltr.ElementItems()[1:]
+	var field string
+	if len(elementItems) > 1 {
+		field = elementItems[0] + "." + strings.Join(elementItems[1:], ".")
+	} else {
+		field = elementItems[0]
+	}
+
+	if len(fltr.Values) == 0 {
+		switch fltr.Type {
+		case utils.MetaExists, utils.MetaNotExists:
+			if not {
+				return []bson.M{{field: bson.M{"$exists": false}}}, nil
+			}
+			return []bson.M{{field: bson.M{"$exists": true}}}, nil
+		case utils.MetaEmpty, utils.MetaNotEmpty:
+			if not {
+				return []bson.M{{field: bson.M{"$ne": ""}}}, nil
+			}
+			return []bson.M{{field: ""}}, nil
+		default:
+			return nil, fmt.Errorf("unsupported filter type for empty values: %s", fltr.Type)
+		}
+	}
+
+	var conditions []bson.M
+	for _, value := range fltr.Values {
+		var cond bson.M
+		switch fltr.Type {
+		case utils.MetaString, utils.MetaEqual:
+			cond = bson.M{field: value}
+		case utils.MetaNotString, utils.MetaNotEqual:
+			cond = bson.M{field: bson.M{"$ne": value}}
+		case utils.MetaGreaterThan:
+			cond = bson.M{field: bson.M{"$gt": value}}
+		case utils.MetaGreaterOrEqual:
+			cond = bson.M{field: bson.M{"$gte": value}}
+		case utils.MetaLessThan:
+			cond = bson.M{field: bson.M{"$lt": value}}
+		case utils.MetaLessOrEqual:
+			cond = bson.M{field: bson.M{"$lte": value}}
+		case utils.MetaPrefix, utils.MetaNotPrefix:
+			if not {
+				cond = bson.M{field: bson.M{"$not": bson.M{"$regex": "^" + value}}}
+			}
+			cond = bson.M{field: bson.M{"$regex": "^" + value}}
+		case utils.MetaSuffix, utils.MetaNotSuffix:
+			if not {
+				cond = bson.M{field: bson.M{"$not": bson.M{"$regex": value + "$"}}}
+			}
+			cond = bson.M{field: bson.M{"$regex": value + "$"}}
+		case utils.MetaRegex, utils.MetaNotRegex:
+			if not {
+				cond = bson.M{field: bson.M{"$not": bson.M{"$regex": value}}}
+			}
+			cond = bson.M{field: bson.M{"$regex": value}}
+		default:
+			return nil, fmt.Errorf("unsupported filter type: %s", fltr.Type)
+		}
+		conditions = append(conditions, cond)
+	}
+
+	return conditions, nil
+}
+
+func FilterToRedisQuery(fltr *FilterRule, prfx string) (conditions []string, err error) {
+	for _, value := range fltr.Values {
+		var cond string
+		switch fltr.Type {
+		case utils.MetaString:
+			cond = prfx + value
+		case utils.MetaPrefix:
+			cond = fmt.Sprintf("%s*", prfx+value)
+		case utils.MetaSuffix:
+			cond = fmt.Sprintf("%s*%s", prfx, value)
+		}
+		conditions = append(conditions, cond)
+	}
+	return
 }
 
 func verifyInlineFilterS(fltrs []string) (err error) {

@@ -35,7 +35,7 @@ import (
 func TestDatamanagerCacheDataFromDBNoPrfxErr(t *testing.T) {
 	cfg := config.NewDefaultCGRConfig()
 	dm := NewDataManager(nil, cfg, nil)
-	err := dm.CacheDataFromDB(context.Background(), "", []string{}, false)
+	err := dm.CacheDataFromDB(context.Background(), "", []string{}, nil, false)
 	if err == nil || err.Error() != "unsupported cache prefix" {
 		t.Errorf("\nExpected <%+v>, \nReceived <%+v>", "unsupported cache prefix", err)
 	}
@@ -43,7 +43,7 @@ func TestDatamanagerCacheDataFromDBNoPrfxErr(t *testing.T) {
 
 func TestDatamanagerCacheDataFromDBNoDMErr(t *testing.T) {
 	var dm *DataManager
-	err := dm.CacheDataFromDB(context.Background(), "", []string{}, false)
+	err := dm.CacheDataFromDB(context.Background(), "", []string{}, nil, false)
 	if err == nil || err != utils.ErrNoDatabaseConn {
 		t.Errorf("\nExpected <%+v>, \nReceived <%+v>", utils.ErrNoDatabaseConn, err)
 	}
@@ -2443,7 +2443,7 @@ func TestDMCacheDataFromDBRouteProfilePrefix(t *testing.T) {
 		t.Error("expected ok to be false")
 	}
 
-	if err := dm.CacheDataFromDB(context.Background(), utils.RouteProfilePrefix, []string{utils.MetaAny}, false); err != nil {
+	if err := dm.CacheDataFromDB(context.Background(), utils.RouteProfilePrefix, []string{utils.MetaAny}, nil, false); err != nil {
 		t.Error(err)
 	}
 
@@ -2488,7 +2488,7 @@ func TestDMCacheDataFromDBChargerProfilePrefix(t *testing.T) {
 		t.Error("expected ok to be false")
 	}
 
-	if err := dm.CacheDataFromDB(context.Background(), utils.ChargerProfilePrefix, []string{utils.MetaAny}, false); err != nil {
+	if err := dm.CacheDataFromDB(context.Background(), utils.ChargerProfilePrefix, []string{utils.MetaAny}, nil, false); err != nil {
 		t.Error(err)
 	}
 
@@ -2539,7 +2539,7 @@ func TestDMCacheDataFromDBRateProfilePrefix(t *testing.T) {
 		t.Error("expected ok to be false")
 	}
 
-	if err := dm.CacheDataFromDB(context.Background(), utils.RateProfilePrefix, []string{utils.MetaAny}, false); err != nil {
+	if err := dm.CacheDataFromDB(context.Background(), utils.RateProfilePrefix, []string{utils.MetaAny}, nil, false); err != nil {
 		t.Error(err)
 	}
 
@@ -2586,7 +2586,7 @@ func TestDMCacheDataFromDBActionProfilePrefix(t *testing.T) {
 		t.Error("expected ok to be false")
 	}
 
-	if err := dm.CacheDataFromDB(context.Background(), utils.ActionProfilePrefix, []string{utils.MetaAny}, false); err != nil {
+	if err := dm.CacheDataFromDB(context.Background(), utils.ActionProfilePrefix, []string{utils.MetaAny}, nil, false); err != nil {
 		t.Error(err)
 	}
 
@@ -2620,7 +2620,7 @@ func TestDMCacheDataFromDBAttributeFilterIndexes(t *testing.T) {
 		t.Error("expected ok to be false")
 	}
 
-	if err := dm.CacheDataFromDB(context.Background(), utils.AttributeFilterIndexes, []string{utils.MetaAny}, false); err != nil {
+	if err := dm.CacheDataFromDB(context.Background(), utils.AttributeFilterIndexes, []string{utils.MetaAny}, nil, false); err != nil {
 		t.Error(err)
 	}
 
@@ -2656,7 +2656,7 @@ func TestDMCacheDataFromDBResourceFilterIndexes(t *testing.T) {
 		t.Error("expected ok to be false")
 	}
 
-	if err := dm.CacheDataFromDB(context.Background(), utils.ResourceFilterIndexes, []string{utils.MetaAny}, false); err != nil {
+	if err := dm.CacheDataFromDB(context.Background(), utils.ResourceFilterIndexes, []string{utils.MetaAny}, nil, false); err != nil {
 		t.Error(err)
 	}
 

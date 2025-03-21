@@ -2,6 +2,10 @@
 // CGRateS Configuration file
 //
 
+"general": {
+	"reply_timeout": "30s",
+},
+
 
 "logger": {
 	"level": 7
@@ -26,21 +30,21 @@
 
 "caches":{
 	"partitions": {
-		"*resource_profiles": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*resources": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*statqueues": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*statqueue_profiles": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*thresholds": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*threshold_profiles": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*filters": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*route_profiles": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*attribute_profiles": {"limit": 10000, "ttl":"0s", "precache": true},
-		"*resource_filter_indexes" :{"limit": 10000, "ttl":"0s", "precache": true},
-		"*stat_filter_indexes" : {"limit": 10000, "ttl":"0s", "precache": true},
-		"*threshold_filter_indexes" : {"limit": 10000, "ttl":"0s", "precache": true},
-		"*route_filter_indexes" : {"limit": 10000, "ttl":"0s", "precache": true},
-		"*attribute_filter_indexes" : {"limit": 10000, "ttl":"0s", "precache": true},
-		"*charger_filter_indexes" : {"limit": 10000, "ttl":"0s", "precache": true},
+		"*resource_profiles": {"limit": 10000, "ttl":"", "precache": true,  "precache_filters": ["*prefix:~*req:RES_ACNT","*gt:~Limit:20"]}},
+		"*resources": {"limit": 10000, "ttl":"", "precache": true},
+		"*statqueues": {"limit": 10000, "ttl":"", "precache": true},
+		"*statqueue_profiles": {"limit": 10000, "ttl":"", "precache": true},
+		"*thresholds": {"limit": 10000, "ttl":"", "precache": true},
+		"*threshold_profiles": {"limit": 10000, "ttl":"", "precache": true},
+		"*filters": {"limit": 10000, "ttl":"", "precache": true},
+		"*route_profiles": {"limit": 10000, "ttl":"", "precache": true, "precache_filters": ["*suffix:~*req:1"]}},
+		"*attribute_profiles": {"limit": 10000, "ttl":"", "precache": true},
+		"*resource_filter_indexes" :{"limit": 10000, "ttl":"", "precache": true},
+		"*stat_filter_indexes" : {"limit": 10000, "ttl":"", "precache": true},
+		"*threshold_filter_indexes" : {"limit": 10000, "ttl":"", "precache": true},
+		"*route_filter_indexes" : {"limit": 10000, "ttl":"", "precache": true},
+		"*attribute_filter_indexes" : {"limit": 10000, "ttl":"", "precache": true},
+		"*charger_filter_indexes" : {"limit": 10000, "ttl":"", "precache": true},
 	},
 },
 

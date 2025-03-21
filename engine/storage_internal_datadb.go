@@ -106,6 +106,9 @@ func (iDB *InternalDB) GetKeysForPrefix(_ *context.Context, prefix string) (ids 
 	}
 	return
 }
+func (idb *InternalDB) FilterItemsDrv(ctx *context.Context, cacheID string, filtersObjList []*Filter) ([]string, error) {
+	return nil, nil
+}
 
 func (iDB *InternalDB) GetVersions(itm string) (vrs Versions, err error) {
 	x, ok := iDB.db.Get(utils.CacheVersions, utils.VersionName)
