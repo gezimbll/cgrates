@@ -101,23 +101,23 @@ var (
 	CostLow            = strings.ToLower(utils.Cost)
 	CostSourceLow      = strings.ToLower(utils.CostSource)
 	CacheInstanceToCol = map[string]string{
-		utils.ResourceProfilesPrefix: ColRsP,
-		utils.ResourcesPrefix:        ColRes,
-		utils.StatQueueProfilePrefix: ColSqp,
-		utils.StatQueuePrefix:        ColSqs,
-		utils.TrendProfilePrefix:     ColTrs,
-		utils.TrendPrefix:            ColTrd,
-		utils.ThresholdProfilePrefix: ColTps,
-		utils.ThresholdPrefix:        ColThs,
-		utils.FilterPrefix:           ColFlt,
-		utils.RouteProfilePrefix:     ColRts,
-		utils.RankingProfilePrefix:   ColRgp,
-		utils.RankingPrefix:          ColRnk,
-		utils.AttributeProfilePrefix: ColAttr,
-		utils.ChargerProfilePrefix:   ColCpp,
-		utils.RateProfilePrefix:      ColRpf,
-		utils.ActionProfilePrefix:    ColAct,
-		utils.AccountPrefix:          ColAcc,
+		utils.CacheResourceProfiles:  ColRsP,
+		utils.CacheResources:         ColRes,
+		utils.CacheStatQueueProfiles: ColSqp,
+		utils.CacheStatQueues:        ColSqs,
+		utils.CacheTrendProfiles:     ColTrs,
+		utils.CacheTrends:            ColTrd,
+		utils.CacheThresholdProfiles: ColTps,
+		utils.CacheThresholds:        ColThs,
+		utils.CacheFilters:           ColFlt,
+		utils.CacheRouteProfiles:     ColRts,
+		utils.CacheRankingProfiles:   ColRgp,
+		utils.CacheRankings:          ColRnk,
+		utils.CacheAttributeProfiles: ColAttr,
+		utils.CacheChargerProfiles:   ColCpp,
+		utils.CacheRateProfiles:      ColRpf,
+		utils.CacheActionProfiles:    ColAct,
+		utils.CacheAccounts:          ColAcc,
 	}
 )
 
@@ -1315,6 +1315,7 @@ func (ms *MongoStorage) SetRateProfileDrv(ctx *context.Context, rpp *utils.RateP
 
 func (ms *MongoStorage) FilterItemsDrv(ctx *context.Context, cacheID string, filtersObjList []*Filter) ([]string, error) {
 	col, has := CacheInstanceToCol[cacheID]
+	fmt.Println(col)
 	if !has {
 		return nil, fmt.Errorf("not allowed to filter items for this type of cache instance %s", cacheID)
 	}
@@ -1364,7 +1365,9 @@ func (ms *MongoStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 		}
 		key := doc["id"].(string)
 		items = append(items, key)
+		fmt.Println(doc)
 	}
+
 	if err := cursor.Err(); err != nil {
 		return nil, err
 	}

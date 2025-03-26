@@ -761,16 +761,16 @@ func (fltr *FilterRule) ElementItems() []string {
 	return strings.Split(fltr.Element, utils.NestingSep)
 }
 
+// Convert each filter rule and constructs a MongoDB query with or condition
 func FilterToMongoQuery(fltr *FilterRule) ([]bson.M, error) {
 	not := strings.HasPrefix(fltr.Type, utils.MetaNot)
 	elementItems := fltr.ElementItems()[1:]
 	var field string
 	if len(elementItems) > 1 {
-		field = elementItems[0] + "." + strings.Join(elementItems[1:], ".")
+		field = strings.ToLower(elementItems[0] + "." + strings.Join(elementItems[1:], "."))
 	} else {
-		field = elementItems[0]
+		field = strings.ToLower(elementItems[0])
 	}
-
 	if len(fltr.Values) == 0 {
 		switch fltr.Type {
 		case utils.MetaExists, utils.MetaNotExists:
@@ -797,7 +797,11 @@ func FilterToMongoQuery(fltr *FilterRule) ([]bson.M, error) {
 		case utils.MetaNotString, utils.MetaNotEqual:
 			cond = bson.M{field: bson.M{"$ne": value}}
 		case utils.MetaGreaterThan:
-			cond = bson.M{field: bson.M{"$gt": value}}
+			numVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert value %s to number: %w", value, err)
+			}
+			cond = bson.M{field: bson.M{"$gt": numVal}}
 		case utils.MetaGreaterOrEqual:
 			cond = bson.M{field: bson.M{"$gte": value}}
 		case utils.MetaLessThan:
@@ -822,12 +826,14 @@ func FilterToMongoQuery(fltr *FilterRule) ([]bson.M, error) {
 		default:
 			return nil, fmt.Errorf("unsupported filter type: %s", fltr.Type)
 		}
+		// Add the condition to the list
 		conditions = append(conditions, cond)
 	}
 
 	return conditions, nil
 }
 
+// FilterToRedisQuery filters use filter rules (*string, *prefix, *suffix) on redis keys
 func FilterToRedisQuery(fltr *FilterRule, prfx string) (conditions []string, err error) {
 	for _, value := range fltr.Values {
 		var cond string

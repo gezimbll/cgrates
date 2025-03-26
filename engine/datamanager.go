@@ -106,19 +106,35 @@ func (dm *DataManager) DataDB() DataDB {
 	return nil
 }
 
-func (dm *DataManager) CacheDataFromDB(ctx *context.Context, prfx string, ids, filterIDs []string, mustBeCached bool) (err error) {
+// limits the number of items in a partition based on configuration
+func (dm *DataManager) LimitPartition(cacheID string, ids []string) []string {
+	prefixCacheID := utils.CacheInstanceToPrefix[cacheID]
+	if cCfg, has := dm.cfg.CacheCfg().Partitions[cacheID]; has &&
+		cCfg.Limit >= 0 &&
+		cCfg.Limit < len(ids) {
+		ids = ids[:cCfg.Limit]
+	}
+	for i := range ids {
+		ids[i] = strings.TrimPrefix(ids[i], prefixCacheID)
+	}
+	return ids
+}
+
+func (dm *DataManager) CacheDataFromDB(ctx *context.Context, cacheID string, ids, filterIDs []string, mustBeCached bool) (err error) {
 	if dm == nil {
 		return utils.ErrNoDatabaseConn
 	}
-	if !cachePrefixMap.Has(prfx) {
+	// check if its a valid cache partition
+	if !utils.CachePartitions.Has(cacheID) {
 		return utils.NewCGRError(utils.DataManager,
 			utils.MandatoryIEMissingCaps,
 			utils.UnsupportedCachePrefix,
-			fmt.Sprintf("prefix <%s> is not a supported cache prefix", prfx))
+			fmt.Sprintf("cache <%s> is not a supported cache partition", cacheID))
 	}
-	if dm.cfg.CacheCfg().Partitions[utils.CachePrefixToInstance[prfx]].Limit == 0 {
+	if dm.cfg.CacheCfg().Partitions[cacheID].Limit == 0 {
 		return
 	}
+	// receive the list of items from the db using filters(overwrites the ids parameter list)
 	if len(filterIDs) != 0 {
 		var filtersObjList []*Filter
 		for _, fltr := range filterIDs {
@@ -128,166 +144,160 @@ func (dm *DataManager) CacheDataFromDB(ctx *context.Context, prfx string, ids, f
 			}
 			filtersObjList = append(filtersObjList, resultFilter)
 		}
-		ids, err = dm.DataDB().FilterItemsDrv(context.Background(), prfx, filtersObjList)
+		//  get the ids by passing the filters in deeper db layers
+		ids, err = dm.DataDB().FilterItemsDrv(context.Background(), cacheID, filtersObjList)
 		if err != nil {
 			return err
 		}
+		ids = dm.LimitPartition(cacheID, ids)
 	} else {
 		// *apiban and *dispatchers are not stored in database
-		if prfx == utils.MetaAPIBan || prfx == utils.MetaSentryPeer { // no need for ids in this case
+		if cacheID == utils.MetaAPIBan || cacheID == utils.MetaSentryPeer { // no need for ids in this case
 			ids = []string{utils.EmptyString}
 		} else if len(ids) != 0 && ids[0] == utils.MetaAny {
 			if mustBeCached {
-				ids = Cache.GetItemIDs(utils.CachePrefixToInstance[prfx], utils.EmptyString)
+				ids = Cache.GetItemIDs(cacheID, utils.EmptyString)
 			} else {
-				if ids, err = dm.DataDB().GetKeysForPrefix(ctx, prfx); err != nil {
+				if ids, err = dm.DataDB().GetKeysForPrefix(ctx, utils.CacheInstanceToPrefix[cacheID]); err != nil {
 					return utils.NewCGRError(utils.DataManager,
 						utils.ServerErrorCaps,
 						err.Error(),
-						fmt.Sprintf("DataManager error <%s> querying keys for prefix: <%s>", err.Error(), prfx))
+						fmt.Sprintf("DataManager error <%s> querying keys for prefix: <%s>", err.Error(), cacheID))
 				}
-				if cCfg, has := dm.cfg.CacheCfg().Partitions[utils.CachePrefixToInstance[prfx]]; has &&
-					cCfg.Limit >= 0 &&
-					cCfg.Limit < len(ids) {
-					ids = ids[:cCfg.Limit]
-				}
-				for i := range ids {
-					ids[i] = strings.TrimPrefix(ids[i], prfx)
-				}
+				ids = dm.LimitPartition(cacheID, ids)
 			}
 		}
 	}
-
 	for _, dataID := range ids {
 		if mustBeCached &&
-			!Cache.HasItem(utils.CachePrefixToInstance[prfx], dataID) { // only cache if previously there
+			!Cache.HasItem(cacheID, dataID) { // only cache if previously there
 			continue
 		}
-		switch prfx {
-		case utils.ResourceProfilesPrefix:
+		switch cacheID {
+		case utils.CacheResourceProfiles:
 			tntID := utils.NewTenantID(dataID)
 			lkID := guardian.Guardian.GuardIDs("", dm.cfg.GeneralCfg().LockingTimeout, resourceProfileLockKey(tntID.Tenant, tntID.ID))
 			_, err = dm.GetResourceProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
 			guardian.Guardian.UnguardIDs(lkID)
-		case utils.ResourcesPrefix:
+		case utils.CacheResources:
 			tntID := utils.NewTenantID(dataID)
 			lkID := guardian.Guardian.GuardIDs("", dm.cfg.GeneralCfg().LockingTimeout, resourceLockKey(tntID.Tenant, tntID.ID))
 			_, err = dm.GetResource(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
 			guardian.Guardian.UnguardIDs(lkID)
-		case utils.StatQueueProfilePrefix:
+		case utils.CacheStatQueueProfiles:
 			tntID := utils.NewTenantID(dataID)
 			lkID := guardian.Guardian.GuardIDs("", dm.cfg.GeneralCfg().LockingTimeout, statQueueProfileLockKey(tntID.Tenant, tntID.ID))
 			_, err = dm.GetStatQueueProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
 			guardian.Guardian.UnguardIDs(lkID)
-		case utils.StatQueuePrefix:
+		case utils.CacheStatQueues:
 			tntID := utils.NewTenantID(dataID)
 			lkID := guardian.Guardian.GuardIDs("", dm.cfg.GeneralCfg().LockingTimeout, statQueueLockKey(tntID.Tenant, tntID.ID))
 			_, err = dm.GetStatQueue(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
 			guardian.Guardian.UnguardIDs(lkID)
-		case utils.ThresholdProfilePrefix:
+		case utils.CacheThresholdProfiles:
 			tntID := utils.NewTenantID(dataID)
 			lkID := guardian.Guardian.GuardIDs("", dm.cfg.GeneralCfg().LockingTimeout, thresholdProfileLockKey(tntID.Tenant, tntID.ID))
 			_, err = dm.GetThresholdProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
 			guardian.Guardian.UnguardIDs(lkID)
-		case utils.RankingProfilePrefix:
+		case utils.CacheRankingProfiles:
 			tntID := utils.NewTenantID(dataID)
 			lkID := guardian.Guardian.GuardIDs("", dm.cfg.GeneralCfg().LockingTimeout, utils.RankingProfileLockKey(tntID.Tenant, tntID.ID))
 			_, err = dm.GetRankingProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
 			guardian.Guardian.UnguardIDs(lkID)
-		case utils.TrendProfilePrefix:
+		case utils.CacheTrendProfiles:
 			tntID := utils.NewTenantID(dataID)
 			_, err = dm.GetTrendProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
-		case utils.ThresholdPrefix:
+		case utils.CacheThresholds:
 			tntID := utils.NewTenantID(dataID)
 			lkID := guardian.Guardian.GuardIDs("", dm.cfg.GeneralCfg().LockingTimeout, thresholdLockKey(tntID.Tenant, tntID.ID))
 			_, err = dm.GetThreshold(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
 			guardian.Guardian.UnguardIDs(lkID)
-		case utils.FilterPrefix:
+		case utils.CacheFilters:
 			tntID := utils.NewTenantID(dataID)
 			_, err = dm.GetFilter(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
-		case utils.RouteProfilePrefix:
+		case utils.CacheRouteProfiles:
 			tntID := utils.NewTenantID(dataID)
 			_, err = dm.GetRouteProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
-		case utils.AttributeProfilePrefix:
+		case utils.CacheAttributeProfiles:
 			tntID := utils.NewTenantID(dataID)
 			_, err = dm.GetAttributeProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
-		case utils.ChargerProfilePrefix:
+		case utils.CacheChargerProfiles:
 			tntID := utils.NewTenantID(dataID)
 			_, err = dm.GetChargerProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
-		case utils.RateProfilePrefix:
+		case utils.CacheRateProfiles:
 			tntID := utils.NewTenantID(dataID)
 			_, err = dm.GetRateProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
-		case utils.ActionProfilePrefix:
+		case utils.CacheActionProfiles:
 			tntID := utils.NewTenantID(dataID)
 			_, err = dm.GetActionProfile(ctx, tntID.Tenant, tntID.ID, false, true, utils.NonTransactional)
-		case utils.AttributeFilterIndexes:
+		case utils.CacheAttributeFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheAttributeFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.ResourceFilterIndexes:
+		case utils.CacheResourceFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheResourceFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.StatFilterIndexes:
+		case utils.CacheStatFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheStatFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.ThresholdFilterIndexes:
+		case utils.CacheThresholdFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheThresholdFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.RouteFilterIndexes:
+		case utils.CacheRouteFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheRouteFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.ChargerFilterIndexes:
+		case utils.CacheChargerFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheChargerFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.RateProfilesFilterIndexPrfx:
+		case utils.CacheRateProfilesFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheRateProfilesFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.RateFilterIndexPrfx:
+		case utils.CacheRateFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheRateFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.ActionProfilesFilterIndexPrfx:
+		case utils.CacheActionProfilesFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheActionProfilesFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.AccountFilterIndexPrfx:
+		case utils.CacheAccountsFilterIndexes:
 			var tntCtx, idxKey string
 			if tntCtx, idxKey, err = splitFilterIndex(dataID); err != nil {
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheAccountsFilterIndexes, tntCtx, idxKey, utils.NonTransactional, false, true)
-		case utils.FilterIndexPrfx:
+		case utils.CacheReverseFilterIndexes:
 			idx := strings.LastIndexByte(dataID, utils.InInFieldSep[0])
 			if idx < 0 {
 				err = fmt.Errorf("WRONG_IDX_KEY_FORMAT<%s>", dataID)
 				return
 			}
 			_, err = dm.GetIndexes(ctx, utils.CacheReverseFilterIndexes, dataID[:idx], dataID[idx+1:], utils.NonTransactional, false, true)
-		case utils.LoadIDPrefix:
+		case utils.CacheLoadIDs:
 			_, err = dm.GetItemLoadIDs(ctx, utils.EmptyString, true)
 		case utils.MetaAPIBan:
 			_, err = GetAPIBan(ctx, utils.EmptyString, dm.cfg.APIBanCfg().Keys, false, false, true)
@@ -299,7 +309,7 @@ func (dm *DataManager) CacheDataFromDB(ctx *context.Context, prfx string, ids, f
 				return utils.NewCGRError(utils.DataManager,
 					utils.ServerErrorCaps,
 					err.Error(),
-					fmt.Sprintf("error <%s> querying DataManager for category: <%s>, dataID: <%s>", err.Error(), prfx, dataID))
+					fmt.Sprintf("error <%s> querying DataManager for category: <%s>, dataID: <%s>", err.Error(), cacheID, dataID))
 			}
 			err = nil
 			// if err = Cache.Remove(ctx, utils.CachePrefixToInstance[prfx], dataID,

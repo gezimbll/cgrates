@@ -1061,24 +1061,33 @@ func (rs *RedisStorage) RemoveConfigSectionsDrv(ctx *context.Context, nodeID str
 	return
 }
 
+// FilterItemsDrv filters items based on the provided filters
 func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, filtersObjList []*Filter) ([]string, error) {
-	prfx := cacheID + config.CgrConfig().GeneralCfg().DefaultTenant + utils.InInFieldSep
+	cachePrx := utils.CacheInstanceToPrefix[cacheID]
+	if cachePrx == "" {
+		return nil, fmt.Errorf("invalid cacheID [%s]", cacheID)
+	}
+	prfx := cachePrx + config.CgrConfig().GeneralCfg().DefaultTenant + utils.InInFieldSep
 	var redisConditions []string
 	var lazyFilters []Filter
 	for _, filterObj := range filtersObjList {
 		var lazyFltr bool
 		for _, rule := range filterObj.Rules {
+			// for redis we check if type is (prefix,suffix,string)since is only way to filter since profiles are encoded
+			// and element should be ~*req to differ from normal filters
 			if strings.HasPrefix(rule.Element, utils.MetaDynReq) {
 				if slices.Contains([]string{utils.MetaString, utils.MetaNotString, utils.MetaPrefix, utils.MetaNotPrefix, utils.MetaSuffix, utils.MetaNotSuffix}, rule.Type) {
 					cond, err := FilterToRedisQuery(rule, prfx)
 					if err != nil {
 						return nil, fmt.Errorf("error converting filter [%s] to redis query: %w", rule.Element, err)
 					}
+					// add conditions to the list
 					redisConditions = append(redisConditions, cond...)
 					continue
 				}
 			}
 			if !lazyFltr {
+				// if we have a lazy filter, we need to check it later
 				lazyFilters = append(lazyFilters, *filterObj)
 				lazyFltr = true
 			}
@@ -1087,7 +1096,9 @@ func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 	if len(redisConditions) == 0 {
 		return nil, fmt.Errorf("no filter to prefix elements")
 	}
-	var keys []string
+	counts := make(map[string]int)
+	// From conditions we filter ids on redis keys
+	// scan and convert to DataProvider each element to apply normal rules on those profiles to filter further
 	for _, cond := range redisConditions {
 		scan := radix.NewScanner(rs.client, radix.ScanOpts{
 			Command: redisSCAN,
@@ -1095,10 +1106,18 @@ func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 		})
 		var key string
 		for scan.Next(&key) {
-			keys = append(keys, key)
+			counts[key]++
 		}
 		if err := scan.Close(); err != nil {
 			return nil, err
+		}
+	}
+
+	var keys []string
+	// Only keep keys that appeared in all conditions.
+	for key, count := range counts {
+		if count == len(redisConditions) {
+			keys = append(keys, key)
 		}
 	}
 	if len(lazyFilters) == 0 {
@@ -1113,6 +1132,7 @@ func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 		} else if len(values) == 0 {
 			return nil, utils.ErrNotFound
 		}
+		// Based on cacheid pick object type to unmarshal
 		switch cacheID {
 		case utils.ResourceProfilesPrefix:
 			var rp ResourceProfile
@@ -1121,6 +1141,7 @@ func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 				return nil, err
 			}
 			var allProfilesPass = true
+			//applying the lazyfilters on each object
 			for _, filterObj := range lazyFilters {
 				var profilePass bool
 				for _, rule := range filterObj.Rules {
@@ -1133,11 +1154,13 @@ func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 						break
 					}
 				}
+				// if we have a filter that doesn't pass, we can skip this key
 				if !profilePass {
 					allProfilesPass = false
 					break
 				}
 			}
+			// if we have a filter that passes, we can keep this key
 			if allProfilesPass {
 				filteredKeys = append(filteredKeys, key)
 			}
