@@ -766,11 +766,11 @@ func FilterToMongoQuery(fltr *FilterRule) ([]bson.M, error) {
 	elementItems := fltr.ElementItems()[1:]
 	var field string
 	if len(elementItems) > 1 {
-		field = elementItems[0] + "." + strings.Join(elementItems[1:], ".")
+		field = strings.ToLower(elementItems[0] + "." + strings.Join(elementItems[1:], "."))
 	} else {
-		field = elementItems[0]
+		field = strings.ToLower(elementItems[0])
 	}
-
+	fmt.Println("field", field)
 	if len(fltr.Values) == 0 {
 		switch fltr.Type {
 		case utils.MetaExists, utils.MetaNotExists:
@@ -797,7 +797,11 @@ func FilterToMongoQuery(fltr *FilterRule) ([]bson.M, error) {
 		case utils.MetaNotString, utils.MetaNotEqual:
 			cond = bson.M{field: bson.M{"$ne": value}}
 		case utils.MetaGreaterThan:
-			cond = bson.M{field: bson.M{"$gt": value}}
+			numVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert value %s to number: %w", value, err)
+			}
+			cond = bson.M{field: bson.M{"$gt": numVal}}
 		case utils.MetaGreaterOrEqual:
 			cond = bson.M{field: bson.M{"$gte": value}}
 		case utils.MetaLessThan:

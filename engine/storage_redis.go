@@ -1062,7 +1062,11 @@ func (rs *RedisStorage) RemoveConfigSectionsDrv(ctx *context.Context, nodeID str
 }
 
 func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, filtersObjList []*Filter) ([]string, error) {
-	prfx := cacheID + config.CgrConfig().GeneralCfg().DefaultTenant + utils.InInFieldSep
+	cachePrx := utils.CacheInstanceToPrefix[cacheID]
+	if cachePrx == "" {
+		return nil, fmt.Errorf("invalid cacheID [%s]", cacheID)
+	}
+	prfx := cachePrx + config.CgrConfig().GeneralCfg().DefaultTenant + utils.InInFieldSep
 	var redisConditions []string
 	var lazyFilters []Filter
 	for _, filterObj := range filtersObjList {
@@ -1087,7 +1091,7 @@ func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 	if len(redisConditions) == 0 {
 		return nil, fmt.Errorf("no filter to prefix elements")
 	}
-	var keys []string
+	counts := make(map[string]int)
 	for _, cond := range redisConditions {
 		scan := radix.NewScanner(rs.client, radix.ScanOpts{
 			Command: redisSCAN,
@@ -1095,10 +1099,18 @@ func (rs *RedisStorage) FilterItemsDrv(ctx *context.Context, cacheID string, fil
 		})
 		var key string
 		for scan.Next(&key) {
-			keys = append(keys, key)
+			counts[key]++
 		}
 		if err := scan.Close(); err != nil {
 			return nil, err
+		}
+	}
+
+	var keys []string
+	// Only keep keys that appeared in all conditions.
+	for key, count := range counts {
+		if count == len(redisConditions) {
+			keys = append(keys, key)
 		}
 	}
 	if len(lazyFilters) == 0 {

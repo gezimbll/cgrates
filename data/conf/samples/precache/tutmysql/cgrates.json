@@ -30,7 +30,7 @@
 
 "caches":{
 	"partitions": {
-		"*resource_profiles": {"limit": 10000, "ttl":"", "precache": true,  "precache_filters": ["*prefix:~*req:RES_ACNT","*gt:~Limit:20"]}},
+		"*resource_profiles": {"limit": 10000, "ttl":"", "precache": true,  "precache_filters": ["*prefix:~*req:RES_T","*prefix:~*req:RES_ACNT","*gt:~Limit:20"]}},
 		"*resources": {"limit": 10000, "ttl":"", "precache": true},
 		"*statqueues": {"limit": 10000, "ttl":"", "precache": true},
 		"*statqueue_profiles": {"limit": 10000, "ttl":"", "precache": true},
