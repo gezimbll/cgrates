@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/cgrates/baningo"
 	"github.com/cgrates/birpc/context"
@@ -81,11 +83,17 @@ var (
 // NewDataManager returns a new DataManager
 func NewDataManager(dataDB DataDB, cfg *config.CGRConfig, connMgr *ConnManager) *DataManager {
 	ms, _ := utils.NewMarshaler(cfg.GeneralCfg().DBDataEncoding)
+	var wb *WriteBuffer
+	if cfg.DataDbCfg().StoreInterval > 0 {
+		wb = NewWriteBuffer(cfg.DataDbCfg().StoreInterval)
+	}
 	return &DataManager{
 		dataDB:  dataDB,
 		cfg:     cfg,
 		connMgr: connMgr,
 		ms:      ms,
+		wb:      wb,
+		async:   cfg.DataDbCfg().StoreInterval > 0,
 	}
 }
 
@@ -96,6 +104,53 @@ type DataManager struct {
 	cfg     *config.CGRConfig
 	connMgr *ConnManager
 	ms      utils.Marshaler
+	wb      *WriteBuffer
+	async   bool
+}
+type WriteBuffer struct {
+	mu       sync.Mutex
+	ops      map[string]func() error
+	interval time.Duration
+	stop     chan struct{}
+}
+
+func NewWriteBuffer(interval time.Duration) *WriteBuffer {
+	wb := &WriteBuffer{
+		ops:      make(map[string]func() error),
+		interval: interval,
+		stop:     make(chan struct{}),
+	}
+	go wb.periodicFlush()
+	return wb
+}
+
+func (wb *WriteBuffer) periodicFlush() {
+	ticker := time.NewTicker(wb.interval)
+	fmt.Println(wb.interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("here")
+			wb.Flush()
+		case <-wb.stop:
+			return
+		}
+	}
+}
+func (wb *WriteBuffer) Enqueue(key string, op func() error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+	wb.ops[key] = op
+}
+
+func (wb *WriteBuffer) Flush() {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+	for _, op := range wb.ops {
+		op()
+	}
+	wb.ops = make(map[string]func() error)
 }
 
 // DataDB exports access to dataDB
@@ -361,6 +416,14 @@ func (dm *DataManager) SetFilter(ctx *context.Context, fltr *Filter, withIndex b
 		utils.NonTransactional); err != nil && err != utils.ErrNotFound {
 		return err
 	}
+	fmt.Println(dm.async)
+	if dm.async {
+		fmt.Println("Enqueue")
+		dm.wb.Enqueue(utils.ConcatenatedKey(fltr.Tenant, fltr.ID), func() error {
+			return dm.DataDB().SetFilterDrv(ctx, fltr)
+		})
+		return nil
+	}
 	if err = dm.DataDB().SetFilterDrv(ctx, fltr); err != nil {
 		return
 	}
@@ -476,6 +539,14 @@ func (dm *DataManager) GetThreshold(ctx *context.Context, tenant, id string,
 func (dm *DataManager) SetThreshold(ctx *context.Context, th *Threshold) (err error) {
 	if dm == nil {
 		return utils.ErrNoDatabaseConn
+	}
+	fmt.Println(dm.async)
+	if dm.async {
+		fmt.Println("Enqueue")
+		dm.wb.Enqueue(utils.ConcatenatedKey(th.Tenant, th.ID), func() error {
+			return dm.DataDB().SetThresholdDrv(ctx, th)
+		})
+		return nil
 	}
 	if err = dm.DataDB().SetThresholdDrv(ctx, th); err != nil {
 		return

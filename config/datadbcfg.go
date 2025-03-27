@@ -69,19 +69,20 @@ type DataDBOpts struct {
 
 // DataDbCfg Database config
 type DataDbCfg struct {
-	Type        string
-	Host        string   // The host to connect to. Values that start with / are for UNIX domain sockets.
-	Port        string   // The port to bind to.
-	Name        string   // The name of the database to connect to.
-	User        string   // The user to sign in as.
-	Password    string   // The user's password.
-	RmtConns    []string // Remote DataDB  connIDs
-	RmtConnID   string
-	RplConns    []string // Replication connIDs
-	RplFiltered bool
-	RplCache    string
-	Items       map[string]*ItemOpts
-	Opts        *DataDBOpts
+	Type          string
+	Host          string   // The host to connect to. Values that start with / are for UNIX domain sockets.
+	Port          string   // The port to bind to.
+	Name          string   // The name of the database to connect to.
+	User          string   // The user to sign in as.
+	Password      string   // The user's password.
+	RmtConns      []string // Remote DataDB  connIDs
+	RmtConnID     string
+	RplConns      []string // Replication connIDs
+	RplFiltered   bool
+	RplCache      string
+	StoreInterval time.Duration
+	Items         map[string]*ItemOpts
+	Opts          *DataDBOpts
 }
 
 // loadDataDBCfg loads the DataDB section of the configuration
@@ -248,6 +249,11 @@ func (dbcfg *DataDbCfg) loadFromJSONCfg(jsnDbCfg *DbJsonCfg) (err error) {
 	if jsnDbCfg.Replication_cache != nil {
 		dbcfg.RplCache = *jsnDbCfg.Replication_cache
 	}
+	if jsnDbCfg.Store_interval != nil {
+		if dbcfg.StoreInterval, err = utils.ParseDurationWithNanosecs(*jsnDbCfg.Store_interval); err != nil {
+			return
+		}
+	}
 	if jsnDbCfg.Opts != nil {
 		err = dbcfg.Opts.loadFromJSONCfg(jsnDbCfg.Opts)
 	}
@@ -303,6 +309,9 @@ func (dbcfg DataDbCfg) Clone() (cln *DataDbCfg) {
 	if dbcfg.RplConns != nil {
 		cln.RplConns = slices.Clone(dbcfg.RplConns)
 	}
+	if dbcfg.StoreInterval != 0 {
+		cln.StoreInterval = dbcfg.StoreInterval
+	}
 	return
 }
 
@@ -338,6 +347,7 @@ func (dbcfg DataDbCfg) AsMapInterface() any {
 		utils.ReplicationConnsCfg:    dbcfg.RplConns,
 		utils.ReplicationFilteredCfg: dbcfg.RplFiltered,
 		utils.ReplicationCache:       dbcfg.RplCache,
+		utils.StoreIntervalCfg:       dbcfg.StoreInterval.String(),
 		utils.OptsCfg:                opts,
 	}
 	if dbcfg.Items != nil {
@@ -538,6 +548,8 @@ type DbJsonCfg struct {
 	Replication_conns     *[]string
 	Replication_filtered  *bool
 	Replication_cache     *string
+	Async                 *bool
+	Store_interval        *string
 	Items                 map[string]*ItemOptsJson
 	Opts                  *DBOptsJson
 }
