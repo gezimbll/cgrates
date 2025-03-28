@@ -83,9 +83,9 @@ var (
 // NewDataManager returns a new DataManager
 func NewDataManager(dataDB DataDB, cfg *config.CGRConfig, connMgr *ConnManager) *DataManager {
 	ms, _ := utils.NewMarshaler(cfg.GeneralCfg().DBDataEncoding)
-	var wb *WriteBuffer
+	var wb *WriteBffr
 	if cfg.DataDbCfg().StoreInterval > 0 {
-		wb = NewWriteBuffer(cfg.DataDbCfg().StoreInterval)
+		wb = NewWriteBuff(cfg.DataDbCfg().StoreInterval)
 	}
 	return &DataManager{
 		dataDB:  dataDB,
@@ -104,18 +104,18 @@ type DataManager struct {
 	cfg     *config.CGRConfig
 	connMgr *ConnManager
 	ms      utils.Marshaler
-	wb      *WriteBuffer
+	wb      *WriteBffr
 	async   bool
 }
-type WriteBuffer struct {
+type WriteBffr struct {
 	mu       sync.Mutex
 	ops      map[string]func() error
 	interval time.Duration
 	stop     chan struct{}
 }
 
-func NewWriteBuffer(interval time.Duration) *WriteBuffer {
-	wb := &WriteBuffer{
+func NewWriteBuff(interval time.Duration) *WriteBffr {
+	wb := &WriteBffr{
 		ops:      make(map[string]func() error),
 		interval: interval,
 		stop:     make(chan struct{}),
@@ -124,31 +124,31 @@ func NewWriteBuffer(interval time.Duration) *WriteBuffer {
 	return wb
 }
 
-func (wb *WriteBuffer) periodicFlush() {
+func (wb *WriteBffr) periodicFlush() {
 	ticker := time.NewTicker(wb.interval)
-	fmt.Println(wb.interval)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
-			fmt.Println("here")
-			wb.Flush()
+			wb.Write()
 		case <-wb.stop:
 			return
 		}
 	}
 }
-func (wb *WriteBuffer) Enqueue(key string, op func() error) {
+func (wb *WriteBffr) AddInMap(key string, op func() error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 	wb.ops[key] = op
 }
 
-func (wb *WriteBuffer) Flush() {
+func (wb *WriteBffr) Write() {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 	for _, op := range wb.ops {
-		op()
+		if err := op(); err != nil {
+			utils.Logger.Err(fmt.Sprintf("Error writing to DB: %s", err))
+		}
 	}
 	wb.ops = make(map[string]func() error)
 }
@@ -419,7 +419,7 @@ func (dm *DataManager) SetFilter(ctx *context.Context, fltr *Filter, withIndex b
 	fmt.Println(dm.async)
 	if dm.async {
 		fmt.Println("Enqueue")
-		dm.wb.Enqueue(utils.ConcatenatedKey(fltr.Tenant, fltr.ID), func() error {
+		dm.wb.AddInMap(utils.ConcatenatedKey(fltr.Tenant, fltr.ID), func() error {
 			return dm.DataDB().SetFilterDrv(ctx, fltr)
 		})
 		return nil
@@ -540,12 +540,11 @@ func (dm *DataManager) SetThreshold(ctx *context.Context, th *Threshold) (err er
 	if dm == nil {
 		return utils.ErrNoDatabaseConn
 	}
-	fmt.Println(dm.async)
 	if dm.async {
-		fmt.Println("Enqueue")
-		dm.wb.Enqueue(utils.ConcatenatedKey(th.Tenant, th.ID), func() error {
+		dm.wb.AddInMap(utils.ConcatenatedKey(th.Tenant, th.ID), func() error {
 			return dm.DataDB().SetThresholdDrv(ctx, th)
 		})
+
 		return nil
 	}
 	if err = dm.DataDB().SetThresholdDrv(ctx, th); err != nil {
@@ -589,6 +588,7 @@ func (dm *DataManager) GetThresholdProfile(ctx *context.Context, tenant, id stri
 	tntID := utils.ConcatenatedKey(tenant, id)
 	if cacheRead {
 		if x, ok := Cache.Get(utils.CacheThresholdProfiles, tntID); ok {
+			fmt.Println("Cache hit")
 			if x == nil {
 				return nil, utils.ErrNotFound
 			}
@@ -649,6 +649,12 @@ func (dm *DataManager) SetThresholdProfile(ctx *context.Context, th *ThresholdPr
 	if err != nil && err != utils.ErrNotFound {
 		return err
 	}
+	if dm.async {
+		dm.wb.AddInMap(utils.ConcatenatedKey(utils.ThresholdProfilePrefix, th.ID), func() error {
+			return dm.DataDB().SetThresholdProfileDrv(ctx, th)
+		})
+		return nil
+	}
 	if err = dm.DataDB().SetThresholdProfileDrv(ctx, th); err != nil {
 		return err
 	}
@@ -702,6 +708,15 @@ func (dm *DataManager) RemoveThresholdProfile(ctx *context.Context, tenant, id s
 	oldTh, err := dm.GetThresholdProfile(ctx, tenant, id, true, false, utils.NonTransactional)
 	if err != nil && err != utils.ErrNotFound {
 		return err
+	}
+	if dm.async {
+		dm.wb.AddInMap(utils.ConcatenatedKey(tenant, id), func() error {
+			if err := dm.DataDB().RemThresholdProfileDrv(ctx, tenant, id); err != nil {
+				return err
+			}
+			return dm.RemoveThreshold(ctx, tenant, id)
+		})
+		return nil
 	}
 	if err = dm.DataDB().RemThresholdProfileDrv(ctx, tenant, id); err != nil {
 		return
@@ -2512,6 +2527,11 @@ func (dm *DataManager) SetActionProfile(ctx *context.Context, ap *ActionProfile,
 	if err != nil && err != utils.ErrNotFound {
 		return err
 	}
+	if dm.async {
+		dm.wb.AddInMap(utils.ConcatenatedKey(ap.Tenant, ap.ID), func() error {
+			return dm.DataDB().SetActionProfileDrv(ctx, ap)
+		})
+	}
 	if err = dm.DataDB().SetActionProfileDrv(ctx, ap); err != nil {
 		return err
 	}
@@ -2802,6 +2822,12 @@ func (dm *DataManager) SetAccount(ctx *context.Context, ap *utils.Account, withI
 	oldRpp, err := dm.GetAccount(ctx, ap.Tenant, ap.ID)
 	if err != nil && err != utils.ErrNotFound {
 		return err
+	}
+	if dm.async {
+		dm.wb.AddInMap(utils.ConcatenatedKey(ap.Tenant, ap.ID), func() error {
+			return dm.DataDB().SetAccountDrv(ctx, ap)
+		})
+		return nil
 	}
 	if err = dm.DataDB().SetAccountDrv(ctx, ap); err != nil {
 		return err
