@@ -83,7 +83,7 @@ var (
 // NewDataManager returns a new DataManager
 func NewDataManager(dataDB DataDB, cfg *config.CGRConfig, connMgr *ConnManager) *DataManager {
 	ms, _ := utils.NewMarshaler(cfg.GeneralCfg().DBDataEncoding)
-	var wb *WriteBffr
+	var wb *WriteBuff
 	if cfg.DataDbCfg().StoreInterval > 0 {
 		wb = NewWriteBuff(cfg.DataDbCfg().StoreInterval)
 	}
@@ -104,18 +104,18 @@ type DataManager struct {
 	cfg     *config.CGRConfig
 	connMgr *ConnManager
 	ms      utils.Marshaler
-	wb      *WriteBffr
+	wb      *WriteBuff
 	async   bool
 }
-type WriteBffr struct {
+type WriteBuff struct {
 	mu       sync.Mutex
 	ops      map[string]func() error
 	interval time.Duration
 	stop     chan struct{}
 }
 
-func NewWriteBuff(interval time.Duration) *WriteBffr {
-	wb := &WriteBffr{
+func NewWriteBuff(interval time.Duration) *WriteBuff {
+	wb := &WriteBuff{
 		ops:      make(map[string]func() error),
 		interval: interval,
 		stop:     make(chan struct{}),
@@ -124,7 +124,7 @@ func NewWriteBuff(interval time.Duration) *WriteBffr {
 	return wb
 }
 
-func (wb *WriteBffr) periodicFlush() {
+func (wb *WriteBuff) periodicFlush() {
 	ticker := time.NewTicker(wb.interval)
 	defer ticker.Stop()
 	for {
@@ -136,13 +136,13 @@ func (wb *WriteBffr) periodicFlush() {
 		}
 	}
 }
-func (wb *WriteBffr) AddInMap(key string, op func() error) {
+func (wb *WriteBuff) AddInMap(key string, op func() error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 	wb.ops[key] = op
 }
 
-func (wb *WriteBffr) Write() {
+func (wb *WriteBuff) Write() {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 	for _, op := range wb.ops {
@@ -541,6 +541,10 @@ func (dm *DataManager) SetThreshold(ctx *context.Context, th *Threshold) (err er
 		return utils.ErrNoDatabaseConn
 	}
 	if dm.async {
+		if errCh := Cache.Set(ctx, utils.CacheThresholds, utils.ConcatenatedKey(th.Tenant, th.ID), th, nil,
+			cacheCommit(utils.NonTransactional), utils.NonTransactional); errCh != nil {
+			return errCh
+		}
 		dm.wb.AddInMap(utils.ConcatenatedKey(th.Tenant, th.ID), func() error {
 			return dm.DataDB().SetThresholdDrv(ctx, th)
 		})
@@ -650,6 +654,10 @@ func (dm *DataManager) SetThresholdProfile(ctx *context.Context, th *ThresholdPr
 		return err
 	}
 	if dm.async {
+		if errCh := Cache.Set(ctx, utils.CacheThresholdProfiles, utils.ConcatenatedKey(th.Tenant, th.ID), th, nil,
+			cacheCommit(utils.NonTransactional), utils.NonTransactional); errCh != nil {
+			return errCh
+		}
 		dm.wb.AddInMap(utils.ConcatenatedKey(utils.ThresholdProfilePrefix, th.ID), func() error {
 			return dm.DataDB().SetThresholdProfileDrv(ctx, th)
 		})
@@ -710,6 +718,10 @@ func (dm *DataManager) RemoveThresholdProfile(ctx *context.Context, tenant, id s
 		return err
 	}
 	if dm.async {
+		if errCh := Cache.Set(ctx, utils.CacheThresholdProfiles, utils.ConcatenatedKey(tenant, id), nil, nil,
+			cacheCommit(utils.NonTransactional), utils.NonTransactional); errCh != nil {
+			return errCh
+		}
 		dm.wb.AddInMap(utils.ConcatenatedKey(tenant, id), func() error {
 			if err := dm.DataDB().RemThresholdProfileDrv(ctx, tenant, id); err != nil {
 				return err
@@ -2824,6 +2836,10 @@ func (dm *DataManager) SetAccount(ctx *context.Context, ap *utils.Account, withI
 		return err
 	}
 	if dm.async {
+		if errCh := Cache.Set(ctx, utils.CacheAccounts, utils.ConcatenatedKey(ap.Tenant, ap.ID), ap, nil,
+			cacheCommit(utils.NonTransactional), utils.NonTransactional); errCh != nil {
+			return errCh
+		}
 		dm.wb.AddInMap(utils.ConcatenatedKey(ap.Tenant, ap.ID), func() error {
 			return dm.DataDB().SetAccountDrv(ctx, ap)
 		})
