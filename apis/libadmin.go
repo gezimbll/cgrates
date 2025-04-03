@@ -40,6 +40,7 @@ func (admS *AdminSv1) CallCache(ctx *context.Context, cacheopt string, tnt, cach
 		if argCache, err = admS.composeArgsReload(ctx, tnt, cacheID, itemID, filters); err != nil {
 			return
 		}
+
 		args = utils.NewAttrReloadCacheWithOptsFromMap(argCache, tnt, opts)
 	case utils.MetaLoad:
 		method = utils.CacheSv1LoadCache
@@ -90,6 +91,7 @@ func (admS *AdminSv1) CallCache(ctx *context.Context, cacheopt string, tnt, cach
 		}
 
 	}
+
 	return admS.connMgr.Call(ctx, admS.cfg.AdminSCfg().CachesConns,
 		method, args, &reply)
 }

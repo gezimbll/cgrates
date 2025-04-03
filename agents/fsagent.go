@@ -275,7 +275,6 @@ func (fsa *FSsessions) onChannelAnswer(fsev FSEvent, connIdx int) {
 	chanUUID := fsev.GetUUID()
 	for _, val := range []string{utils.AccountField, utils.Subject, utils.Destination, utils.Category, utils.OriginID, utils.Tenant} {
 		if _, err := cgrEv.FieldAsString(val); err != nil {
-			utils.Logger.Debug(fmt.Sprintf("error %v", err))
 			fsa.disconnectSession(connIdx, chanUUID, "",
 				utils.NewErrMandatoryIeMissing(val).Error())
 			return

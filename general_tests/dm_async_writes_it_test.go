@@ -49,7 +49,7 @@ func TestDmAsyncWrites(t *testing.T) {
 	"db_type": "redis",						
 	"db_port": 6379, 						
 	"db_name": "10", 
-	"store_interval": "10s",						
+	"store_interval": "4s",						
 },
 "stor_db": {
 	"db_password": "CGRateS.org"
@@ -87,7 +87,7 @@ func TestDmAsyncWrites(t *testing.T) {
 		LogBuffer:  bytes.NewBuffer(nil),
 	}
 	client, _ := ng.Run(t)
-	defer t.Log(ng.LogBuffer)
+	//	defer t.Log(ng.LogBuffer)
 
 	t.Run("TestDmAsyncWrites", func(t *testing.T) {
 		thp := &engine.ThresholdProfile{
@@ -103,15 +103,21 @@ func TestDmAsyncWrites(t *testing.T) {
 			t.Error("Expected OK, got ", reply)
 		}
 		var thp2 engine.ThresholdProfile
-		if err := client.Call(context.Background(), utils.AdminSv1GetThresholdProfile, &utils.TenantID{Tenant: "cgrates.org", ID: "THP1"}, &thp2); err == nil || err.Error() != utils.ErrNotFound.Error() {
-			t.Error(err)
-		}
-		time.Sleep(20 * time.Second)
 		if err := client.Call(context.Background(), utils.AdminSv1GetThresholdProfile, &utils.TenantID{Tenant: "cgrates.org", ID: "THP1"}, &thp2); err != nil {
 			t.Error(err)
 		}
-		if thp2.ID != "THP1" {
-			t.Error("Expected THP1, got ", thp2.ID)
+		time.Sleep(5 * time.Second)
+		if err := client.Call(context.Background(), utils.CacheSv1Clear, &utils.AttrCacheIDsWithAPIOpts{
+			CacheIDs: nil,
+		}, &reply); err != nil {
+			t.Error(err)
+		}
+		var thp4 engine.ThresholdProfile
+		if err := client.Call(context.Background(), utils.AdminSv1GetThresholdProfile, &utils.TenantID{Tenant: "cgrates.org", ID: "THP1"}, &thp4); err != nil {
+			t.Error(err)
+		}
+		if thp4.ID != "THP1" {
+			t.Error("Expected THP1, got ", thp4.ID)
 		}
 
 	})

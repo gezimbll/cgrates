@@ -135,11 +135,6 @@ func (adms *AdminSv1) SetThresholdProfile(ctx *context.Context, args *engine.Thr
 		utils.Logger.Info(fmt.Sprintf("<AdminSv1.SetThresholdProfile> Delaying cache call for %v", adms.cfg.GeneralCfg().CachingDelay))
 		time.Sleep(adms.cfg.GeneralCfg().CachingDelay)
 	}
-	//handle caching for ThresholdProfile and Threshold
-	if err := adms.CallCache(ctx, utils.IfaceAsString(args.APIOpts[utils.MetaCache]), args.Tenant, utils.CacheThresholdProfiles,
-		args.TenantID(), utils.EmptyString, &args.FilterIDs, args.APIOpts); err != nil {
-		return utils.APIErrorHandler(err)
-	}
 	*reply = utils.OK
 	return nil
 }

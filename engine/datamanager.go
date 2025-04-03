@@ -83,7 +83,7 @@ var (
 // NewDataManager returns a new DataManager
 func NewDataManager(dataDB DataDB, cfg *config.CGRConfig, connMgr *ConnManager) *DataManager {
 	ms, _ := utils.NewMarshaler(cfg.GeneralCfg().DBDataEncoding)
-	var wb *WriteBffr
+	var wb *WriteBuff
 	if cfg.DataDbCfg().StoreInterval > 0 {
 		wb = NewWriteBuff(cfg.DataDbCfg().StoreInterval)
 	}
@@ -104,53 +104,74 @@ type DataManager struct {
 	cfg     *config.CGRConfig
 	connMgr *ConnManager
 	ms      utils.Marshaler
-	wb      *WriteBffr
+	wb      *WriteBuff
 	async   bool
 }
-type WriteBffr struct {
+
+// WriteBuff is a write buffer that batches write operations
+type WriteBuff struct {
 	mu       sync.Mutex
-	ops      map[string]func() error
+	ops      map[string]func(*context.Context) error
 	interval time.Duration
 	stop     chan struct{}
+	done     chan struct{}
+	ctx      *context.Context
 }
 
-func NewWriteBuff(interval time.Duration) *WriteBffr {
-	wb := &WriteBffr{
-		ops:      make(map[string]func() error),
+// NewWriteBuff creates a new WriteBuff with the specified interval
+func NewWriteBuff(interval time.Duration) *WriteBuff {
+	wb := &WriteBuff{
+		ops:      make(map[string]func(*context.Context) error),
 		interval: interval,
 		stop:     make(chan struct{}),
+		done:     make(chan struct{}),
+		ctx:      &context.Context{},
 	}
 	go wb.periodicFlush()
 	return wb
 }
 
-func (wb *WriteBffr) periodicFlush() {
+// Starts the periodic flush of the write buffer
+func (wb *WriteBuff) periodicFlush() {
 	ticker := time.NewTicker(wb.interval)
-	defer ticker.Stop()
+	defer func() {
+		ticker.Stop()
+		close(wb.done)
+	}()
 	for {
 		select {
 		case <-ticker.C:
 			wb.Write()
 		case <-wb.stop:
+			wb.Write()
 			return
 		}
 	}
 }
-func (wb *WriteBffr) AddInMap(key string, op func() error) {
+
+// Add the key in map with the function to be executed
+func (wb *WriteBuff) AddInMap(key string, op func(*context.Context) error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 	wb.ops[key] = op
 }
 
-func (wb *WriteBffr) Write() {
+// Executes all the functions in the buffer map and clears
+func (wb *WriteBuff) Write() {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 	for _, op := range wb.ops {
-		if err := op(); err != nil {
+		if err := op(wb.ctx); err != nil {
 			utils.Logger.Err(fmt.Sprintf("Error writing to DB: %s", err))
 		}
 	}
-	wb.ops = make(map[string]func() error)
+	wb.ops = make(map[string]func(*context.Context) error)
+}
+
+// Stop stops the periodic flush and waits for finsh(to be updated since it might stuck)
+func (wb *WriteBuff) Stop() {
+	close(wb.stop)
+	<-wb.done
 }
 
 // DataDB exports access to dataDB
@@ -416,14 +437,6 @@ func (dm *DataManager) SetFilter(ctx *context.Context, fltr *Filter, withIndex b
 		utils.NonTransactional); err != nil && err != utils.ErrNotFound {
 		return err
 	}
-	fmt.Println(dm.async)
-	if dm.async {
-		fmt.Println("Enqueue")
-		dm.wb.AddInMap(utils.ConcatenatedKey(fltr.Tenant, fltr.ID), func() error {
-			return dm.DataDB().SetFilterDrv(ctx, fltr)
-		})
-		return nil
-	}
 	if err = dm.DataDB().SetFilterDrv(ctx, fltr); err != nil {
 		return
 	}
@@ -541,7 +554,11 @@ func (dm *DataManager) SetThreshold(ctx *context.Context, th *Threshold) (err er
 		return utils.ErrNoDatabaseConn
 	}
 	if dm.async {
-		dm.wb.AddInMap(utils.ConcatenatedKey(th.Tenant, th.ID), func() error {
+		if errCh := Cache.Set(ctx, utils.CacheThresholds, utils.ConcatenatedKey(th.Tenant, th.ID), th, nil,
+			cacheCommit(utils.NonTransactional), utils.NonTransactional); errCh != nil {
+			return errCh
+		}
+		dm.wb.AddInMap(utils.ConcatenatedKey(th.Tenant, th.ID), func(ctx *context.Context) error {
 			return dm.DataDB().SetThresholdDrv(ctx, th)
 		})
 
@@ -588,7 +605,6 @@ func (dm *DataManager) GetThresholdProfile(ctx *context.Context, tenant, id stri
 	tntID := utils.ConcatenatedKey(tenant, id)
 	if cacheRead {
 		if x, ok := Cache.Get(utils.CacheThresholdProfiles, tntID); ok {
-			fmt.Println("Cache hit")
 			if x == nil {
 				return nil, utils.ErrNotFound
 			}
@@ -634,9 +650,32 @@ func (dm *DataManager) GetThresholdProfile(ctx *context.Context, tenant, id stri
 	return
 }
 
+// Pushes the profile to the EFS in cause of failure
+func (dm *DataManager) failoverEfs(ctx *context.Context, profile any) {
+	args := &utils.ArgsFailedPosts{
+		Tenant:    "",
+		Path:      "",
+		Event:     profile,
+		FailedDir: "",
+	}
+	var reply string
+	if err := dm.connMgr.Call(ctx, []string{"conns"},
+		utils.EfSv1ProcessEvent, args, &reply); err != nil {
+		utils.Logger.Warning(fmt.Sprintf(
+			"could not push profile for <%s> because: <%s>", profile,
+			err.Error()))
+	}
+
+}
+
 func (dm *DataManager) SetThresholdProfile(ctx *context.Context, th *ThresholdProfile, withIndex bool) (err error) {
 	if dm == nil {
 		return utils.ErrNoDatabaseConn
+	}
+	// Caches the threshold profile to be accessible faster through cache
+	if err = Cache.Set(ctx, utils.CacheThresholdProfiles, utils.ConcatenatedKey(th.Tenant, th.ID), th, nil,
+		cacheCommit(utils.NonTransactional), utils.NonTransactional); err != nil {
+		return err
 	}
 	if withIndex {
 		if err := dm.checkFilters(ctx, th.Tenant, th.FilterIDs); err != nil {
@@ -649,9 +688,14 @@ func (dm *DataManager) SetThresholdProfile(ctx *context.Context, th *ThresholdPr
 	if err != nil && err != utils.ErrNotFound {
 		return err
 	}
+	// If asynchronus,add profile in buffer to be written to DB
 	if dm.async {
-		dm.wb.AddInMap(utils.ConcatenatedKey(utils.ThresholdProfilePrefix, th.ID), func() error {
-			return dm.DataDB().SetThresholdProfileDrv(ctx, th)
+		dm.wb.AddInMap(utils.ConcatenatedKey(utils.ThresholdProfilePrefix, th.ID), func(ctx *context.Context) error {
+			if err := dm.DataDB().SetThresholdProfileDrv(ctx, th); err != nil {
+				dm.failoverEfs(ctx, *th)
+				return err
+			}
+			return nil
 		})
 		return nil
 	}
@@ -710,7 +754,11 @@ func (dm *DataManager) RemoveThresholdProfile(ctx *context.Context, tenant, id s
 		return err
 	}
 	if dm.async {
-		dm.wb.AddInMap(utils.ConcatenatedKey(tenant, id), func() error {
+		if errCh := Cache.Set(ctx, utils.CacheThresholdProfiles, utils.ConcatenatedKey(tenant, id), nil, nil,
+			cacheCommit(utils.NonTransactional), utils.NonTransactional); errCh != nil {
+			return errCh
+		}
+		dm.wb.AddInMap(utils.ConcatenatedKey(tenant, id), func(ctx *context.Context) error {
 			if err := dm.DataDB().RemThresholdProfileDrv(ctx, tenant, id); err != nil {
 				return err
 			}
@@ -2527,11 +2575,6 @@ func (dm *DataManager) SetActionProfile(ctx *context.Context, ap *ActionProfile,
 	if err != nil && err != utils.ErrNotFound {
 		return err
 	}
-	if dm.async {
-		dm.wb.AddInMap(utils.ConcatenatedKey(ap.Tenant, ap.ID), func() error {
-			return dm.DataDB().SetActionProfileDrv(ctx, ap)
-		})
-	}
 	if err = dm.DataDB().SetActionProfileDrv(ctx, ap); err != nil {
 		return err
 	}
@@ -2824,9 +2867,10 @@ func (dm *DataManager) SetAccount(ctx *context.Context, ap *utils.Account, withI
 		return err
 	}
 	if dm.async {
-		dm.wb.AddInMap(utils.ConcatenatedKey(ap.Tenant, ap.ID), func() error {
-			return dm.DataDB().SetAccountDrv(ctx, ap)
-		})
+		if errCh := Cache.Set(ctx, utils.CacheAccounts, utils.ConcatenatedKey(ap.Tenant, ap.ID), ap, nil,
+			cacheCommit(utils.NonTransactional), utils.NonTransactional); errCh != nil {
+			return errCh
+		}
 		return nil
 	}
 	if err = dm.DataDB().SetAccountDrv(ctx, ap); err != nil {
