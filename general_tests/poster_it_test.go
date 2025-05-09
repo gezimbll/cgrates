@@ -182,7 +182,12 @@ func testPosterITAMQP(t *testing.T) {
 	if err := json.Unmarshal(body, &acc); err != nil {
 		t.Fatal(err)
 	}
-	if acc[utils.AccountField] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
+	var account map[string]any
+	if err := json.Unmarshal([]byte(acc[utils.AccountField].(string)), &account); err != nil {
+		t.Fatal(err)
+	}
+
+	if account["ID"] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
 		t.Errorf("Expected %q ,received %q", utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account), acc[utils.AccountField])
 	}
 }
@@ -220,7 +225,12 @@ func testPosterITAMQPv1(t *testing.T) {
 	if err := json.Unmarshal(body, &acc); err != nil {
 		t.Fatal(err)
 	}
-	if acc[utils.AccountField] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
+	var account map[string]any
+	if err := json.Unmarshal([]byte(acc[utils.AccountField].(string)), &account); err != nil {
+		t.Fatal(err)
+	}
+
+	if account["ID"] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
 		t.Errorf("Expected %q ,received %q", utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account), acc[utils.AccountField])
 	}
 }
@@ -258,7 +268,12 @@ func testPosterITSQS(t *testing.T) {
 	if err := json.Unmarshal(body, &acc); err != nil {
 		t.Fatal(err)
 	}
-	if acc[utils.AccountField] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
+	var account map[string]any
+	if err := json.Unmarshal([]byte(acc[utils.AccountField].(string)), &account); err != nil {
+		t.Fatal(err)
+	}
+
+	if account["ID"] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
 		t.Errorf("Expected %q ,received %q", utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account), acc[utils.AccountField])
 	}
 }
@@ -296,7 +311,12 @@ func testPosterITS3(t *testing.T) {
 	if err := json.Unmarshal(body, &acc); err != nil {
 		t.Fatal(err)
 	}
-	if acc[utils.AccountField] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
+	var account map[string]any
+	if err := json.Unmarshal([]byte(acc[utils.AccountField].(string)), &account); err != nil {
+		t.Fatal(err)
+	}
+
+	if account["ID"] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
 		t.Errorf("Expected %q ,received %q", utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account), acc[utils.AccountField])
 	}
 }
@@ -334,7 +354,12 @@ func testPosterITKafka(t *testing.T) {
 	if err := json.Unmarshal(body, &acc); err != nil {
 		t.Fatal(err)
 	}
-	if acc[utils.AccountField] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
+	var account map[string]any
+	if err := json.Unmarshal([]byte(acc[utils.AccountField].(string)), &account); err != nil {
+		t.Fatal(err)
+	}
+
+	if account["ID"] != utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account) {
 		t.Errorf("Expected %q ,received %q", utils.ConcatenatedKey(pstrAccount.Tenant, pstrAccount.Account), acc[utils.AccountField])
 	}
 }
