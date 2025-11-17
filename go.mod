@@ -10,7 +10,7 @@ go 1.24.2
 
 // replace github.com/cgrates/kamevapi => ../kamevapi
 
-// replace github.com/cgrates/aringo => ../aringo
+replace github.com/cgrates/aringo => ../aringo
 
 require (
 	github.com/Azure/go-amqp v1.0.5
@@ -89,6 +89,7 @@ require (
 	github.com/blevesearch/zapx/v16 v16.1.5 // indirect
 	github.com/cenkalti/hub v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/coder/websocket v1.8.14 // indirect
 	github.com/couchbase/ghistogram v0.1.0 // indirect
 	github.com/couchbase/moss v0.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

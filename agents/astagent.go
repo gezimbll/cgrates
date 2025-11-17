@@ -21,7 +21,6 @@ package agents
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -135,11 +134,9 @@ func (sma *AsteriskAgent) ListenAndServe(stopChan <-chan struct{}) (err error) {
 
 // setChannelVar will set the value of a variable
 func (sma *AsteriskAgent) setChannelVar(chanID string, vrblName, vrblVal string) (success bool) {
-	if _, err := sma.astConn.Call(aringo.HTTP_POST,
-		fmt.Sprintf("http://%s/ari/channels/%s/variable?variable=%s&value=%s", // Asterisk having issue with variable terminating empty so harcoding param in url
-			sma.cgrCfg.AsteriskAgentCfg().AsteriskConns[sma.astConnIdx].Address,
-			chanID, vrblName, vrblVal),
-		nil); err != nil {
+	if _, err := sma.astConn.Call(sma.ctx, aringo.HTTP_POST,
+		fmt.Sprintf("channels/%s/variable", chanID), // Asterisk having issue with variable terminating empty so harcoding param in url
+		map[string]string{"variable": vrblName, "value": vrblVal}); err != nil {
 		// Since we got error, disconnect channel
 		sma.hangupChannel(chanID,
 			fmt.Sprintf("<%s> error: <%s> setting <%s> for channelID: <%s>",
@@ -154,9 +151,8 @@ func (sma *AsteriskAgent) hangupChannel(channelID, warnMsg string) {
 	if warnMsg != "" {
 		utils.Logger.Warning(warnMsg)
 	}
-	if _, err := sma.astConn.Call(aringo.HTTP_DELETE, fmt.Sprintf("http://%s/ari/channels/%s",
-		sma.cgrCfg.AsteriskAgentCfg().AsteriskConns[sma.astConnIdx].Address, channelID),
-		url.Values{"reason": {"congestion"}}); err != nil {
+	if _, err := sma.astConn.Call(sma.ctx, aringo.HTTP_DELETE, fmt.Sprintf("channels/%s", channelID),
+		map[string]string{"reason": "congestion"}); err != nil {
 		utils.Logger.Warning(
 			fmt.Sprintf("<%s> failed disconnecting channel <%s>, err: %s",
 				utils.AsteriskAgent, channelID, err.Error()))
@@ -165,10 +161,8 @@ func (sma *AsteriskAgent) hangupChannel(channelID, warnMsg string) {
 
 func (sma *AsteriskAgent) handleStasisStart(ev *SMAsteriskEvent) {
 	// Subscribe for channel updates even after we leave Stasis
-	if _, err := sma.astConn.Call(aringo.HTTP_POST,
-		fmt.Sprintf("http://%s/ari/applications/%s/subscription?eventSource=channel:%s",
-			sma.cgrCfg.AsteriskAgentCfg().AsteriskConns[sma.astConnIdx].Address,
-			CGRAuthAPP, ev.ChannelID()), nil); err != nil {
+	if _, err := sma.astConn.Call(sma.ctx, aringo.HTTP_POST,
+		fmt.Sprintf("applications/%s/subscription", CGRAuthAPP), map[string]string{"eventSource": fmt.Sprintf("channel:%s", ev.ChannelID())}); err != nil {
 		// Since we got error, disconnect channel
 		sma.hangupChannel(ev.ChannelID(),
 			fmt.Sprintf("<%s> error: %s subscribing for channelID: %s",
@@ -249,10 +243,9 @@ func (sma *AsteriskAgent) handleStasisStart(ev *SMAsteriskEvent) {
 		return
 	}
 	// Exit channel from stasis
-	if _, err := sma.astConn.Call(
+	if _, err := sma.astConn.Call(sma.ctx,
 		aringo.HTTP_POST,
-		fmt.Sprintf("http://%s/ari/channels/%s/continue",
-			sma.cgrCfg.AsteriskAgentCfg().AsteriskConns[sma.astConnIdx].Address,
+		fmt.Sprintf("channels/%s/continue",
 			ev.ChannelID()), nil); err != nil {
 	}
 	// Done with processing event, cache it for later use
@@ -396,13 +389,13 @@ func (sma *AsteriskAgent) V1DisconnectSession(ctx *context.Context, cgrEv utils.
 func (sma *AsteriskAgent) V1GetActiveSessionIDs(ctx *context.Context, ignParam string,
 	sessionIDs *[]*sessions.SessionID) error {
 	var slMpIface []map[string]any // decode the result from ari into a slice of map[string]any
-	if byts, err := sma.astConn.Call(
+	restResp, err := sma.astConn.Call(sma.ctx,
 		aringo.HTTP_GET,
-		fmt.Sprintf("http://%s/ari/channels",
-			sma.cgrCfg.AsteriskAgentCfg().AsteriskConns[sma.astConnIdx].Address),
-		nil); err != nil {
+		"channels", nil)
+	if err != nil {
 		return err
-	} else if err := json.Unmarshal(byts, &slMpIface); err != nil {
+	}
+	if err := json.Unmarshal([]byte(restResp.MessageBody), &slMpIface); err != nil {
 		return err
 	}
 	var sIDs []*sessions.SessionID
