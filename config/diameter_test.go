@@ -27,9 +27,12 @@ import (
 
 func TestDiameterAgentCfgloadFromJsonCfg(t *testing.T) {
 	jsonCFG := &DiameterAgentJsonCfg{
-		Enabled:            utils.BoolPointer(true),
-		ListenNet:          utils.StringPointer("tcp"),
-		Listen:             utils.StringPointer("127.0.0.1:3868"),
+		Enabled: utils.BoolPointer(true),
+		Listeners: &[]*DiamListenerJsnCfg{
+			{ListenNet: utils.StringPointer("tcp"),
+				Listen: utils.StringPointer("127.0.0.1:3868")},
+		},
+
 		CeApplications:     utils.SliceStringPointer([]string{"Base"}),
 		DictionariesPath:   utils.StringPointer("/usr/share/cgrates/diameter/dict/"),
 		SessionSConns:      &[]string{utils.MetaInternal, "*conn1"},
@@ -51,9 +54,14 @@ func TestDiameterAgentCfgloadFromJsonCfg(t *testing.T) {
 		},
 	}
 	expected := &DiameterAgentCfg{
-		Enabled:                true,
-		ListenNet:              "tcp",
-		Listen:                 "127.0.0.1:3868",
+		Enabled: true,
+		Listeners: []DiameterListener{
+			{
+				ListenNet: "tcp",
+				Listen:    "127.0.0.1:3868",
+			},
+		},
+
 		CeApplications:         []string{"Base"},
 		DictionariesPath:       "/usr/share/cgrates/diameter/dict/",
 		SessionSConns:          []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaSessionS), "*conn1"},
@@ -258,9 +266,11 @@ func TestDiameterAgentCfgAsMapInterface1(t *testing.T) {
 
 func TestDiameterAgentCfgClone(t *testing.T) {
 	ban := &DiameterAgentCfg{
-		Enabled:          true,
-		ListenNet:        "tcp",
-		Listen:           "127.0.0.1:3868",
+		Enabled: true,
+		Listeners: []DiameterListener{
+			{ListenNet: "tcp",
+				Listen: "127.0.0.1:3868"},
+		},
 		CeApplications:   []string{"Base"},
 		DictionariesPath: "/usr/share/cgrates/diameter/dict/",
 		SessionSConns:    []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaSessionS), "*conn1"},

@@ -819,9 +819,14 @@ func TestCgrCfgJSONDefaultRouteSCfg(t *testing.T) {
 
 func TestCgrCfgJSONDefaultsDiameterAgentCfg(t *testing.T) {
 	testDA := &DiameterAgentCfg{
-		Enabled:           false,
-		Listen:            "127.0.0.1:3868",
-		ListenNet:         utils.TCP,
+		Enabled: false,
+		Listeners: []DiameterListener{
+			{
+				Listen:    "127.0.0.1:3868",
+				ListenNet: utils.TCP,
+			},
+		},
+
 		DictionariesPath:  "/usr/share/cgrates/diameter/dict/",
 		SessionSConns:     []string{utils.ConcatenatedKey(rpcclient.BiRPCInternal, utils.MetaSessionS)},
 		OriginHost:        "CGR-DA",
@@ -834,11 +839,11 @@ func TestCgrCfgJSONDefaultsDiameterAgentCfg(t *testing.T) {
 	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.Enabled, testDA.Enabled) {
 		t.Errorf("expecting: %+v, received: %+v", cgrCfg.diameterAgentCfg.Enabled, testDA.Enabled)
 	}
-	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.Listen, testDA.Listen) {
-		t.Errorf("expecting: %+v, received: %+v", cgrCfg.diameterAgentCfg.Listen, testDA.Listen)
+	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.Listeners[0].Listen, testDA.Listeners[0].Listen) {
+		t.Errorf("expecting: %+v, received: %+v", cgrCfg.diameterAgentCfg.Listeners[0].Listen, testDA.Listeners[0].Listen)
 	}
-	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.ListenNet, testDA.ListenNet) {
-		t.Errorf("expecting: %+v, received: %+v", cgrCfg.diameterAgentCfg.ListenNet, testDA.ListenNet)
+	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.Listeners[0].ListenNet, testDA.Listeners[0].ListenNet) {
+		t.Errorf("expecting: %+v, received: %+v", cgrCfg.diameterAgentCfg.Listeners[0].ListenNet, testDA.Listeners[0].ListenNet)
 	}
 	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.DictionariesPath, testDA.DictionariesPath) {
 		t.Errorf("expecting: %+v, received: %+v", cgrCfg.diameterAgentCfg.DictionariesPath, testDA.DictionariesPath)
@@ -1773,9 +1778,11 @@ func TestSuretaxConfig(t *testing.T) {
 
 func TestDiameterAgentConfig(t *testing.T) {
 	expected := &DiameterAgentCfg{
-		Enabled:                false,
-		ListenNet:              "tcp",
-		Listen:                 "127.0.0.1:3868",
+		Enabled: false,
+		Listeners: []DiameterListener{
+			{ListenNet: "tcp",
+				Listen: "127.0.0.1:3868"},
+		},
 		DictionariesPath:       "/usr/share/cgrates/diameter/dict/",
 		SessionSConns:          []string{utils.ConcatenatedKey(rpcclient.BiRPCInternal, utils.MetaSessionS)},
 		StatSConns:             []string{},
