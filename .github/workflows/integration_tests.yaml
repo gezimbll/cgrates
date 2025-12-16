@@ -56,15 +56,10 @@ jobs:
       - name: Run Ansible Playbook
         run: |
           ansible-playbook data/ansible/integration_tests/main.yaml -i localhost, -c local -e "ansible_user=$(whoami) cgrates_dir=$GITHUB_WORKSPACE cgrates_clone_repo=false install_go=false"
-
-      # - name: Set up tmate session for debugging
-      #   uses: mxschmitt/action-tmate@v3
-
-      - name: Run flaky tests
-        continue-on-error: true 
-        run: |
-          sudo env "PATH=$PATH" ./flaky_test.sh
           
       - name: Run integration tests
         run: |
           sudo env "PATH=$PATH" ./integration_test.sh
+      
+      - name: Set up tmate session for debugging
+        uses: mxschmitt/action-tmate@v3
