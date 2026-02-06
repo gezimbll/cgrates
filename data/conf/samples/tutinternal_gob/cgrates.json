@@ -90,12 +90,52 @@
 
 "sessions": {
 	"enabled": true,
-	"routes_conns": ["conn1"],
-	"resources_conns": ["conn1"],
-	"attributes_conns": ["conn1"],
-	"rates_conns": ["conn1"],
-	"cdrs_conns": ["conn1"],
-	"chargers_conns": ["conn1"],
+	"opts":{
+	"conns":{
+	"*routes": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*resources": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*attributes": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*rates": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*cdrs": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*chargers": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	]
+			}
+	},
 },
 
 

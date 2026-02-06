@@ -1,15 +1,31 @@
 {
   "sessions": {
     "enabled": true,
-    "ips_conns": [
-      "*localhost"
+    "opts":{
+    "conns":{
+    "*ips": [
+         {
+            "Tenant": "",
+            "FilterIDs": [],
+            "Value": ["*localhost"]
+         }
     ],
-    "cdrs_conns": [
-      "*localhost"
+    "*cdrs": [
+         {
+            "Tenant": "",
+            "FilterIDs": [],
+            "Value": ["*localhost"]
+         }
     ],
-    "chargers_conns": [
-      "*localhost"
+    "*chargers": [
+         {
+            "Tenant": "",
+            "FilterIDs": [],
+            "Value": ["*localhost"]
+         }
     ]
+            }
+    },
   },
   "ips": {
     "enabled": true,

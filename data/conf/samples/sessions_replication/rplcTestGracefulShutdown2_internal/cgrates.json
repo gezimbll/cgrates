@@ -41,8 +41,24 @@
 
 "sessions": {
 	"enabled": true,		
-	"replication_conns": ["rplConn"],
-	"chargers_conns": ["*internal"]
+	"opts":{
+	"conns":{
+	"*replication": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["rplConn"]
+		 }
+	],
+	"*chargers": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["*internal"]
+		 }
+	]
+			}
+	},
 },
 
 "admins": {

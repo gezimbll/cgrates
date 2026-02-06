@@ -91,9 +91,31 @@
 
 "sessions": {
 	"enabled": true,
-	"rates_conns": ["conn1"],
-	"resources_conns": ["conn1"],
-	"attributes_conns": ["conn1"],
+	"opts":{
+	"conns":{
+	"*rates": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*resources": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*attributes": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	]
+			}
+	},
 },
 
 "attributes": {

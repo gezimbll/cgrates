@@ -76,9 +76,13 @@ func TestSessionBasics(t *testing.T) {
 },
 "sessions": {
     "enabled": true,
-    "accounts_conns": ["*internal"],
-	"rates_conns": ["*internal"],
-    "cdrs_conns": ["*internal"]
+    "opts": {
+        "conns": {
+            "*accounts": [{"Tenant":"","FilterIDs":[],"Value":["*internal"]}],
+            "*rates": [{"Tenant":"","FilterIDs":[],"Value":["*internal"]}],
+            "*cdrs": [{"Tenant":"","FilterIDs":[],"Value":["*internal"]}]
+        }
+    }
 },
 "cdrs": {
     "enabled": true,
@@ -652,9 +656,13 @@ func TestSessionLifecycle(t *testing.T) {
 },
 "sessions": {
 	"enabled": true,
-	"chargers_conns": ["*localhost"],
 	"alterable_fields": ["AlterableField"],
-	"terminate_attempts": 1
+	"terminate_attempts": 1,
+	"opts": {
+		"conns": {
+			"*chargers": [{"Tenant":"","FilterIDs":[],"Value":["*localhost"]}]
+		}
+	}
 },
 "chargers": {
 	"enabled": true

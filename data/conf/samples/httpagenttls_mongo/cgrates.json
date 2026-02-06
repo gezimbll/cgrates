@@ -69,10 +69,38 @@
 
 "sessions": {
 	"enabled": true,
-	"attributes_conns": ["*localhost"],
-	"cdrs_conns": ["*localhost"],
-	"rates_conns": ["*localhost"],
-	"chargers_conns": ["*internal"],
+	"opts":{
+	"conns":{
+	"*attributes": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["*localhost"]
+		 }
+	],
+	"*cdrs": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["*localhost"]
+		 }
+	],
+	"*rates": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["*localhost"]
+		 }
+	],
+	"*chargers": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["*internal"]
+		 }
+	]
+			}
+	},
 },
 
 

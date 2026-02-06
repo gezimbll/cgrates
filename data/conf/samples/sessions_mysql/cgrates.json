@@ -86,15 +86,67 @@
 	"sessions": {
 		"enabled": true,
 		"session_ttl": "50ms",
-		"chargers_conns": ["*localhost"],
-		"rates_conns": ["*localhost"],
-		"cdrs_conns": ["*internal"],
-		"resources_conns": ["*internal"],
-		"thresholds_conns": ["*internal"],
-		"stats_conns": ["*internal"],
-		"routes_conns": ["*internal"],
-		"attributes_conns": ["*internal"],
-		"alterable_fields": ["Extra1"]
+		"alterable_fields": ["Extra1"],
+		"opts":{
+		"conns":{
+		"*chargers": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*localhost"]
+				 }
+		],
+		"*rates": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*localhost"]
+				 }
+		],
+		"*cdrs": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*internal"]
+				 }
+		],
+		"*resources": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*internal"]
+				 }
+		],
+		"*thresholds": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*internal"]
+				 }
+		],
+		"*stats": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*internal"]
+				 }
+		],
+		"*routes": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*internal"]
+				 }
+		],
+		"*attributes": [
+				 {
+						"Tenant": "",
+						"FilterIDs": [],
+						"Value": ["*internal"]
+				 }
+		]
+						}
+		},
 	},
 
 

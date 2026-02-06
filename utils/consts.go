@@ -382,6 +382,7 @@ const (
 	StoppedCaps              = "STOPPED"
 	MetaAdminS               = "*admins"
 	MetaReplicator           = "*replicator"
+	MetaReplication          = "*replication"
 	MetaRerate               = "*rerate"
 	MetaRefund               = "*refund"
 	MetaStats                = "*stats"
@@ -2160,6 +2161,7 @@ const (
 	PgSSLRootCertCfg          = "pgSSLRootCert"
 	ItemsCfg                  = "items"
 	OptsCfg                   = "opts"
+	ConnsCfg                  = "conns"
 	Tenants                   = "tenants"
 	MysqlLocation             = "mysqlLocation"
 )

@@ -19,8 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>
 package config
 
 import (
-	"fmt"
-	"slices"
 	"strconv"
 	"time"
 
@@ -107,6 +105,7 @@ type SessionsOpts struct {
 	AccountsInitialize     []*DynamicBoolOpt
 	AccountsUpdate         []*DynamicBoolOpt
 	AccountsTerminate      []*DynamicBoolOpt
+	Conns                  map[string][]*DynamicStringSliceOpt
 }
 
 // SessionSCfg is the config section for SessionS
@@ -114,17 +113,6 @@ type SessionSCfg struct {
 	Enabled             bool
 	ListenBiJSON        string
 	ListenBiGob         string
-	ChargerSConns       []string
-	ResourceSConns      []string
-	IPsConns            []string
-	ThresholdSConns     []string
-	StatSConns          []string
-	RouteSConns         []string
-	AttributeSConns     []string
-	CDRsConns           []string
-	ReplicationConns    []string
-	RateSConns          []string
-	AccountSConns       []string
 	StoreSCosts         bool
 	SessionIndexes      utils.StringSet
 	ClientProtocol      float64
@@ -132,7 +120,6 @@ type SessionSCfg struct {
 	TerminateAttempts   int
 	AlterableFields     utils.StringSet
 	MinDurLowBalance    time.Duration
-	ActionSConns        []string
 	STIRCfg             *STIRcfg
 	DefaultUsage        map[string]time.Duration
 	Opts                *SessionsOpts
@@ -410,6 +397,12 @@ func (sesOpts *SessionsOpts) loadFromJSONCfg(jsnCfg *SessionsOptsJson) error {
 		}
 		sesOpts.AccountsForceUsage = append(opts, sesOpts.AccountsForceUsage...)
 	}
+	if jsnCfg.Conns != nil {
+		tagged := tagConnsOpt(jsnCfg.Conns)
+		for connType, opts := range tagged {
+			sesOpts.Conns[connType] = append(sesOpts.Conns[connType], opts...)
+		}
+	}
 	return nil
 }
 
@@ -425,48 +418,6 @@ func (scfg *SessionSCfg) loadFromJSONCfg(jsnCfg *SessionSJsonCfg) (err error) {
 	}
 	if jsnCfg.ListenBiGob != nil {
 		scfg.ListenBiGob = *jsnCfg.ListenBiGob
-	}
-	if jsnCfg.ChargerSConns != nil {
-		scfg.ChargerSConns = tagInternalConns(*jsnCfg.ChargerSConns, utils.MetaChargers)
-	}
-	if jsnCfg.ResourceSConns != nil {
-		scfg.ResourceSConns = tagInternalConns(*jsnCfg.ResourceSConns, utils.MetaResources)
-	}
-	if jsnCfg.IPsConns != nil {
-		scfg.IPsConns = tagInternalConns(*jsnCfg.IPsConns, utils.MetaIPs)
-	}
-	if jsnCfg.ThresholdSConns != nil {
-		scfg.ThresholdSConns = tagInternalConns(*jsnCfg.ThresholdSConns, utils.MetaThresholds)
-	}
-	if jsnCfg.StatSConns != nil {
-		scfg.StatSConns = tagInternalConns(*jsnCfg.StatSConns, utils.MetaStats)
-	}
-	if jsnCfg.RouteSConns != nil {
-		scfg.RouteSConns = tagInternalConns(*jsnCfg.RouteSConns, utils.MetaRoutes)
-	}
-	if jsnCfg.AttributeSConns != nil {
-		scfg.AttributeSConns = tagInternalConns(*jsnCfg.AttributeSConns, utils.MetaAttributes)
-	}
-	if jsnCfg.CDRsConns != nil {
-		scfg.CDRsConns = tagInternalConns(*jsnCfg.CDRsConns, utils.MetaCDRs)
-	}
-	if jsnCfg.ActionSConns != nil {
-		scfg.ActionSConns = tagInternalConns(*jsnCfg.ActionSConns, utils.MetaActions)
-	}
-	if jsnCfg.ReplicationConns != nil {
-		scfg.ReplicationConns = make([]string, len(*jsnCfg.ReplicationConns))
-		for idx, connID := range *jsnCfg.ReplicationConns {
-			if connID == utils.MetaInternal {
-				return fmt.Errorf("Replication connection ID needs to be different than *internal ")
-			}
-			scfg.ReplicationConns[idx] = connID
-		}
-	}
-	if jsnCfg.RateSConns != nil {
-		scfg.RateSConns = tagInternalConns(*jsnCfg.RateSConns, utils.MetaRates)
-	}
-	if jsnCfg.AccountSConns != nil {
-		scfg.AccountSConns = tagInternalConns(*jsnCfg.AccountSConns, utils.MetaAccounts)
 	}
 	if jsnCfg.StoreSCosts != nil {
 		scfg.StoreSCosts = *jsnCfg.StoreSCosts
@@ -568,12 +519,12 @@ func (scfg SessionSCfg) AsMapInterface() any {
 		utils.MetaTTLUsageCfg:               scfg.Opts.TTLUsage,
 		utils.MetaOriginID:                  scfg.Opts.OriginID,
 		utils.MetaAccountsForceUsage:        scfg.Opts.AccountsForceUsage,
+		utils.ConnsCfg:                      stripConnsOpt(scfg.Opts.Conns),
 	}
 	mp := map[string]any{
 		utils.EnabledCfg:             scfg.Enabled,
 		utils.ListenBijsonCfg:        scfg.ListenBiJSON,
 		utils.ListenBigobCfg:         scfg.ListenBiGob,
-		utils.ReplicationConnsCfg:    scfg.ReplicationConns,
 		utils.StoreSCostsCfg:         scfg.StoreSCosts,
 		utils.SessionIndexesCfg:      scfg.SessionIndexes.AsSlice(),
 		utils.ClientProtocolCfg:      scfg.ClientProtocol,
@@ -590,39 +541,6 @@ func (scfg SessionSCfg) AsMapInterface() any {
 	}
 	if scfg.MinDurLowBalance != 0 {
 		mp[utils.MinDurLowBalanceCfg] = scfg.MinDurLowBalance.String()
-	}
-	if scfg.ChargerSConns != nil {
-		mp[utils.ChargerSConnsCfg] = stripInternalConns(scfg.ChargerSConns)
-	}
-	if scfg.ResourceSConns != nil {
-		mp[utils.ResourceSConnsCfg] = stripInternalConns(scfg.ResourceSConns)
-	}
-	if scfg.IPsConns != nil {
-		mp[utils.IPsConnsCfg] = stripInternalConns(scfg.IPsConns)
-	}
-	if scfg.ThresholdSConns != nil {
-		mp[utils.ThresholdSConnsCfg] = stripInternalConns(scfg.ThresholdSConns)
-	}
-	if scfg.StatSConns != nil {
-		mp[utils.StatSConnsCfg] = stripInternalConns(scfg.StatSConns)
-	}
-	if scfg.RouteSConns != nil {
-		mp[utils.RouteSConnsCfg] = stripInternalConns(scfg.RouteSConns)
-	}
-	if scfg.AttributeSConns != nil {
-		mp[utils.AttributeSConnsCfg] = stripInternalConns(scfg.AttributeSConns)
-	}
-	if scfg.CDRsConns != nil {
-		mp[utils.CDRsConnsCfg] = stripInternalConns(scfg.CDRsConns)
-	}
-	if scfg.ActionSConns != nil {
-		mp[utils.ActionSConnsCfg] = stripInternalConns(scfg.ActionSConns)
-	}
-	if scfg.RateSConns != nil {
-		mp[utils.RateSConnsCfg] = stripInternalConns(scfg.RateSConns)
-	}
-	if scfg.AccountSConns != nil {
-		mp[utils.AccountSConnsCfg] = stripInternalConns(scfg.AccountSConns)
 	}
 	return mp
 }
@@ -669,6 +587,7 @@ func (o *SessionsOpts) Clone() *SessionsOpts {
 		TTLUsage:               CloneDynamicDurationPointerOpt(o.TTLUsage),
 		OriginID:               CloneDynamicStringOpt(o.OriginID),
 		AccountsForceUsage:     CloneDynamicBoolOpt(o.AccountsForceUsage),
+		Conns:                  CloneConnsOpt(o.Conns),
 	}
 }
 
@@ -692,43 +611,6 @@ func (scfg SessionSCfg) Clone() (cln *SessionSCfg) {
 	for k, v := range scfg.DefaultUsage {
 		cln.DefaultUsage[k] = v
 	}
-	if scfg.ChargerSConns != nil {
-		cln.ChargerSConns = slices.Clone(scfg.ChargerSConns)
-	}
-	if scfg.ResourceSConns != nil {
-		cln.ResourceSConns = slices.Clone(scfg.ResourceSConns)
-	}
-	if scfg.IPsConns != nil {
-		cln.IPsConns = slices.Clone(scfg.IPsConns)
-	}
-	if scfg.ThresholdSConns != nil {
-		cln.ThresholdSConns = slices.Clone(scfg.ThresholdSConns)
-	}
-	if scfg.StatSConns != nil {
-		cln.StatSConns = slices.Clone(scfg.StatSConns)
-	}
-	if scfg.RouteSConns != nil {
-		cln.RouteSConns = slices.Clone(scfg.RouteSConns)
-	}
-	if scfg.AttributeSConns != nil {
-		cln.AttributeSConns = slices.Clone(scfg.AttributeSConns)
-	}
-	if scfg.CDRsConns != nil {
-		cln.CDRsConns = slices.Clone(scfg.CDRsConns)
-	}
-	if scfg.ReplicationConns != nil {
-		cln.ReplicationConns = slices.Clone(scfg.ReplicationConns)
-	}
-	if scfg.ActionSConns != nil {
-		cln.ActionSConns = slices.Clone(scfg.ActionSConns)
-	}
-	if scfg.RateSConns != nil {
-		cln.RateSConns = slices.Clone(scfg.RateSConns)
-	}
-	if scfg.AccountSConns != nil {
-		cln.AccountSConns = slices.Clone(scfg.AccountSConns)
-	}
-
 	return
 }
 
@@ -827,43 +709,44 @@ func diffSTIRJsonCfg(d *STIRJsonCfg, v1, v2 *STIRcfg) *STIRJsonCfg {
 }
 
 type SessionsOptsJson struct {
-	Accounts               []*DynamicInterfaceOpt `json:"*accounts"`
-	Attributes             []*DynamicInterfaceOpt `json:"*attributes"`
-	CDRs                   []*DynamicInterfaceOpt `json:"*cdrs"`
-	Chargers               []*DynamicInterfaceOpt `json:"*chargers"`
-	Resources              []*DynamicInterfaceOpt `json:"*resources"`
-	IPs                    []*DynamicInterfaceOpt `json:"*ips"`
-	Routes                 []*DynamicInterfaceOpt `json:"*routes"`
-	Stats                  []*DynamicInterfaceOpt `json:"*stats"`
-	Thresholds             []*DynamicInterfaceOpt `json:"*thresholds"`
-	Initiate               []*DynamicInterfaceOpt `json:"*initiate"`
-	Update                 []*DynamicInterfaceOpt `json:"*update"`
-	Terminate              []*DynamicInterfaceOpt `json:"*terminate"`
-	Message                []*DynamicInterfaceOpt `json:"*message"`
-	AttributesDerivedReply []*DynamicInterfaceOpt `json:"*attributesDerivedReply"`
-	BlockerError           []*DynamicInterfaceOpt `json:"*blockerError"`
-	CDRsDerivedReply       []*DynamicInterfaceOpt `json:"*cdrsDerivedReply"`
-	ResourcesAuthorize     []*DynamicInterfaceOpt `json:"*resourcesAuthorize"`
-	ResourcesAllocate      []*DynamicInterfaceOpt `json:"*resourcesAllocate"`
-	ResourcesRelease       []*DynamicInterfaceOpt `json:"*resourcesRelease"`
-	ResourcesDerivedReply  []*DynamicInterfaceOpt `json:"*resourcesDerivedReply"`
-	IPsAuthorize           []*DynamicInterfaceOpt `json:"*ipsAuthorize"`
-	IPsAllocate            []*DynamicInterfaceOpt `json:"*ipsAllocate"`
-	IPsRelease             []*DynamicInterfaceOpt `json:"*ipsRelease"`
-	RoutesDerivedReply     []*DynamicInterfaceOpt `json:"*routesDerivedReply"`
-	StatsDerivedReply      []*DynamicInterfaceOpt `json:"*statsDerivedReply"`
-	ThresholdsDerivedReply []*DynamicInterfaceOpt `json:"*thresholdsDerivedReply"`
-	MaxUsage               []*DynamicInterfaceOpt `json:"*maxUsage"`
-	ForceUsage             []*DynamicInterfaceOpt `json:"*forceUsage"`
-	TTL                    []*DynamicInterfaceOpt `json:"*ttl"`
-	Chargeable             []*DynamicInterfaceOpt `json:"*chargeable"`
-	DebitInterval          []*DynamicInterfaceOpt `json:"*debitInterval"`
-	TTLLastUsage           []*DynamicInterfaceOpt `json:"*ttlLastUsage"`
-	TTLLastUsed            []*DynamicInterfaceOpt `json:"*ttlLastUsed"`
-	TTLMaxDelay            []*DynamicInterfaceOpt `json:"*ttlMaxDelay"`
-	TTLUsage               []*DynamicInterfaceOpt `json:"*ttlUsage"`
-	OriginID               []*DynamicInterfaceOpt `json:"*originID"`
-	AccountsForceUsage     []*DynamicInterfaceOpt `json:"*accountsForceUsage"`
+	Accounts               []*DynamicInterfaceOpt              `json:"*accounts"`
+	Attributes             []*DynamicInterfaceOpt              `json:"*attributes"`
+	CDRs                   []*DynamicInterfaceOpt              `json:"*cdrs"`
+	Chargers               []*DynamicInterfaceOpt              `json:"*chargers"`
+	Resources              []*DynamicInterfaceOpt              `json:"*resources"`
+	IPs                    []*DynamicInterfaceOpt              `json:"*ips"`
+	Routes                 []*DynamicInterfaceOpt              `json:"*routes"`
+	Stats                  []*DynamicInterfaceOpt              `json:"*stats"`
+	Thresholds             []*DynamicInterfaceOpt              `json:"*thresholds"`
+	Initiate               []*DynamicInterfaceOpt              `json:"*initiate"`
+	Update                 []*DynamicInterfaceOpt              `json:"*update"`
+	Terminate              []*DynamicInterfaceOpt              `json:"*terminate"`
+	Message                []*DynamicInterfaceOpt              `json:"*message"`
+	AttributesDerivedReply []*DynamicInterfaceOpt              `json:"*attributesDerivedReply"`
+	BlockerError           []*DynamicInterfaceOpt              `json:"*blockerError"`
+	CDRsDerivedReply       []*DynamicInterfaceOpt              `json:"*cdrsDerivedReply"`
+	ResourcesAuthorize     []*DynamicInterfaceOpt              `json:"*resourcesAuthorize"`
+	ResourcesAllocate      []*DynamicInterfaceOpt              `json:"*resourcesAllocate"`
+	ResourcesRelease       []*DynamicInterfaceOpt              `json:"*resourcesRelease"`
+	ResourcesDerivedReply  []*DynamicInterfaceOpt              `json:"*resourcesDerivedReply"`
+	IPsAuthorize           []*DynamicInterfaceOpt              `json:"*ipsAuthorize"`
+	IPsAllocate            []*DynamicInterfaceOpt              `json:"*ipsAllocate"`
+	IPsRelease             []*DynamicInterfaceOpt              `json:"*ipsRelease"`
+	RoutesDerivedReply     []*DynamicInterfaceOpt              `json:"*routesDerivedReply"`
+	StatsDerivedReply      []*DynamicInterfaceOpt              `json:"*statsDerivedReply"`
+	ThresholdsDerivedReply []*DynamicInterfaceOpt              `json:"*thresholdsDerivedReply"`
+	MaxUsage               []*DynamicInterfaceOpt              `json:"*maxUsage"`
+	ForceUsage             []*DynamicInterfaceOpt              `json:"*forceUsage"`
+	TTL                    []*DynamicInterfaceOpt              `json:"*ttl"`
+	Chargeable             []*DynamicInterfaceOpt              `json:"*chargeable"`
+	DebitInterval          []*DynamicInterfaceOpt              `json:"*debitInterval"`
+	TTLLastUsage           []*DynamicInterfaceOpt              `json:"*ttlLastUsage"`
+	TTLLastUsed            []*DynamicInterfaceOpt              `json:"*ttlLastUsed"`
+	TTLMaxDelay            []*DynamicInterfaceOpt              `json:"*ttlMaxDelay"`
+	TTLUsage               []*DynamicInterfaceOpt              `json:"*ttlUsage"`
+	OriginID               []*DynamicInterfaceOpt              `json:"*originID"`
+	AccountsForceUsage     []*DynamicInterfaceOpt              `json:"*accountsForceUsage"`
+	Conns                  map[string][]*DynamicStringSliceOpt `json:"conns,omitempty"`
 }
 
 // SessionSJsonCfg config section
@@ -871,18 +754,6 @@ type SessionSJsonCfg struct {
 	Enabled             *bool             `json:"enabled"`
 	ListenBiJSON        *string           `json:"listen_bijson"`
 	ListenBiGob         *string           `json:"listen_bigob"`
-	ChargerSConns       *[]string         `json:"chargers_conns"`
-	ResourceSConns      *[]string         `json:"resources_conns"`
-	IPsConns            *[]string         `json:"ips_conns"`
-	ThresholdSConns     *[]string         `json:"thresholds_conns"`
-	StatSConns          *[]string         `json:"stats_conns"`
-	RouteSConns         *[]string         `json:"routes_conns"`
-	CDRsConns           *[]string         `json:"cdrs_conns"`
-	ReplicationConns    *[]string         `json:"replication_conns"`
-	AttributeSConns     *[]string         `json:"attributes_conns"`
-	ActionSConns        *[]string         `json:"actions_conns"`
-	RateSConns          *[]string         `json:"rates_conns"`
-	AccountSConns       *[]string         `json:"accounts_conns"`
 	StoreSCosts         *bool             `json:"store_session_costs"`
 	SessionIndexes      *[]string         `json:"session_indexes"`
 	ClientProtocol      *float64          `json:"client_protocol"`
@@ -1010,6 +881,9 @@ func diffSessionsOptsJsonCfg(d *SessionsOptsJson, v1, v2 *SessionsOpts) *Session
 	if !DynamicBoolOptEqual(v1.AccountsForceUsage, v2.AccountsForceUsage) {
 		d.AccountsForceUsage = BoolToIfaceDynamicOpts(v2.AccountsForceUsage)
 	}
+	if !ConnsOptEqual(v1.Conns, v2.Conns) {
+		d.Conns = stripConnsOpt(v2.Conns)
+	}
 	return d
 }
 
@@ -1025,39 +899,6 @@ func diffSessionSJsonCfg(d *SessionSJsonCfg, v1, v2 *SessionSCfg) *SessionSJsonC
 	}
 	if v1.ListenBiGob != v2.ListenBiGob {
 		d.ListenBiGob = utils.StringPointer(v2.ListenBiGob)
-	}
-	if !slices.Equal(v1.ChargerSConns, v2.ChargerSConns) {
-		d.ChargerSConns = utils.SliceStringPointer(stripInternalConns(v2.ChargerSConns))
-	}
-	if !slices.Equal(v1.ResourceSConns, v2.ResourceSConns) {
-		d.ResourceSConns = utils.SliceStringPointer(stripInternalConns(v2.ResourceSConns))
-	}
-	if !slices.Equal(v1.IPsConns, v2.IPsConns) {
-		d.IPsConns = utils.SliceStringPointer(stripInternalConns(v2.IPsConns))
-	}
-	if !slices.Equal(v1.ThresholdSConns, v2.ThresholdSConns) {
-		d.ThresholdSConns = utils.SliceStringPointer(stripInternalConns(v2.ThresholdSConns))
-	}
-	if !slices.Equal(v1.StatSConns, v2.StatSConns) {
-		d.StatSConns = utils.SliceStringPointer(stripInternalConns(v2.StatSConns))
-	}
-	if !slices.Equal(v1.RouteSConns, v2.RouteSConns) {
-		d.RouteSConns = utils.SliceStringPointer(stripInternalConns(v2.RouteSConns))
-	}
-	if !slices.Equal(v1.AttributeSConns, v2.AttributeSConns) {
-		d.CDRsConns = utils.SliceStringPointer(stripInternalConns(v2.AttributeSConns))
-	}
-	if !slices.Equal(v1.CDRsConns, v2.CDRsConns) {
-		d.ReplicationConns = utils.SliceStringPointer(stripInternalConns(v2.CDRsConns))
-	}
-	if !slices.Equal(v1.ReplicationConns, v2.ReplicationConns) {
-		d.AttributeSConns = utils.SliceStringPointer(v2.ReplicationConns)
-	}
-	if !slices.Equal(v1.RateSConns, v2.RateSConns) {
-		d.RateSConns = utils.SliceStringPointer(stripInternalConns(v2.RateSConns))
-	}
-	if !slices.Equal(v1.AccountSConns, v2.AccountSConns) {
-		d.AccountSConns = utils.SliceStringPointer(stripInternalConns(v2.AccountSConns))
 	}
 	if v1.StoreSCosts != v2.StoreSCosts {
 		d.StoreSCosts = utils.BoolPointer(v2.StoreSCosts)
@@ -1079,9 +920,6 @@ func diffSessionSJsonCfg(d *SessionSJsonCfg, v1, v2 *SessionSCfg) *SessionSJsonC
 	}
 	if v1.MinDurLowBalance != v2.MinDurLowBalance {
 		d.MinDurLowBalance = utils.StringPointer(v2.MinDurLowBalance.String())
-	}
-	if !slices.Equal(v1.ActionSConns, v2.ActionSConns) {
-		d.ActionSConns = utils.SliceStringPointer(stripInternalConns(v2.ActionSConns))
 	}
 	d.Stir = diffSTIRJsonCfg(d.Stir, v1.STIRCfg, v2.STIRCfg)
 	if d.DefaultUsage == nil {

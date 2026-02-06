@@ -655,15 +655,6 @@ const CGRATES_CFG_JSON = `
 	"enabled": false,			// starts the session service: <true|false>
 	"listen_bijson": "127.0.0.1:2014",	// address where to listen for bidirectional JSON-RPC requests
 	"listen_bigob": "",			// address where to listen for bidirectional GOB-RPC requests
-	"chargers_conns": [],			// connections to ChargerS for session forking <""|*internal|$rpc_conns_id>
-	"cdrs_conns": [],			// connections to CDRs for CDR posting <""|*internal|$rpc_conns_id>
-	"resources_conns": [],			// connections to ResourceS for resources monitoring <""|*internal|$rpc_conns_id>
-	"ips_conns": [],			// connections to IPs for monitoring ip usage <""|*internal|$rpc_conns_id>
-	"thresholds_conns": [],			// connections to ThresholdS for reporting session events <""|*internal|$rpc_conns_id>
-	"stats_conns": [],			// connections to StatS for reporting session events <""|*internal|$rpc_conns_id>
-	"routes_conns": [],			// connections to RouteS for querying routes for event <""|*internal|$rpc_conns_id>
-	"attributes_conns": [],			// connections to AttributeS for altering event fields <""|*internal|$rpc_conns_id>
-	"replication_conns": [],		// replicate sessions towards these session services
 	"debit_interval": "0s",			// interval to perform debits on.
 	"store_session_costs": false,		// enable storing of the session costs within CDRs
 	"default_usage":{			// the usage if the event is missing the usage field
@@ -689,10 +680,7 @@ const CGRATES_CFG_JSON = `
 		"default_attest": "A",		// the default attest level if not mentioned in API
 		"publickey_path": "",		// the path to the public key 
 		"privatekey_path": "",		// the path to the private key
-	},
-	"actions_conns": [],			// connections to SchedulerS in case of *dynaprepaid request
-	"rates_conns": [], 			// connections to RateS
-	"accounts_conns": [],			// connections to AccountS
+	},																		
 	"opts": {
 		// "*accounts": [
 		// 	{
@@ -952,7 +940,86 @@ const CGRATES_CFG_JSON = `
 		// 		"FilterIDs": [],
 		// 		"Value": ""
 		// 	}
-		// ]
+		// ],
+		// "conns": {
+		// "*attributes": [					// connections to AttributeS for altering event fields <""|*internal|$rpc_conns_id>	
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*accounts": [					// connections to AccountS
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*rates": [						// connections to RateS
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*actions": [					// connections to SchedulerS in case of *dynaprepaid request
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*routes": [						// connections to RouteS for querying routes for event <""|*internal|$rpc_conns_id>
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*stats": [						// connections to StatS for reporting session events <""|*internal|$rpc_conns_id>
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*thresholds": [						// connections to ThresholdS for reporting session events <""|*internal|$rpc_conns_id>
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*ips": [						// connections to IPs for monitoring ip usage <""|*internal|$rpc_conns_id>
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*chargers": [					// connections to ChargerS for session forking <""|*internal|$rpc_conns_id>
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*cdrs": [						// connections to CDRs for CDR posting <""|*internal|$rpc_conns_id>
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+		// "*replication": [  				// replicate sessions towards these session services
+		// 	{
+		// 		"Tenant": "",
+		// 		"FilterIDs": [],
+		// 		"Value": []
+		// 	}
+		// ],
+   		// }
 	}
 },
 

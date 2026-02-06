@@ -67,10 +67,38 @@
 	"enabled": true,						// starts SessionManager service: <true|false>
 	"debit_interval": "5ms",					// interval to perform debits on.
 	"listen_bijson": "127.0.0.1:22014",		// address where to listen for bidirectional JSON-RPC requests
-	"replication_conns": ["rplConn"],
-	"rals_conns": ["conn1"],
-	"cdrs_conns": ["*internal"],
-	"chargers_conns": ["*internal"],
+	"opts":{
+	"conns":{
+	"*replication": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["rplConn"]
+		 }
+	],
+	"*rals": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["conn1"]
+		 }
+	],
+	"*cdrs": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["*internal"]
+		 }
+	],
+	"*chargers": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Value": ["*internal"]
+		 }
+	]
+			}
+	},
 },
 
 "admins": {

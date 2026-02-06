@@ -379,18 +379,6 @@ func TestCgrCfgJSONDefaultsSMGenericCfg(t *testing.T) {
 	eSessionSCfg := &SessionSCfg{
 		Enabled:             false,
 		ListenBiJSON:        "127.0.0.1:2014",
-		ChargerSConns:       []string{},
-		CDRsConns:           []string{},
-		ResourceSConns:      []string{},
-		IPsConns:            []string{},
-		ThresholdSConns:     []string{},
-		StatSConns:          []string{},
-		RouteSConns:         []string{},
-		AttributeSConns:     []string{},
-		ActionSConns:        []string{},
-		RateSConns:          []string{},
-		AccountSConns:       []string{},
-		ReplicationConns:    []string{},
 		StoreSCosts:         false,
 		SessionIndexes:      utils.StringSet{},
 		ClientProtocol:      1.0,
@@ -446,6 +434,7 @@ func TestCgrCfgJSONDefaultsSMGenericCfg(t *testing.T) {
 			ForceUsage:             []*DynamicBoolOpt{},
 			OriginID:               []*DynamicStringOpt{},
 			AccountsForceUsage:     []*DynamicBoolOpt{},
+			Conns:                  map[string][]*DynamicStringSliceOpt{},
 		},
 	}
 	if !reflect.DeepEqual(eSessionSCfg, cgrCfg.sessionSCfg) {
@@ -1773,18 +1762,6 @@ func TestSessionSConfig(t *testing.T) {
 	expected := &SessionSCfg{
 		Enabled:             false,
 		ListenBiJSON:        "127.0.0.1:2014",
-		ChargerSConns:       []string{},
-		ResourceSConns:      []string{},
-		IPsConns:            []string{},
-		ThresholdSConns:     []string{},
-		StatSConns:          []string{},
-		RouteSConns:         []string{},
-		AttributeSConns:     []string{},
-		CDRsConns:           []string{},
-		ActionSConns:        []string{},
-		RateSConns:          []string{},
-		AccountSConns:       []string{},
-		ReplicationConns:    []string{},
 		StoreSCosts:         false,
 		SessionIndexes:      utils.StringSet{},
 		ClientProtocol:      1.0,
@@ -1842,6 +1819,7 @@ func TestSessionSConfig(t *testing.T) {
 			ForceUsage:             []*DynamicBoolOpt{},
 			OriginID:               []*DynamicStringOpt{},
 			AccountsForceUsage:     []*DynamicBoolOpt{},
+			Conns:                  map[string][]*DynamicStringSliceOpt{},
 		},
 	}
 	cgrConfig := NewDefaultCGRConfig()

@@ -184,6 +184,7 @@ func newCGRConfig(config []byte) (cfg *CGRConfig, err error) {
 				TTLUsage:               []*DynamicDurationPointerOpt{},
 				OriginID:               []*DynamicStringOpt{},
 				AccountsForceUsage:     []*DynamicBoolOpt{},
+				Conns:                  make(map[string][]*DynamicStringSliceOpt),
 			},
 		},
 		fsAgentCfg:       new(FsAgentCfg),

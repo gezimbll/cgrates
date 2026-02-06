@@ -112,7 +112,8 @@ func (sS *SessionS) ListenAndServe(stopChan chan struct{}) {
 
 // Shutdown is called by engine to clear states
 func (sS *SessionS) Shutdown() (err error) {
-	if len(sS.cfg.SessionSCfg().ReplicationConns) == 0 {
+	replConns, _ := sS.getConnIDs(context.TODO(), utils.MetaReplication, utils.MetaAny, nil)
+	if len(replConns) == 0 {
 		var hasErr bool
 		for _, s := range sS.getSessions("", false) { // Force sessions shutdown
 			if err = sS.terminateSession(context.TODO(), s, nil, nil, nil, false); err != nil {
@@ -193,6 +194,16 @@ func (sS *SessionS) biJClients() (clnts []*biJClient) {
 	}
 	sS.biJMux.RUnlock()
 	return
+}
+
+// getConnIDs resolves dynamic connection IDs for the given connection type
+func (sS *SessionS) getConnIDs(ctx *context.Context, connType string,
+	tnt string, dP utils.DataProvider) ([]string, error) {
+	dynConns := sS.cfg.SessionSCfg().Opts.Conns[connType]
+	if len(dynConns) == 0 {
+		return nil, nil
+	}
+	return engine.GetStringSliceOpts(ctx, tnt, dP, nil, sS.fltrS, dynConns, nil)
 }
 
 // riFieldNameVal is a reverse index entry
@@ -331,8 +342,13 @@ func (sS *SessionS) forceSTerminate(ctx *context.Context, s *Session, extraUsage
 				"<%s> failed force terminating session with ID <%s>, err: <%s>",
 				utils.SessionS, s.ID, err.Error()))
 	}
+	tenant := s.OriginCGREvent.Tenant
+	dP := s.OriginCGREvent.AsDataProvider()
 	// post the CDRs
-	if len(sS.cfg.SessionSCfg().CDRsConns) != 0 {
+	if cdrsConns, errC := sS.getConnIDs(ctx, utils.MetaCDRs, tenant, dP); errC != nil {
+		utils.Logger.Warning(
+			fmt.Sprintf("<%s> error resolving CDRs connections: %s", utils.SessionS, errC.Error()))
+	} else if len(cdrsConns) != 0 {
 		var reply string
 		for _, cgrEv := range s.asCGREvents() {
 			if cgrEv.APIOpts == nil {
@@ -345,7 +361,7 @@ func (sS *SessionS) forceSTerminate(ctx *context.Context, s *Session, extraUsage
 				// argsProc.Flags = append(argsProc.Flags, utils.MetaRALs)
 			}
 			cgrEv.SetCloneable(true)
-			if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().CDRsConns,
+			if err = sS.connMgr.Call(ctx, cdrsConns,
 				utils.CDRsV1ProcessEvent, cgrEv, &reply); err != nil {
 				utils.Logger.Warning(
 					fmt.Sprintf(
@@ -355,13 +371,16 @@ func (sS *SessionS) forceSTerminate(ctx *context.Context, s *Session, extraUsage
 		}
 	}
 	// release the resources for the session
-	if len(sS.cfg.SessionSCfg().ResourceSConns) != 0 {
+	if resSConns, errR := sS.getConnIDs(ctx, utils.MetaResources, tenant, dP); errR != nil {
+		utils.Logger.Warning(
+			fmt.Sprintf("<%s> error resolving ResourceS connections: %s", utils.SessionS, errR.Error()))
+	} else if len(resSConns) != 0 {
 		var reply string
 		args := s.OriginCGREvent.Clone()
 		args.ID = utils.UUIDSha1Prefix()
 		args.APIOpts[utils.OptsResourcesUsageID] = s.ID
 		args.APIOpts[utils.OptsResourcesUnits] = 1
-		if err := sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().ResourceSConns,
+		if err := sS.connMgr.Call(ctx, resSConns,
 			utils.ResourceSv1ReleaseResources,
 			args, &reply); err != nil {
 			utils.Logger.Warning(
@@ -370,12 +389,15 @@ func (sS *SessionS) forceSTerminate(ctx *context.Context, s *Session, extraUsage
 		}
 	}
 	// release the ips for the session
-	if len(sS.cfg.SessionSCfg().IPsConns) != 0 {
+	if ipsConns, errI := sS.getConnIDs(ctx, utils.MetaIPs, tenant, dP); errI != nil {
+		utils.Logger.Warning(
+			fmt.Sprintf("<%s> error resolving IPs connections: %s", utils.SessionS, errI.Error()))
+	} else if len(ipsConns) != 0 {
 		var reply string
 		args := s.OriginCGREvent.Clone()
 		args.ID = utils.UUIDSha1Prefix()
 		args.APIOpts[utils.OptsIPsAllocationID] = s.ID
-		if err := sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().IPsConns,
+		if err := sS.connMgr.Call(ctx, ipsConns,
 			utils.IPsV1ReleaseIP,
 			args, &reply); err != nil {
 			utils.Logger.Warning(
@@ -383,7 +405,8 @@ func (sS *SessionS) forceSTerminate(ctx *context.Context, s *Session, extraUsage
 					utils.SessionS, err.Error(), s.ID))
 		}
 	}
-	sS.replicateSessions(ctx, s.ID, false, sS.cfg.SessionSCfg().ReplicationConns)
+	replConns, _ := sS.getConnIDs(ctx, utils.MetaReplication, utils.MetaAny, nil)
+	sS.replicateSessions(ctx, s.ID, false, replConns)
 	if clnt := sS.biJClnt(s.ClientConnID); clnt != nil {
 		go func() {
 			var rply string
@@ -934,14 +957,18 @@ func (sS *SessionS) newSession(ctx *context.Context, cgrEv *utils.CGREvent,
 
 // processChargerS processes the event with chargers and caches the response based on the requestID
 func (sS *SessionS) processChargerS(ctx *context.Context, cgrEv *utils.CGREvent) (chrgrs []*chargers.ChrgSProcessEventReply, err error) {
-	if len(sS.cfg.SessionSCfg().ChargerSConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaChargers, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		err = errors.New("ChargerS is disabled")
 		return
 	}
 	if x, ok := engine.Cache.Get(utils.CacheEventCharges, cgrEv.ID); ok && x != nil {
 		return x.([]*chargers.ChrgSProcessEventReply), nil
 	}
-	if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().ChargerSConns,
+	if err = sS.connMgr.Call(ctx, conns,
 		utils.ChargerSv1ProcessEvent, cgrEv, &chrgrs); err != nil {
 		err = utils.NewErrChargerS(err)
 	}
@@ -955,11 +982,15 @@ func (sS *SessionS) processChargerS(ctx *context.Context, cgrEv *utils.CGREvent)
 
 // ipsAuthorize will authorize the event with the IPs subsystem
 func (sS *SessionS) ipsAuthorize(ctx *context.Context, cgrEv *utils.CGREvent) (rply *utils.AllocatedIP, err error) {
-	if len(sS.cfg.SessionSCfg().IPsConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaIPs, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		return nil, utils.NewErrNotConnected(utils.IPs)
 	}
 	var alcIP utils.AllocatedIP
-	if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().IPsConns,
+	if err = sS.connMgr.Call(ctx, conns,
 		utils.IPsV1AuthorizeIP,
 		cgrEv, &alcIP); err != nil {
 		utils.Logger.Warning(
@@ -969,9 +1000,13 @@ func (sS *SessionS) ipsAuthorize(ctx *context.Context, cgrEv *utils.CGREvent) (r
 	return &alcIP, nil
 }
 
-// ipsAuthorize will authorize the event with the IPs subsystem
+// resourcesAuthorize will authorize the event with the Resources subsystem
 func (sS *SessionS) resourcesAuthorize(ctx *context.Context, cgrEv *utils.CGREvent) (resID string, err error) {
-	if len(sS.cfg.SessionSCfg().ResourceSConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaResources, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		return utils.EmptyString, utils.NewErrNotConnected(utils.ResourceS)
 	}
 	var resUsageID string
@@ -989,7 +1024,7 @@ func (sS *SessionS) resourcesAuthorize(ctx *context.Context, cgrEv *utils.CGREve
 	}
 	cgrEv.APIOpts[utils.OptsResourcesUnits] = resUnits
 	var resMessage string
-	if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().ResourceSConns,
+	if err = sS.connMgr.Call(ctx, conns,
 		utils.ResourceSv1AuthorizeResources,
 		cgrEv, &resMessage); err != nil {
 	}
@@ -998,12 +1033,16 @@ func (sS *SessionS) resourcesAuthorize(ctx *context.Context, cgrEv *utils.CGREve
 
 // accountsMaxAbstracts will query the AccountS cost for Event
 func (sS *SessionS) accountsMaxAbstracts(ctx *context.Context, cgrEv *utils.CGREvent) (rply *utils.EventCharges, err error) {
-	if len(sS.cfg.SessionSCfg().AccountSConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaAccounts, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		err = errors.New("AccountS is disabled")
 		return
 	}
 	var acntCost utils.EventCharges
-	if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().AccountSConns,
+	if err = sS.connMgr.Call(ctx, conns,
 		utils.AccountSv1MaxAbstracts, cgrEv, &acntCost); err != nil {
 		return
 	}
@@ -1286,7 +1325,10 @@ func (sS *SessionS) initSession(ctx *context.Context, cgrEv *utils.CGREvent,
 // updateSession will reset terminator, perform debits and replicate sessions
 func (sS *SessionS) updateSession(ctx *context.Context, s *Session, updtEv, opts engine.MapEvent,
 	dbtItvl time.Duration) (maxUsage map[string]time.Duration, err error) {
-	defer sS.replicateSessions(ctx, s.ID, false, sS.cfg.SessionSCfg().ReplicationConns)
+	defer func() {
+		replConns, _ := sS.getConnIDs(ctx, utils.MetaReplication, utils.MetaAny, nil)
+		sS.replicateSessions(ctx, s.ID, false, replConns)
+	}()
 	s.lk.Lock()
 	defer s.lk.Unlock()
 
@@ -1359,7 +1401,10 @@ func (sS *SessionS) endSession(ctx *context.Context, s *Session, tUsage, lastUsa
 	aTime *time.Time, isInstantEvent bool) (err error) {
 	if !isInstantEvent {
 		//check if we have replicate connection and close the session there
-		defer sS.replicateSessions(ctx, utils.IfaceAsString(s.OriginCGREvent.APIOpts[utils.MetaOriginID]), true, sS.cfg.SessionSCfg().ReplicationConns)
+		defer func() {
+			replConns, _ := sS.getConnIDs(ctx, utils.MetaReplication, utils.MetaAny, nil)
+			sS.replicateSessions(ctx, utils.IfaceAsString(s.OriginCGREvent.APIOpts[utils.MetaOriginID]), true, replConns)
+		}()
 		sS.unregisterSession(utils.IfaceAsString(s.OriginCGREvent.APIOpts[utils.MetaOriginID]), false)
 		s.stopSTerminator()
 		//s.stopDebitLoops()  // TODO: debit loops functionality will be implemented in future versions
@@ -1486,13 +1531,21 @@ func (sS *SessionS) chargeEvent(ctx *context.Context, cgrEv *utils.CGREvent) (ma
 
 // accountSMaxAbstracts computes the maximum abstract units for the events received
 func (sS *SessionS) accountSMaxAbstracts(ctx *context.Context, cgrEvs map[string]*utils.CGREvent) (maxAbstracts map[string]*utils.Decimal, err error) {
-	if len(sS.cfg.SessionSCfg().AccountSConns) == 0 {
+	// resolve AccountS connections using the first event for tenant/dP context
+	var acctConns []string
+	for _, cgrEv := range cgrEvs {
+		if acctConns, err = sS.getConnIDs(ctx, utils.MetaAccounts, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+			return
+		}
+		break
+	}
+	if len(acctConns) == 0 {
 		return nil, utils.NewErrNotConnected(utils.AccountS)
 	}
 	maxAbstracts = make(map[string]*utils.Decimal)
 	for runID, cgrEv := range cgrEvs {
 		var acntCost utils.EventCharges
-		if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().AccountSConns,
+		if err = sS.connMgr.Call(ctx, acctConns,
 			utils.AccountSv1MaxAbstracts, cgrEv, &acntCost); err != nil {
 			return
 		}
@@ -2319,6 +2372,13 @@ func (sS *SessionS) BiRPCv1DeactivateSessions(ctx *context.Context,
 }
 
 func (sS *SessionS) processCDR(ctx *context.Context, cgrEv *utils.CGREvent, rply *string) (err error) {
+	var cdrsConns []string
+	if cdrsConns, err = sS.getConnIDs(ctx, utils.MetaCDRs, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(cdrsConns) == 0 {
+		return utils.NewErrNotConnected(utils.CDRs)
+	}
 	ev := engine.MapEvent(cgrEv.Event)
 	originID := GetSetOptsOriginID(ev, cgrEv.APIOpts)
 	s := sS.getRelocateSession(ctx, originID,
@@ -2335,7 +2395,7 @@ func (sS *SessionS) processCDR(ctx *context.Context, cgrEv *utils.CGREvent, rply
 		// found in cache
 		s = sIface.(*Session)
 	} else { // no cached session, CDR will be handled by CDRs
-		return sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().CDRsConns, utils.CDRsV1ProcessEvent,
+		return sS.connMgr.Call(ctx, cdrsConns, utils.CDRsV1ProcessEvent,
 			cgrEv, rply)
 	}
 
@@ -2352,7 +2412,7 @@ func (sS *SessionS) processCDR(ctx *context.Context, cgrEv *utils.CGREvent, rply
 		if mp := engine.MapEvent(cgrEv.Event); unratedReqs.HasField(mp.GetStringIgnoreErrors(utils.RequestType)) { // order additional rating for unrated request types
 			// argsProc.Flags = append(argsProc.Flags, fmt.Sprintf("%s:true", utils.MetaRALs))
 		}
-		if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().CDRsConns, utils.CDRsV1ProcessEvent,
+		if err = sS.connMgr.Call(ctx, cdrsConns, utils.CDRsV1ProcessEvent,
 			cgrEv, rply); err != nil {
 			utils.Logger.Warning(
 				fmt.Sprintf("<%s> error <%s> posting CDR with originID: <%s>",
@@ -2369,36 +2429,48 @@ func (sS *SessionS) processCDR(ctx *context.Context, cgrEv *utils.CGREvent, rply
 
 // processThreshold will receive the event and send it to ThresholdS to be processed
 func (sS *SessionS) processThreshold(ctx *context.Context, cgrEv *utils.CGREvent, clnb bool) (tIDs []string, err error) {
-	if len(sS.cfg.SessionSCfg().ThresholdSConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaThresholds, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		return tIDs, utils.NewErrNotConnected(utils.ThresholdS)
 	}
 	cgrEv.SetCloneable(clnb)
 	//initialize the returned variable
-	err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().ThresholdSConns, utils.ThresholdSv1ProcessEvent, cgrEv, &tIDs)
+	err = sS.connMgr.Call(ctx, conns, utils.ThresholdSv1ProcessEvent, cgrEv, &tIDs)
 	return
 }
 
 // processStats will receive the event and send it to StatS to be processed
 func (sS *SessionS) processStats(ctx *context.Context, cgrEv *utils.CGREvent, clnb bool) (sIDs []string, err error) {
-	if len(sS.cfg.SessionSCfg().StatSConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaStats, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		return sIDs, utils.NewErrNotConnected(utils.StatS)
 	}
 
 	cgrEv.SetCloneable(clnb)
 	//initialize the returned variable
-	err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().StatSConns, utils.StatSv1ProcessEvent, cgrEv, &sIDs)
+	err = sS.connMgr.Call(ctx, conns, utils.StatSv1ProcessEvent, cgrEv, &sIDs)
 	return
 }
 
 // getRoutes will receive the event and send it to SupplierS to find the suppliers
 func (sS *SessionS) getRoutes(ctx *context.Context, cgrEv *utils.CGREvent) (routesReply routes.SortedRoutesList, err error) {
-	if len(sS.cfg.SessionSCfg().RouteSConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaRoutes, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		return routesReply, utils.NewErrNotConnected(utils.RouteS)
 	}
 	if acd, has := cgrEv.Event[utils.ACD]; has {
 		cgrEv.Event[utils.Usage] = acd
 	}
-	if err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().RouteSConns, utils.RouteSv1GetRoutes,
+	if err = sS.connMgr.Call(ctx, conns, utils.RouteSv1GetRoutes,
 		cgrEv, &routesReply); err != nil {
 		return routesReply, utils.NewErrRouteS(err)
 	}
@@ -2407,7 +2479,11 @@ func (sS *SessionS) getRoutes(ctx *context.Context, cgrEv *utils.CGREvent) (rout
 
 // processAttributes will receive the event and send it to AttributeS to be processed
 func (sS *SessionS) processAttributes(ctx *context.Context, cgrEv *utils.CGREvent) (rplyEv attributes.AttrSProcessEventReply, err error) {
-	if len(sS.cfg.SessionSCfg().AttributeSConns) == 0 {
+	var conns []string
+	if conns, err = sS.getConnIDs(ctx, utils.MetaAttributes, cgrEv.Tenant, cgrEv.AsDataProvider()); err != nil {
+		return
+	}
+	if len(conns) == 0 {
 		return rplyEv, utils.NewErrNotConnected(utils.AttributeS)
 	}
 	if cgrEv.APIOpts == nil {
@@ -2417,7 +2493,7 @@ func (sS *SessionS) processAttributes(ctx *context.Context, cgrEv *utils.CGREven
 	cgrEv.APIOpts[utils.OptsContext] = utils.FirstNonEmpty(
 		utils.IfaceAsString(cgrEv.APIOpts[utils.OptsContext]),
 		utils.MetaSessionS)
-	err = sS.connMgr.Call(ctx, sS.cfg.SessionSCfg().AttributeSConns, utils.AttributeSv1ProcessEvent,
+	err = sS.connMgr.Call(ctx, conns, utils.AttributeSv1ProcessEvent,
 		cgrEv, &rplyEv)
 	return
 }

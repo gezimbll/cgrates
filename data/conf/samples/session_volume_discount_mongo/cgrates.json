@@ -32,8 +32,24 @@
         
 "sessions": {
     "enabled": true,
-    "routes_conns": ["*localhost"],
-    "cdrs_conns": ["*localhost"]
+    "opts":{
+    "conns":{
+    "*routes": [
+         {
+            "Tenant": "",
+            "FilterIDs": [],
+            "Value": ["*localhost"]
+         }
+    ],
+    "*cdrs": [
+         {
+            "Tenant": "",
+            "FilterIDs": [],
+            "Value": ["*localhost"]
+         }
+    ]
+            }
+    },
 },
     
 "attributes": {
