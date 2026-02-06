@@ -93,12 +93,50 @@
 "sessions": {
 	"enabled": true,
 	"listen_bijson": "127.0.0.1:3014",		// address where to listen for bidirectional JSON-RPC requests
-	"routes_conns": ["broadcast_conn"],
-	"resources_conns": ["broadcast_conn"],
-	"attributes_conns": ["broadcast_conn"],
-	"rates_conns": ["broadcast_conn"],
-	"cdrs_conns": ["broadcast_conn"],
-	"chargers_conns": ["broadcast_conn"],
+	"conns":{
+	"*routes": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["broadcast_conn"]
+		 }
+	],
+	"*resources": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["broadcast_conn"]
+		 }
+	],
+	"*attributes": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["broadcast_conn"]
+		 }
+	],
+	"*rates": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["broadcast_conn"]
+		 }
+	],
+	"*cdrs": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["broadcast_conn"]
+		 }
+	],
+	"*chargers": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["broadcast_conn"]
+		 }
+	]
+			},
 },
 
 

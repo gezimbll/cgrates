@@ -470,10 +470,24 @@ func testCfgGetConfigStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := &config.AttributeSJsonCfg{
-		Enabled:               utils.BoolPointer(true),
-		Stats_conns:           &[]string{"*localhost"},
-		Resources_conns:       &[]string{"*localhost"},
-		Accounts_conns:        &[]string{"*localhost"},
+		Enabled: utils.BoolPointer(true),
+		Conns: map[string][]*config.DynamicStringSliceOpt{
+			utils.MetaStats: {
+				{
+					Values: []string{"*localhost"},
+				},
+			},
+			utils.MetaResources: {
+				{
+					Values: []string{"*localhost"},
+				},
+			},
+			utils.MetaAccounts: {
+				{
+					Values: []string{"*localhost"},
+				},
+			},
+		},
 		Indexed_selects:       nil,
 		String_indexed_fields: nil,
 		Prefix_indexed_fields: nil,
@@ -558,10 +572,24 @@ func testCfgGetConfigStoreAgain(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := &config.AttributeSJsonCfg{
-		Enabled:               utils.BoolPointer(true),
-		Stats_conns:           &[]string{"*internal"},
-		Resources_conns:       &[]string{"*internal"},
-		Accounts_conns:        &[]string{"*internal"},
+		Enabled: utils.BoolPointer(true),
+		Conns: map[string][]*config.DynamicStringSliceOpt{
+			utils.MetaStats: {
+				{
+					Values: []string{"*internal"},
+				},
+			},
+			utils.MetaResources: {
+				{
+					Values: []string{"*internal"},
+				},
+			},
+			utils.MetaAccounts: {
+				{
+					Values: []string{"*internal"},
+				},
+			},
+		},
 		Indexed_selects:       utils.BoolPointer(false),
 		String_indexed_fields: nil,
 		Prefix_indexed_fields: nil,
@@ -576,10 +604,24 @@ func testCfgGetConfigStoreAgain(t *testing.T) {
 
 func testCfgMdfSectConfigStore(t *testing.T) {
 	attrSect := &config.AttributeSJsonCfg{
-		Enabled:               utils.BoolPointer(true),
-		Stats_conns:           &[]string{"*internal"},
-		Resources_conns:       &[]string{"*internal"},
-		Accounts_conns:        &[]string{"*internal"},
+		Enabled: utils.BoolPointer(true),
+		Conns: map[string][]*config.DynamicStringSliceOpt{
+			utils.MetaStats: {
+				{
+					Values: []string{"*localhost"},
+				},
+			},
+			utils.MetaResources: {
+				{
+					Values: []string{"*localhost"},
+				},
+			},
+			utils.MetaAccounts: {
+				{
+					Values: []string{"*localhost"},
+				},
+			},
+		},
 		Indexed_selects:       utils.BoolPointer(true),
 		String_indexed_fields: nil,
 		Prefix_indexed_fields: nil,

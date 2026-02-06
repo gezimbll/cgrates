@@ -65,7 +65,15 @@ func TestDiamPrometheus(t *testing.T) {
 },
 "sessions": {
 	"enabled": true,
-	"cdrs_conns": ["*internal"]
+	"conns":  {
+	"*cdrs": [
+		 {
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["*internal"]
+		 }
+	],
+	}
 },
 "cdrs": {
 	"enabled": true,

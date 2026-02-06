@@ -2203,7 +2203,7 @@ func TestStatQueueProcessThresholdsOKNoThIDs(t *testing.T) {
 	}()
 
 	cfg := config.NewDefaultCGRConfig()
-	cfg.StatSCfg().ThresholdSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}
+	cfg.StatSCfg().Conns[utils.MetaThresholds] = []*config.DynamicStringSliceOpt{{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}}}
 	data, _ := NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := NewDBConnManager(map[string]DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 	dm := NewDataManager(dbCM, cfg, nil)
@@ -2258,7 +2258,7 @@ func TestStatQueueProcessThresholdsOKNoThIDs(t *testing.T) {
 
 	sQs := []*StatQueue{sq}
 
-	if err := sS.processThresholds(context.Background(), sQs, nil); err != nil {
+	if err := sS.processThresholds(context.Background(), sQs, nil, "cgrates.org", nil); err != nil {
 		t.Error(err)
 	}
 }
@@ -2274,7 +2274,7 @@ func TestStatQueueProcessThresholdsOK(t *testing.T) {
 	}()
 
 	cfg := config.NewDefaultCGRConfig()
-	cfg.StatSCfg().ThresholdSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}
+	cfg.StatSCfg().Conns[utils.MetaThresholds] = []*config.DynamicStringSliceOpt{{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}}}
 	data, _ := NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := NewDBConnManager(map[string]DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 	dm := NewDataManager(dbCM, cfg, nil)
@@ -2360,7 +2360,7 @@ func TestStatQueueProcessThresholdsOK(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := sS.processThresholds(context.Background(), []*StatQueue{sq}, nil); err != nil {
+	if err := sS.processThresholds(context.Background(), []*StatQueue{sq}, nil, "cgrates.org", nil); err != nil {
 		t.Error(err)
 	}
 }
@@ -2380,7 +2380,7 @@ func TestStatQueueProcessThresholdsErrPartExec(t *testing.T) {
 	utils.Logger = utils.NewStdLoggerWithWriter(&buf, "", 4)
 
 	cfg := config.NewDefaultCGRConfig()
-	cfg.StatSCfg().ThresholdSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}
+	cfg.StatSCfg().Conns[utils.MetaThresholds] = []*config.DynamicStringSliceOpt{{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}}}
 	data, _ := NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := NewDBConnManager(map[string]DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 	dm := NewDataManager(dbCM, cfg, nil)
@@ -2448,7 +2448,7 @@ func TestStatQueueProcessThresholdsErrPartExec(t *testing.T) {
 	sQs := []*StatQueue{sq}
 
 	expLog := `[WARNING] <StatS> error: EXISTS`
-	if err := sS.processThresholds(context.Background(), sQs, nil); err == nil ||
+	if err := sS.processThresholds(context.Background(), sQs, nil, "cgrates.org", nil); err == nil ||
 		err != utils.ErrPartiallyExecuted {
 		t.Errorf("expected: <%+v>, \nreceived: <%+v>", utils.ErrPartiallyExecuted, err)
 	} else if rcvLog := buf.String(); !strings.Contains(rcvLog, expLog) {

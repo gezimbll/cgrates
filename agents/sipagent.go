@@ -55,7 +55,7 @@ func NewSIPAgent(connMgr *engine.ConnManager, cfg *config.CGRConfig,
 	filterS *engine.FilterS) (sa *SIPAgent, err error) {
 	sa = &SIPAgent{
 		connMgr:  connMgr,
-		filterS:  filterS,
+		fltrS:    filterS,
 		cfg:      cfg,
 		ackMap:   make(map[string]chan struct{}),
 		stopChan: make(chan struct{}),
@@ -80,7 +80,7 @@ func NewSIPAgent(connMgr *engine.ConnManager, cfg *config.CGRConfig,
 // SIPAgent is a handler for SIP requests
 type SIPAgent struct {
 	connMgr  *engine.ConnManager
-	filterS  *engine.FilterS
+	fltrS    *engine.FilterS
 	cfg      *config.CGRConfig
 	stopChan chan struct{}
 	ackMap   map[string]chan struct{}
@@ -321,7 +321,7 @@ func (sa *SIPAgent) handleMessage(sipMessage sipingo.Message, remoteHost string)
 		sa.cfg.TemplatesCfg()[utils.MetaErr],
 		sa.cfg.GeneralCfg().DefaultTenant,
 		sa.cfg.GeneralCfg().DefaultTimezone,
-		sa.filterS)
+		sa.fltrS)
 	if err != nil {
 		utils.Logger.Warning(
 			fmt.Sprintf("<%s> error: %s building errSIP for message: %s",
@@ -334,7 +334,7 @@ func (sa *SIPAgent) handleMessage(sipMessage sipingo.Message, remoteHost string)
 			opts, reqProcessor.Tenant, sa.cfg.GeneralCfg().DefaultTenant,
 			utils.FirstNonEmpty(reqProcessor.Timezone,
 				config.CgrConfig().GeneralCfg().DefaultTimezone),
-			sa.filterS, nil)
+			sa.fltrS, nil)
 		var lclProcessed bool
 		if lclProcessed, err = sa.processRequest(reqProcessor, agReq); err != nil {
 			utils.Logger.Warning(
@@ -380,7 +380,7 @@ func (sa *SIPAgent) processRequest(reqProcessor *config.RequestProcessor,
 	agReq *AgentRequest) (processed bool, err error) {
 	startTime := time.Now()
 	replyState := utils.OK
-	if pass, err := sa.filterS.Pass(context.TODO(), agReq.Tenant,
+	if pass, err := sa.fltrS.Pass(context.TODO(), agReq.Tenant,
 		reqProcessor.Filters, agReq); err != nil || !pass {
 		return pass, err
 	}
@@ -416,7 +416,12 @@ func (sa *SIPAgent) processRequest(reqProcessor *config.RequestProcessor,
 	case utils.MetaAuthorize:
 		rply := new(sessions.V1AuthorizeReply)
 		sessions.ApplyFlags(reqType, reqProcessor.Flags, cgrEv.APIOpts)
-		err = sa.connMgr.Call(context.TODO(), sa.cfg.SIPAgentCfg().SessionSConns, utils.SessionSv1AuthorizeEvent,
+		var sessionsConns []string
+		sessionsConns, err = engine.GetConnIDs(context.TODO(), sa.cfg.SIPAgentCfg().Conns[utils.MetaSessionS], cgrEv.Tenant, cgrEv.AsDataProvider(), sa.fltrS)
+		if err != nil {
+			return
+		}
+		err = sa.connMgr.Call(context.TODO(), sessionsConns, utils.SessionSv1AuthorizeEvent,
 			cgrEv, rply)
 		if err != nil {
 			replyState = utils.ErrReplyStateAuthorize
@@ -425,7 +430,12 @@ func (sa *SIPAgent) processRequest(reqProcessor *config.RequestProcessor,
 		agReq.setCGRReply(rply, err)
 	case utils.MetaEvent:
 		rply := new(sessions.V1ProcessEventReply)
-		err = sa.connMgr.Call(context.TODO(), sa.cfg.SIPAgentCfg().SessionSConns, utils.SessionSv1ProcessEvent,
+		var sessionsConns []string
+		sessionsConns, err = engine.GetConnIDs(context.TODO(), sa.cfg.SIPAgentCfg().Conns[utils.MetaSessionS], cgrEv.Tenant, cgrEv.AsDataProvider(), sa.fltrS)
+		if err != nil {
+			return
+		}
+		err = sa.connMgr.Call(context.TODO(), sessionsConns, utils.SessionSv1ProcessEvent,
 			cgrEv, rply)
 		if err != nil {
 			replyState = utils.ErrReplyStateEvent
@@ -485,7 +495,12 @@ func (sa *SIPAgent) processRequest(reqProcessor *config.RequestProcessor,
 		statIDs := strings.Split(rawStatIDs, utils.ANDSep)
 		ev.APIOpts[utils.OptsStatsProfileIDs] = statIDs
 		var reply []string
-		if err := sa.connMgr.Call(context.TODO(), sa.cfg.SIPAgentCfg().StatSConns,
+		var statConns []string
+		statConns, err = engine.GetConnIDs(context.TODO(), sa.cfg.SIPAgentCfg().Conns[utils.MetaStats], ev.Tenant, ev.AsDataProvider(), sa.fltrS)
+		if err != nil {
+			return
+		}
+		if err := sa.connMgr.Call(context.TODO(), statConns,
 			utils.StatSv1ProcessEvent, ev, &reply); err != nil {
 			return false, fmt.Errorf("failed to process %s event in %s: %v",
 				utils.SIPAgent, utils.StatS, err)
@@ -497,7 +512,12 @@ func (sa *SIPAgent) processRequest(reqProcessor *config.RequestProcessor,
 		thIDs := strings.Split(rawThIDs, utils.ANDSep)
 		ev.APIOpts[utils.OptsThresholdsProfileIDs] = thIDs
 		var reply []string
-		if err := sa.connMgr.Call(context.TODO(), sa.cfg.SIPAgentCfg().ThresholdSConns,
+		var thrConns []string
+		thrConns, err = engine.GetConnIDs(context.TODO(), sa.cfg.SIPAgentCfg().Conns[utils.MetaThresholds], ev.Tenant, ev.AsDataProvider(), sa.fltrS)
+		if err != nil {
+			return
+		}
+		if err := sa.connMgr.Call(context.TODO(), thrConns,
 			utils.ThresholdSv1ProcessEvent, ev, &reply); err != nil {
 			return false, fmt.Errorf("failed to process %s event in %s: %v",
 				utils.SIPAgent, utils.ThresholdS, err)
