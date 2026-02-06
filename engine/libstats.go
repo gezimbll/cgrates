@@ -371,8 +371,28 @@ func (sq *StatQueue) addStatEvent(ctx *context.Context, tnt, evID string, filter
 	sq.SQItems = append(sq.SQItems, SQItem{EventID: evID, ExpiryTime: expTime})
 	var pass bool
 	// recreate the request without *opts
-	dDP := NewDynamicDP(ctx, config.CgrConfig().FilterSCfg().ResourceSConns, config.CgrConfig().FilterSCfg().StatSConns,
-		config.CgrConfig().FilterSCfg().AccountSConns, config.CgrConfig().FilterSCfg().TrendSConns, config.CgrConfig().FilterSCfg().RankingSConns, tnt, utils.MapStorage{utils.MetaReq: evNm[utils.MetaReq], utils.MetaOpts: evNm[utils.MetaOpts]})
+	metricEvNm := utils.MapStorage{utils.MetaReq: evNm[utils.MetaReq], utils.MetaOpts: evNm[utils.MetaOpts]}
+	resConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaResources], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	statConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaStats], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	acctConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaAccounts], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	trendConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaTrends], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	rankConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaRankings], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	dDP := NewDynamicDP(ctx, resConns, statConns, acctConns, trendConns, rankConns, tnt, metricEvNm)
 	for idx, metricCfg := range sq.sqPrfl.Metrics {
 		if pass, err = filterS.Pass(ctx, tnt, metricCfg.FilterIDs,
 			evNm); err != nil {
@@ -405,8 +425,28 @@ func (sq *StatQueue) isOneEvent() bool {
 func (sq *StatQueue) addStatOneEvent(ctx *context.Context, tnt string, filterS *FilterS, evNm utils.MapStorage) (err error) {
 	var pass bool
 
-	dDP := NewDynamicDP(ctx, config.CgrConfig().FilterSCfg().ResourceSConns, config.CgrConfig().FilterSCfg().StatSConns,
-		config.CgrConfig().FilterSCfg().AccountSConns, config.CgrConfig().FilterSCfg().TrendSConns, config.CgrConfig().FilterSCfg().RankingSConns, tnt, utils.MapStorage{utils.MetaReq: evNm[utils.MetaReq], utils.MetaOpts: evNm[utils.MetaOpts]})
+	metricEvNm := utils.MapStorage{utils.MetaReq: evNm[utils.MetaReq], utils.MetaOpts: evNm[utils.MetaOpts]}
+	resConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaResources], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	statConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaStats], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	acctConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaAccounts], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	trendConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaTrends], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	rankConns, err := GetConnIDs(ctx, config.CgrConfig().FilterSCfg().Conns[utils.MetaRankings], tnt, metricEvNm, filterS)
+	if err != nil {
+		return
+	}
+	dDP := NewDynamicDP(ctx, resConns, statConns, acctConns, trendConns, rankConns, tnt, metricEvNm)
 
 	for idx, metricCfg := range sq.sqPrfl.Metrics {
 		if pass, err = filterS.Pass(ctx, tnt, metricCfg.FilterIDs,

@@ -60,8 +60,27 @@ func (fS *FilterS) Pass(ctx *context.Context, tenant string, filterIDs []string,
 	if len(filterIDs) == 0 {
 		return true, nil
 	}
-	dDP := NewDynamicDP(ctx, fS.cfg.FilterSCfg().ResourceSConns, fS.cfg.FilterSCfg().StatSConns,
-		fS.cfg.FilterSCfg().AccountSConns, fS.cfg.FilterSCfg().TrendSConns, fS.cfg.FilterSCfg().RankingSConns, tenant, ev)
+	resConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaResources], tenant, ev, fS)
+	if err != nil {
+		return false, err
+	}
+	statConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaStats], tenant, ev, fS)
+	if err != nil {
+		return false, err
+	}
+	acctConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaAccounts], tenant, ev, fS)
+	if err != nil {
+		return false, err
+	}
+	trendConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaTrends], tenant, ev, fS)
+	if err != nil {
+		return false, err
+	}
+	rankConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaRankings], tenant, ev, fS)
+	if err != nil {
+		return false, err
+	}
+	dDP := NewDynamicDP(ctx, resConns, statConns, acctConns, trendConns, rankConns, tenant, ev)
 	for _, fltrID := range filterIDs {
 		f, err := fS.dm.GetFilter(ctx, tenant, fltrID,
 			true, true, utils.NonTransactional)
@@ -121,8 +140,27 @@ func (fS *FilterS) LazyPass(ctx *context.Context, tenant string, filterIDs []str
 		return true, nil, nil
 	}
 	pass = true
-	dDP := NewDynamicDP(ctx, fS.cfg.FilterSCfg().ResourceSConns, fS.cfg.FilterSCfg().StatSConns,
-		fS.cfg.FilterSCfg().AccountSConns, fS.cfg.FilterSCfg().TrendSConns, fS.cfg.FilterSCfg().RankingSConns, tenant, ev)
+	resConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaResources], tenant, ev, fS)
+	if err != nil {
+		return false, nil, err
+	}
+	statConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaStats], tenant, ev, fS)
+	if err != nil {
+		return false, nil, err
+	}
+	acctConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaAccounts], tenant, ev, fS)
+	if err != nil {
+		return false, nil, err
+	}
+	trendConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaTrends], tenant, ev, fS)
+	if err != nil {
+		return false, nil, err
+	}
+	rankConns, err := GetConnIDs(ctx, fS.cfg.FilterSCfg().Conns[utils.MetaRankings], tenant, ev, fS)
+	if err != nil {
+		return false, nil, err
+	}
+	dDP := NewDynamicDP(ctx, resConns, statConns, acctConns, trendConns, rankConns, tenant, ev)
 	for _, fltrID := range filterIDs {
 		var f *Filter
 		f, err = fS.dm.GetFilter(ctx, tenant, fltrID,

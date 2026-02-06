@@ -315,8 +315,19 @@ func (alS *AttributeS) V1ProcessEvent(ctx *context.Context, args *utils.CGREvent
 
 	var lastID string
 	matchedIDs := []*FieldsAltered{}
-	dynDP := engine.NewDynamicDP(ctx, alS.cfg.AttributeSCfg().ResourceSConns,
-		alS.cfg.AttributeSCfg().StatSConns, alS.cfg.AttributeSCfg().AccountSConns, nil, nil, args.Tenant, eNV)
+	resConns, err := engine.GetConnIDs(ctx, alS.cfg.AttributeSCfg().Conns[utils.MetaResources], tnt, args.AsDataProvider(), alS.fltrS)
+	if err != nil {
+		return err
+	}
+	statConns, err := engine.GetConnIDs(ctx, alS.cfg.AttributeSCfg().Conns[utils.MetaStats], tnt, args.AsDataProvider(), alS.fltrS)
+	if err != nil {
+		return err
+	}
+	accConns, err := engine.GetConnIDs(ctx, alS.cfg.AttributeSCfg().Conns[utils.MetaAccounts], tnt, args.AsDataProvider(), alS.fltrS)
+	if err != nil {
+		return err
+	}
+	dynDP := engine.NewDynamicDP(ctx, resConns, statConns, accConns, nil, nil, args.Tenant, eNV)
 	for i := 0; i < processRuns; i++ {
 		eNV[utils.MetaVars].(utils.MapStorage)[utils.MetaProcessRunsCfg] = i + 1
 		var evRply *AttrSProcessEventReply

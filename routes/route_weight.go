@@ -21,6 +21,7 @@ package routes
 import (
 	"github.com/cgrates/birpc/context"
 	"github.com/cgrates/cgrates/config"
+	"github.com/cgrates/cgrates/engine"
 	"github.com/cgrates/cgrates/utils"
 )
 
@@ -54,13 +55,34 @@ func (ws *WeightSorter) SortRoutes(ctx *context.Context, prflID string,
 		if route.blocker {
 			srtRoute.SortingData[utils.Blocker] = true
 		}
+		var resConns []string
+		resConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaResources], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var statConns []string
+		statConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaStats], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var acctConns []string
+		acctConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaAccounts], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var trendConns []string
+		trendConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaTrends], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var rankConns []string
+		rankConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaRankings], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
 		var pass bool
 		if pass, err = routeLazyPass(ctx, route.lazyCheckRules, ev, srtRoute.SortingData,
-			ws.cfg.FilterSCfg().ResourceSConns,
-			ws.cfg.FilterSCfg().StatSConns,
-			ws.cfg.FilterSCfg().AccountSConns,
-			ws.cfg.FilterSCfg().TrendSConns,
-			ws.cfg.FilterSCfg().RankingSConns); err != nil {
+			resConns, statConns, acctConns, trendConns, rankConns); err != nil {
 			return
 		} else if pass {
 			sortedRoutes.Routes = append(sortedRoutes.Routes, srtRoute)

@@ -31,7 +31,11 @@ import (
 func populateResourcesForRoutes(ctx *context.Context, cfg *config.CGRConfig,
 	connMgr *engine.ConnManager, routes map[string]*RouteWithWeight,
 	ev *utils.CGREvent, extraOpts *optsGetRoutes) (sortedRoutes []*SortedRoute, err error) {
-	if len(cfg.RouteSCfg().ResourceSConns) == 0 {
+	resSConns, err := engine.GetConnIDs(ctx, cfg.RouteSCfg().Conns[utils.MetaResources], ev.Tenant, ev.AsDataProvider(), nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(resSConns) == 0 {
 		return nil, utils.NewErrMandatoryIeMissing("connIDs")
 	}
 	sortedRoutes = make([]*SortedRoute, 0, len(routes))
@@ -58,7 +62,7 @@ func populateResourcesForRoutes(ctx *context.Context, cfg *config.CGRConfig,
 		var tUsage float64
 		for _, resID := range route.ResourceIDs {
 			var res utils.Resource
-			if err = connMgr.Call(ctx, cfg.RouteSCfg().ResourceSConns, utils.ResourceSv1GetResource,
+			if err = connMgr.Call(ctx, resSConns, utils.ResourceSv1GetResource,
 				&utils.TenantIDWithAPIOpts{TenantID: &utils.TenantID{Tenant: ev.Tenant, ID: resID}},
 				&res); err != nil && err.Error() != utils.ErrNotFound.Error() {
 				utils.Logger.Warning(
@@ -70,13 +74,34 @@ func populateResourcesForRoutes(ctx *context.Context, cfg *config.CGRConfig,
 		}
 		srtRoute.SortingData[utils.ResourceUsageStr] = tUsage
 		srtRoute.sortingDataDecimal[utils.ResourceUsageStr] = utils.NewDecimalFromFloat64(tUsage)
+		var resFilterConns []string
+		resFilterConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaResources], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var statFilterConns []string
+		statFilterConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaStats], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var acctFilterConns []string
+		acctFilterConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaAccounts], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var trendFilterConns []string
+		trendFilterConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaTrends], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var rankFilterConns []string
+		rankFilterConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaRankings], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
 		var pass bool
 		if pass, err = routeLazyPass(ctx, route.lazyCheckRules, ev, srtRoute.SortingData,
-			cfg.FilterSCfg().ResourceSConns,
-			cfg.FilterSCfg().StatSConns,
-			cfg.FilterSCfg().AccountSConns,
-			cfg.FilterSCfg().TrendSConns,
-			cfg.FilterSCfg().RankingSConns); err != nil {
+			resFilterConns, statFilterConns, acctFilterConns, trendFilterConns, rankFilterConns); err != nil {
 			return
 		} else if pass {
 			sortedRoutes = append(sortedRoutes, srtRoute)

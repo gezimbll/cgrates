@@ -33,7 +33,11 @@ import (
 func populateCostForRoutes(ctx *context.Context, cfg *config.CGRConfig, connMgr *engine.ConnManager,
 	fltrS *engine.FilterS, routes map[string]*RouteWithWeight, ev *utils.CGREvent,
 	extraOpts *optsGetRoutes) (sortedRoutes []*SortedRoute, err error) {
-	if len(cfg.RouteSCfg().RateSConns) == 0 {
+	rateSConns, err := engine.GetConnIDs(ctx, cfg.RouteSCfg().Conns[utils.MetaRates], ev.Tenant, ev.AsDataProvider(), fltrS)
+	if err != nil {
+		return nil, err
+	}
+	if len(rateSConns) == 0 {
 		return nil, utils.NewErrMandatoryIeMissing("connIDs")
 	}
 	var usage *decimal.Big
@@ -64,11 +68,16 @@ func populateCostForRoutes(ctx *context.Context, cfg *config.CGRConfig, connMgr 
 			srtRoute.SortingData[utils.Blocker] = true
 		}
 		var cost *utils.Decimal
+		var acctSConns []string
+		acctSConns, err = engine.GetConnIDs(ctx, cfg.RouteSCfg().Conns[utils.MetaAccounts], ev.Tenant, ev.AsDataProvider(), fltrS)
+		if err != nil {
+			return nil, err
+		}
 		if len(route.AccountIDs) != 0 { // query AccountS for cost
 
 			var acntCost utils.EventCharges
 			ev.APIOpts[utils.OptsAccountsProfileIDs] = slices.Clone(route.AccountIDs)
-			if err = connMgr.Call(ctx, cfg.RouteSCfg().AccountSConns,
+			if err = connMgr.Call(ctx, acctSConns,
 				utils.AccountSv1MaxAbstracts, ev, &acntCost); err != nil {
 				if extraOpts.ignoreErrors {
 					utils.Logger.Warning(
@@ -94,7 +103,7 @@ func populateCostForRoutes(ctx *context.Context, cfg *config.CGRConfig, connMgr 
 		} else { // query RateS for cost
 			ev.APIOpts[utils.OptsRatesProfileIDs] = slices.Clone(route.RateProfileIDs)
 			var rpCost utils.RateProfileCost
-			if err = connMgr.Call(ctx, cfg.RouteSCfg().RateSConns,
+			if err = connMgr.Call(ctx, rateSConns,
 				utils.RateSv1CostForEvent, ev, &rpCost); err != nil {
 				if extraOpts.ignoreErrors {
 					utils.Logger.Warning(
@@ -116,14 +125,34 @@ func populateCostForRoutes(ctx *context.Context, cfg *config.CGRConfig, connMgr 
 			srtRoute.sortingDataDecimal[utils.Cost] = cost
 		}
 		srtRoute.SortingData[utils.Cost] = cost
-
+		var resConns []string
+		resConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaResources], ev.Tenant, ev.AsDataProvider(), fltrS)
+		if err != nil {
+			return nil, err
+		}
+		var statFConns []string
+		statFConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaStats], ev.Tenant, ev.AsDataProvider(), fltrS)
+		if err != nil {
+			return nil, err
+		}
+		var acctFConns []string
+		acctFConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaAccounts], ev.Tenant, ev.AsDataProvider(), fltrS)
+		if err != nil {
+			return nil, err
+		}
+		var trendConns []string
+		trendConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaTrends], ev.Tenant, ev.AsDataProvider(), fltrS)
+		if err != nil {
+			return nil, err
+		}
+		var rankConns []string
+		rankConns, err = engine.GetConnIDs(ctx, cfg.FilterSCfg().Conns[utils.MetaRankings], ev.Tenant, ev.AsDataProvider(), fltrS)
+		if err != nil {
+			return nil, err
+		}
 		var pass bool
 		if pass, err = routeLazyPass(ctx, route.lazyCheckRules, ev, srtRoute.SortingData,
-			cfg.FilterSCfg().ResourceSConns,
-			cfg.FilterSCfg().StatSConns,
-			cfg.FilterSCfg().AccountSConns,
-			cfg.FilterSCfg().TrendSConns,
-			cfg.FilterSCfg().RankingSConns); err != nil {
+			resConns, statFConns, acctFConns, trendConns, rankConns); err != nil {
 			return
 		} else if pass {
 			sortedRoutes = append(sortedRoutes, srtRoute)

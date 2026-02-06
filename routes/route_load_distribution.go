@@ -43,9 +43,6 @@ type LoadDistributionSorter struct {
 // SortRoutes .
 func (ws *LoadDistributionSorter) SortRoutes(ctx *context.Context, prflID string,
 	routes map[string]*RouteWithWeight, ev *utils.CGREvent, extraOpts *optsGetRoutes) (sortedRoutes *SortedRoutes, err error) {
-	if len(ws.cfg.RouteSCfg().StatSConns) == 0 {
-		return nil, utils.NewErrMandatoryIeMissing("connIDs")
-	}
 	sortedRoutes = &SortedRoutes{
 		ProfileID: prflID,
 		Sorting:   utils.MetaLoad,
@@ -85,12 +82,34 @@ func (ws *LoadDistributionSorter) SortRoutes(ctx *context.Context, prflID string
 		}
 		srtRoute.SortingData[utils.Load] = metricSum
 		srtRoute.sortingDataDecimal[utils.Load] = metricSum
+		var resConns []string
+		resConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaResources], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var statFConns []string
+		statFConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaStats], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var acctConns []string
+		acctConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaAccounts], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var trendConns []string
+		trendConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaTrends], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var rankConns []string
+		rankConns, err = engine.GetConnIDs(ctx, ws.cfg.FilterSCfg().Conns[utils.MetaRankings], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
 		var pass bool
 		if pass, err = routeLazyPass(ctx, route.lazyCheckRules, ev, srtRoute.SortingData,
-			ws.cfg.FilterSCfg().ResourceSConns,
-			ws.cfg.FilterSCfg().StatSConns,
-			ws.cfg.FilterSCfg().AccountSConns,
-			ws.cfg.FilterSCfg().TrendSConns, ws.cfg.FilterSCfg().RankingSConns); err != nil {
+			resConns, statFConns, acctConns, trendConns, rankConns); err != nil {
 			return
 		} else if pass {
 			// Add the ratio in SortingData so we can used it later in SortLoadDistribution
@@ -118,8 +137,13 @@ func populateStatsForLoadRoute(ctx *context.Context, cfg *config.CGRConfig,
 		// check if we get an ID in the following form (StatID:MetricID)
 		statWithMetric := strings.Split(statID, utils.InInFieldSep)
 		var metrics map[string]*utils.Decimal
+		connIDs, connErr := engine.GetConnIDs(ctx, cfg.RouteSCfg().Conns[utils.MetaStats], tenant, nil, nil)
+		if connErr != nil {
+			err = connErr
+			return
+		}
 		if err = connMgr.Call(ctx,
-			cfg.RouteSCfg().StatSConns,
+			connIDs,
 			utils.StatSv1GetQueueDecimalMetrics,
 			&utils.TenantIDWithAPIOpts{
 				TenantID: &utils.TenantID{

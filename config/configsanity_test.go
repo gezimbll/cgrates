@@ -199,109 +199,13 @@ func TestConfigSanitySessionS(t *testing.T) {
 	cfg.sessionSCfg = &SessionSCfg{
 		Enabled:           true,
 		TerminateAttempts: 0,
+		Opts:              &SessionsOpts{},
 	}
 	expected := "<SessionS> 'terminate_attempts' should be at least 1"
 	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
 		t.Errorf("Expecting: %+q  received: %+q", expected, err)
 	}
 	cfg.sessionSCfg.TerminateAttempts = 1
-
-	cfg.sessionSCfg.ChargerSConns = []string{utils.MetaInternal}
-	expected = "<ChargerS> not enabled but requested by <SessionS> component"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.ChargerSConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.ChargerSConns = []string{}
-	cfg.chargerSCfg.Enabled = true
-
-	cfg.sessionSCfg.ResourceSConns = []string{utils.MetaInternal}
-	expected = "<ResourceS> not enabled but requested by <SessionS> component"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.ResourceSConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.ResourceSConns = []string{}
-	cfg.resourceSCfg.Enabled = true
-
-	cfg.sessionSCfg.ThresholdSConns = []string{utils.MetaInternal}
-	expected = "<ThresholdS> not enabled but requested by <SessionS> component"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.ThresholdSConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.ThresholdSConns = []string{}
-	cfg.thresholdSCfg.Enabled = true
-
-	cfg.sessionSCfg.StatSConns = []string{utils.MetaInternal}
-	expected = "<StatS> not enabled but requested by <SessionS> component"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.StatSConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.StatSConns = []string{}
-	cfg.statsCfg.Enabled = true
-
-	cfg.sessionSCfg.RouteSConns = []string{utils.MetaInternal}
-	expected = "<RouteS> not enabled but requested by <SessionS> component"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.RouteSConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.RouteSConns = []string{}
-	cfg.routeSCfg.Enabled = true
-
-	cfg.sessionSCfg.AttributeSConns = []string{utils.MetaInternal}
-	expected = "<AttributeS> not enabled but requested by <SessionS> component"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.AttributeSConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.AttributeSConns = []string{}
-	cfg.attributeSCfg.Enabled = true
-
-	cfg.sessionSCfg.CDRsConns = []string{utils.MetaInternal}
-	expected = "<CDRs> not enabled but requested by <SessionS> component"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.CDRsConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.CDRsConns = []string{}
-	cfg.cdrsCfg.Enabled = true
-	cfg.sessionSCfg.ReplicationConns = []string{"test"}
-	expected = "<SessionS> connection with id: <test> not defined"
-	if err := cfg.checkConfigSanity(); err == nil || err.Error() != expected {
-		t.Errorf("Expecting: %+q  received: %+q", expected, err)
-	}
-	cfg.sessionSCfg.ReplicationConns = []string{}
 
 	cfg.cacheCfg.Partitions[utils.CacheClosedSessions].Limit = 0
 	expected = "<CacheS> *closed_sessions needs to be != 0, received: 0"
@@ -1723,11 +1627,42 @@ func TestCGRConfigcheckConfigSanitySessionSErr(t *testing.T) {
 		cdrsCfg: &CdrsCfg{
 			Enabled: false,
 		},
-
+		chargerSCfg: &ChargerSCfg{
+			Enabled: false,
+		},
+		resourceSCfg: &ResourceSConfig{
+			Enabled: false,
+		},
+		ipsCfg: &IPsCfg{
+			Enabled: false,
+		},
+		thresholdSCfg: &ThresholdSCfg{
+			Enabled: false,
+		},
+		statsCfg: &StatSCfg{
+			Enabled: false,
+		},
+		routeSCfg: &RouteSCfg{
+			Enabled: false,
+		},
+		attributeSCfg: &AttributeSCfg{
+			Enabled: false,
+		},
+		actionSCfg: &ActionSCfg{
+			Enabled: false,
+		},
+		rateSCfg: &RateSCfg{
+			Enabled: false,
+		},
+		accountSCfg: &AccountSCfg{
+			Enabled: false,
+		},
 		sessionSCfg: &SessionSCfg{
 			Enabled:           true,
 			TerminateAttempts: 1,
 			AlterableFields:   utils.NewStringSet([]string{"OriginHost"}),
+			Conns:             make(map[string][]*DynamicStringSliceOpt),
+			Opts:              &SessionsOpts{},
 		},
 		cacheCfg: &CacheCfg{
 

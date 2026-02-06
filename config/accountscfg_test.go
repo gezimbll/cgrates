@@ -28,11 +28,13 @@ import (
 
 func TestAccountSCfgLoadFromJSONCfg(t *testing.T) {
 	jsonCfg := &AccountSJsonCfg{
-		Enabled:                  utils.BoolPointer(true),
-		Attributes_conns:         &[]string{utils.MetaInternal},
-		Rates_conns:              &[]string{utils.MetaInternal},
-		Thresholds_conns:         &[]string{utils.MetaInternal},
-		Indexed_selects:          utils.BoolPointer(false),
+		Enabled: utils.BoolPointer(true),
+		Conns: map[string][]*DynamicStringSliceOpt{
+			utils.MetaAttributes: {{Values: []string{utils.MetaInternal}}},
+			utils.MetaRates:      {{Values: []string{utils.MetaInternal}}},
+			utils.MetaThresholds: {{Values: []string{utils.MetaInternal}}},
+		},
+		Indexed_selects: utils.BoolPointer(false),
 		String_indexed_fields:    &[]string{"*req.index1"},
 		Prefix_indexed_fields:    &[]string{"*req.index1"},
 		Suffix_indexed_fields:    &[]string{"*req.index1"},
@@ -47,11 +49,13 @@ func TestAccountSCfgLoadFromJSONCfg(t *testing.T) {
 		t.Error(err)
 	}
 	expected := &AccountSCfg{
-		Enabled:                true,
-		AttributeSConns:        []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)},
-		RateSConns:             []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRates)},
-		ThresholdSConns:        []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)},
-		IndexedSelects:         false,
+		Enabled: true,
+		Conns: map[string][]*DynamicStringSliceOpt{
+			utils.MetaAttributes: {{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}}},
+			utils.MetaRates:      {{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRates)}}},
+			utils.MetaThresholds: {{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}}},
+		},
+		IndexedSelects: false,
 		StringIndexedFields:    &[]string{"*req.index1"},
 		PrefixIndexedFields:    &[]string{"*req.index1"},
 		SuffixIndexedFields:    &[]string{"*req.index1"},
@@ -187,11 +191,13 @@ func TestAccountSCfgClone(t *testing.T) {
 		t.Error(err)
 	}
 	ban := &AccountSCfg{
-		Enabled:             true,
-		IndexedSelects:      false,
-		AttributeSConns:     []string{"*req.index1"},
-		RateSConns:          []string{"*req.index1"},
-		ThresholdSConns:     []string{"*req.index1"},
+		Enabled:        true,
+		IndexedSelects: false,
+		Conns: map[string][]*DynamicStringSliceOpt{
+			utils.MetaAttributes: {{Values: []string{"*req.index1"}}},
+			utils.MetaRates:      {{Values: []string{"*req.index1"}}},
+			utils.MetaThresholds: {{Values: []string{"*req.index1"}}},
+		},
 		StringIndexedFields: &[]string{"*req.index1"},
 		PrefixIndexedFields: &[]string{"*req.index1", "*req.index2"},
 		SuffixIndexedFields: &[]string{"*req.index1"},
@@ -204,13 +210,13 @@ func TestAccountSCfgClone(t *testing.T) {
 	if !reflect.DeepEqual(ban, rcv) {
 		t.Errorf("\nExpected: %+v\nReceived: %+v", utils.ToJSON(ban), utils.ToJSON(rcv))
 	}
-	if rcv.AttributeSConns[0] = utils.EmptyString; ban.AttributeSConns[0] != "*req.index1" {
+	if rcv.Conns[utils.MetaAttributes][0].Values[0] = utils.EmptyString; ban.Conns[utils.MetaAttributes][0].Values[0] != "*req.index1" {
 		t.Errorf("Expected clone to not modify the cloned")
 	}
-	if rcv.RateSConns[0] = utils.EmptyString; ban.RateSConns[0] != "*req.index1" {
+	if rcv.Conns[utils.MetaRates][0].Values[0] = utils.EmptyString; ban.Conns[utils.MetaRates][0].Values[0] != "*req.index1" {
 		t.Errorf("Expected clone to not modify the cloned")
 	}
-	if rcv.ThresholdSConns[0] = utils.EmptyString; ban.ThresholdSConns[0] != "*req.index1" {
+	if rcv.Conns[utils.MetaThresholds][0].Values[0] = utils.EmptyString; ban.Conns[utils.MetaThresholds][0].Values[0] != "*req.index1" {
 		t.Errorf("Expected clone to not modify the cloned")
 	}
 	if (*rcv.StringIndexedFields)[0] = utils.EmptyString; (*ban.StringIndexedFields)[0] != "*req.index1" {
@@ -228,11 +234,13 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 	var d *AccountSJsonCfg
 
 	v1 := &AccountSCfg{
-		Enabled:             true,
-		AttributeSConns:     []string{"*localhost"},
-		RateSConns:          []string{},
-		ThresholdSConns:     []string{},
-		IndexedSelects:      true,
+		Enabled: true,
+		Conns: map[string][]*DynamicStringSliceOpt{
+			utils.MetaAttributes: {{Values: []string{"*localhost"}}},
+			utils.MetaRates:      {{Values: []string{}}},
+			utils.MetaThresholds: {{Values: []string{}}},
+		},
+		IndexedSelects: true,
 		StringIndexedFields: &[]string{"~*req.Index1"},
 		PrefixIndexedFields: &[]string{},
 		SuffixIndexedFields: &[]string{},
@@ -259,11 +267,13 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 	}
 
 	v2 := &AccountSCfg{
-		Enabled:             false,
-		AttributeSConns:     []string{"*localhost", "*birpc"},
-		RateSConns:          []string{"*localhost"},
-		ThresholdSConns:     []string{"*localhost"},
-		IndexedSelects:      false,
+		Enabled: false,
+		Conns: map[string][]*DynamicStringSliceOpt{
+			utils.MetaAttributes: {{Values: []string{"*localhost", "*birpc"}}},
+			utils.MetaRates:      {{Values: []string{"*localhost"}}},
+			utils.MetaThresholds: {{Values: []string{"*localhost"}}},
+		},
+		IndexedSelects: false,
 		StringIndexedFields: &[]string{"~*req.Index1"},
 		PrefixIndexedFields: &[]string{},
 		SuffixIndexedFields: &[]string{},
@@ -290,11 +300,13 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 	}
 
 	expected1 := &AccountSJsonCfg{
-		Enabled:               utils.BoolPointer(false),
-		Indexed_selects:       utils.BoolPointer(false),
-		Attributes_conns:      &[]string{"*localhost", "*birpc"},
-		Rates_conns:           &[]string{"*localhost"},
-		Thresholds_conns:      &[]string{"*localhost"},
+		Enabled:         utils.BoolPointer(false),
+		Indexed_selects: utils.BoolPointer(false),
+		Conns: map[string][]*DynamicStringSliceOpt{
+			utils.MetaAttributes: {{Values: []string{"*localhost", "*birpc"}}},
+			utils.MetaRates:      {{Values: []string{"*localhost"}}},
+			utils.MetaThresholds: {{Values: []string{"*localhost"}}},
+		},
 		String_indexed_fields: nil,
 		Prefix_indexed_fields: nil,
 		Suffix_indexed_fields: nil,
@@ -335,9 +347,6 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 	expected3 := &AccountSJsonCfg{
 		Enabled:               nil,
 		Indexed_selects:       nil,
-		Attributes_conns:      nil,
-		Rates_conns:           nil,
-		Thresholds_conns:      nil,
 		String_indexed_fields: nil,
 		Prefix_indexed_fields: nil,
 		Suffix_indexed_fields: nil,
@@ -355,11 +364,13 @@ func TestDiffAccountSJsonCfg(t *testing.T) {
 
 func TestAccountSCloneSection(t *testing.T) {
 	acS := &AccountSCfg{
-		Enabled:             true,
-		AttributeSConns:     []string{"*localhost"},
-		RateSConns:          []string{},
-		ThresholdSConns:     []string{},
-		IndexedSelects:      true,
+		Enabled: true,
+		Conns: map[string][]*DynamicStringSliceOpt{
+			utils.MetaAttributes: {{Values: []string{"*localhost"}}},
+			utils.MetaRates:      {{Values: []string{}}},
+			utils.MetaThresholds: {{Values: []string{}}},
+		},
+		IndexedSelects: true,
 		StringIndexedFields: &[]string{"~*req.Index1"},
 		PrefixIndexedFields: &[]string{},
 		SuffixIndexedFields: &[]string{},

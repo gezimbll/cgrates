@@ -142,8 +142,12 @@ func (aL *actExport) execute(ctx *context.Context, data utils.MapStorage, _ stri
 	if expIDs, has := aL.cfg().Opts[utils.MetaExporterIDs]; has {
 		exporterIDs = strings.Split(utils.IfaceAsString(expIDs), utils.InfieldSep)
 	}
+	var eesConns []string
+	if eesConns, err = engine.GetConnIDs(ctx, aL.config.ActionSCfg().Conns[utils.MetaEEs], aL.tnt, data, nil); err != nil {
+		return
+	}
 	var rply map[string]map[string]any
-	return aL.connMgr.Call(ctx, aL.config.ActionSCfg().EEsConns,
+	return aL.connMgr.Call(ctx, eesConns,
 		utils.EeSv1ProcessEvent, &utils.CGREventWithEeIDs{
 			EeIDs: exporterIDs,
 			CGREvent: &utils.CGREvent{

@@ -49,8 +49,12 @@ func (aL *actResetStat) execute(ctx *context.Context, data utils.MapStorage, trg
 	if args.Tenant == utils.EmptyString { // in case that user pass only ID we populate the tenant from the event
 		args.Tenant = aL.tnt
 	}
+	var statsConns []string
+	if statsConns, err = engine.GetConnIDs(ctx, aL.config.ActionSCfg().Conns[utils.MetaStats], aL.tnt, data, nil); err != nil {
+		return
+	}
 	var rply string
-	return aL.connMgr.Call(ctx, aL.config.ActionSCfg().StatSConns,
+	return aL.connMgr.Call(ctx, statsConns,
 		utils.StatSv1ResetStatQueue, args, &rply)
 }
 
@@ -78,7 +82,11 @@ func (aL *actResetThreshold) execute(ctx *context.Context, data utils.MapStorage
 	if args.Tenant == utils.EmptyString { // in case that user pass only ID we populate the tenant from the event
 		args.Tenant = aL.tnt
 	}
+	var threshConns []string
+	if threshConns, err = engine.GetConnIDs(ctx, aL.config.ActionSCfg().Conns[utils.MetaThresholds], aL.tnt, data, nil); err != nil {
+		return
+	}
 	var rply string
-	return aL.connMgr.Call(ctx, aL.config.ActionSCfg().ThresholdSConns,
+	return aL.connMgr.Call(ctx, threshConns,
 		utils.ThresholdSv1ResetThreshold, args, &rply)
 }

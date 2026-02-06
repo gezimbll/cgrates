@@ -40,7 +40,11 @@ type QOSRouteSorter struct {
 
 func (qos *QOSRouteSorter) SortRoutes(ctx *context.Context, prflID string, routes map[string]*RouteWithWeight,
 	ev *utils.CGREvent, extraOpts *optsGetRoutes) (sortedRoutes *SortedRoutes, err error) {
-	if len(qos.cfg.RouteSCfg().StatSConns) == 0 {
+	statSConns, err := engine.GetConnIDs(ctx, qos.cfg.RouteSCfg().Conns[utils.MetaStats], ev.Tenant, ev.AsDataProvider(), nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(statSConns) == 0 {
 		return nil, utils.NewErrMandatoryIeMissing("connIDs")
 	}
 	sortedRoutes = &SortedRoutes{
@@ -92,13 +96,34 @@ func (qos *QOSRouteSorter) SortRoutes(ctx *context.Context, prflID string, route
 				}
 			}
 		}
+		var resConns []string
+		resConns, err = engine.GetConnIDs(ctx, qos.cfg.FilterSCfg().Conns[utils.MetaResources], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var statFConns []string
+		statFConns, err = engine.GetConnIDs(ctx, qos.cfg.FilterSCfg().Conns[utils.MetaStats], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var acctConns []string
+		acctConns, err = engine.GetConnIDs(ctx, qos.cfg.FilterSCfg().Conns[utils.MetaAccounts], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var trendConns []string
+		trendConns, err = engine.GetConnIDs(ctx, qos.cfg.FilterSCfg().Conns[utils.MetaTrends], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var rankConns []string
+		rankConns, err = engine.GetConnIDs(ctx, qos.cfg.FilterSCfg().Conns[utils.MetaRankings], ev.Tenant, nil, nil)
+		if err != nil {
+			return nil, err
+		}
 		var pass bool
 		if pass, err = routeLazyPass(ctx, route.lazyCheckRules, ev, srtRoute.SortingData,
-			qos.cfg.FilterSCfg().ResourceSConns,
-			qos.cfg.FilterSCfg().StatSConns,
-			qos.cfg.FilterSCfg().AccountSConns,
-			qos.cfg.FilterSCfg().TrendSConns,
-			qos.cfg.FilterSCfg().RankingSConns); err != nil {
+			resConns, statFConns, acctConns, trendConns, rankConns); err != nil {
 			return
 		} else if pass {
 			sortedRoutes.Routes = append(sortedRoutes.Routes, srtRoute)
@@ -120,7 +145,12 @@ func populatStatsForQOSRoute(ctx *context.Context, cfg *config.CGRConfig,
 	provStsMetrics := make(map[string]metric)
 	for _, statID := range statIDs {
 		var metrics map[string]*utils.Decimal
-		if err = connMgr.Call(ctx, cfg.RouteSCfg().StatSConns, utils.StatSv1GetQueueDecimalMetrics,
+		connIDs, connErr := engine.GetConnIDs(ctx, cfg.RouteSCfg().Conns[utils.MetaStats], tenant, nil, nil)
+		if connErr != nil {
+			err = connErr
+			return
+		}
+		if err = connMgr.Call(ctx, connIDs, utils.StatSv1GetQueueDecimalMetrics,
 			&utils.TenantIDWithAPIOpts{TenantID: &utils.TenantID{Tenant: tenant, ID: statID}}, &metrics); err != nil &&
 			err.Error() != utils.ErrNotFound.Error() {
 			utils.Logger.Warning(

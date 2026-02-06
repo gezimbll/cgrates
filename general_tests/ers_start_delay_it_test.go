@@ -69,7 +69,15 @@ func TestErsStartDelay(t *testing.T) {
 		},	
 		"sessions":{
 		   "enabled": true,
-		   "cdrs_conns":["*localhost"]
+		    "conns": {
+			"*cdrs": [ 
+			{
+			"Tenant": "",
+			"FilterIDs": [],
+			"Values": ["*localhost"]
+			}
+									]
+			}
         },
 		"logger": {
      	"level": 7,								},

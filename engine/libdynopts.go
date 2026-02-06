@@ -172,6 +172,15 @@ func GetStringSliceOpts(ctx *context.Context, tnt string, dP utils.DataProvider,
 	return dftOpt, nil // return the default value if there are no options and none of the filters pass
 }
 
+// GetConnIDs resolves dynamic connection IDs from the given DynamicStringSliceOpt list.
+func GetConnIDs(ctx *context.Context, dynConns []*config.DynamicStringSliceOpt,
+	tnt string, dP utils.DataProvider, fltrS *FilterS) ([]string, error) {
+	if len(dynConns) == 0 {
+		return nil, nil
+	}
+	return GetStringSliceOpts(ctx, tnt, dP, nil, fltrS, dynConns, nil)
+}
+
 // GetIntOpts checks the specified option names in order among the keys in APIOpts returning the first value it finds as int, otherwise it
 // returns the config option if at least one filter passes or the default value if none of them do
 func GetIntOpts(ctx *context.Context, tnt string, dP utils.DataProvider, cch map[string]any, fS *FilterS, dynOpts []*config.DynamicIntOpt,
@@ -373,6 +382,9 @@ func ConvertOptsToMapStringAny(in any) (map[string]any, error) {
 
 // getOptIfaceFromDP is a helper that returns the first option (as interface{}) found in cache or data provider
 func optIfaceFromDP(dP utils.DataProvider, cch map[string]any, optNames []string) (any, error) {
+	if dP == nil {
+		return nil, utils.ErrNotFound
+	}
 	if cch != nil {
 		for _, optName := range optNames {
 			if opt, ok := cch[optName]; ok {

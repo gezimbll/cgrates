@@ -85,9 +85,13 @@ func (r *RankingS) computeRanking(ctx *context.Context, rkP *utils.RankingProfil
 	rk.LastUpdate = time.Now()
 	rk.Metrics = make(map[string]map[string]float64) // reset previous values
 	rk.SortedStatIDs = make([]string, 0)
+	statConns, err := engine.GetConnIDs(ctx, r.cgrcfg.RankingSCfg().Conns[utils.MetaStats], rk.Tenant, rkP, r.filterS)
+	if err != nil {
+		return
+	}
 	for _, statID := range rkP.StatIDs {
 		var floatMetrics map[string]float64
-		if err := r.connMgr.Call(context.Background(), r.cgrcfg.RankingSCfg().StatSConns,
+		if err := r.connMgr.Call(context.Background(), statConns,
 			utils.StatSv1GetQueueFloatMetrics,
 			&utils.TenantIDWithAPIOpts{TenantID: &utils.TenantID{Tenant: rkP.Tenant, ID: statID}},
 			&floatMetrics); err != nil {
@@ -146,7 +150,8 @@ func (r *RankingS) processThresholds(rk *utils.Ranking) (err error) {
 	if len(rk.SortedStatIDs) == 0 {
 		return
 	}
-	if len(r.cgrcfg.RankingSCfg().ThresholdSConns) == 0 {
+	threshConns := engine.GetConnIDs(r.cgrcfg.RankingSCfg().Conns[utils.MetaThresholds])
+	if len(threshConns) == 0 {
 		return
 	}
 	opts := map[string]any{
@@ -176,7 +181,7 @@ func (r *RankingS) processThresholds(rk *utils.Ranking) (err error) {
 	}
 	var withErrs bool
 	var rkIDs []string
-	if err := r.connMgr.Call(context.TODO(), r.cgrcfg.RankingSCfg().ThresholdSConns,
+	if err := r.connMgr.Call(context.TODO(), threshConns,
 		utils.ThresholdSv1ProcessEvent, ev, &rkIDs); err != nil &&
 		(len(thIDs) != 0 || err.Error() != utils.ErrNotFound.Error()) {
 		utils.Logger.Warning(
@@ -194,7 +199,8 @@ func (r *RankingS) processEEs(rk *utils.Ranking) (err error) {
 	if len(rk.SortedStatIDs) == 0 {
 		return
 	}
-	if len(r.cgrcfg.RankingSCfg().EEsConns) == 0 {
+	eesConns := engine.GetConnIDs(r.cgrcfg.RankingSCfg().Conns[utils.MetaEEs])
+	if len(eesConns) == 0 {
 		return
 	}
 	opts := map[string]any{
@@ -214,7 +220,7 @@ func (r *RankingS) processEEs(rk *utils.Ranking) (err error) {
 	}
 	var withErrs bool
 	var reply map[string]map[string]any
-	if err := r.connMgr.Call(context.TODO(), r.cgrcfg.RankingSCfg().EEsConns,
+	if err := r.connMgr.Call(context.TODO(), eesConns,
 		utils.EeSv1ProcessEvent, ev, &reply); err != nil &&
 		err.Error() != utils.ErrNotFound.Error() {
 		utils.Logger.Warning(

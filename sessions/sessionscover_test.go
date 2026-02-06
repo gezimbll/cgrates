@@ -280,7 +280,9 @@ dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
 func TestForceSTerminatorPostCDRs(t *testing.T) {
 	log.SetOutput(io.Discard)
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().CDRsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}
+	cfg.SessionSCfg().Conns[utils.MetaCDRs] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -316,7 +318,9 @@ dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
 func TestForceSTerminatorReleaseSession(t *testing.T) {
 	log.SetOutput(io.Discard)
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -483,7 +487,7 @@ func TestDebitSessionResponderMaxDebit(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -546,7 +550,7 @@ func TestDebitSessionResponderMaxDebitError(t *testing.T) {
 	internalRpcChan := make(chan birpc.ClientConnector, 1)
 	internalRpcChan <- sMock
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	// cfg.SessionSCfg().SchedulerConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaActions)}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
@@ -652,7 +656,7 @@ func TestDebitLoopSessionErrorDebiting(t *testing.T) {
 	cfg := config.NewDefaultCGRConfig()
 	cfg.GeneralCfg().NodeID = "ClientConnIdtest"
 	cfg.SessionSCfg().TerminateAttempts = 1
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	// cfg.SessionSCfg().SchedulerConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaActions)}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
@@ -737,7 +741,7 @@ func TestDebitLoopSession(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -801,7 +805,7 @@ func TestDebitLoopSessionFrcDiscLowerDbtInterval(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -855,7 +859,7 @@ func TestDebitLoopSessionLowBalance(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	cfg.SessionSCfg().MinDurLowBalance = 1 * time.Second
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
@@ -918,8 +922,10 @@ func TestDebitLoopSessionWarningSessions(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	// RALsConns removed - no longer part of SessionSCfg
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	cfg.SessionSCfg().MinDurLowBalance = 1 * time.Second
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
@@ -976,8 +982,10 @@ func TestDebitLoopSessionDisconnectSession(t *testing.T) {
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
 	cfg.GeneralCfg().NodeID = "ClientConnID"
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	// RALsConns removed - no longer part of SessionSCfg
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	cfg.SessionSCfg().MinDurLowBalance = 1 * time.Second
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
@@ -1043,7 +1051,9 @@ func TestStoreSCost(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().CDRsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}
+	cfg.SessionSCfg().Conns[utils.MetaCDRs] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -1099,7 +1109,7 @@ func TestRefundSession(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -1205,7 +1215,7 @@ func TestRoundCost(t *testing.T) {
 	sMock := make(chan birpc.ClientConnector, 1)
 	sMock <- testMock1
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	dbCM := engine.NewDBConnManager(map[string]engine.DataDB{utils.MetaDefault: data}, cfg.DbCfg())
 dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), nil)
@@ -1381,7 +1391,9 @@ dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), connMgr)
 		t.Errorf("Expected %+v, received %+v", expectedErr, err)
 	}
 
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
 
 	expectedSess := &Session{
 		CGRID:        "da39a3ee5e6b4b0d3255bfef95601890afd80709",
@@ -1695,7 +1707,9 @@ func TestSyncSessions(t *testing.T) {
 	chanInternal <- sTestMock
 	cfg := config.NewDefaultCGRConfig()
 	//cfg.GeneralCfg().ReplyTimeout = 1
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	cfg.CacheCfg().ReplicationConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaReplicator)}
 	cfg.CacheCfg().Partitions[utils.CacheClosedSessions] = &config.CacheParamCfg{
 		Replicate: true,
@@ -1770,7 +1784,7 @@ func TestAuthEvent(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- sTestMock
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs):     chanInternal,
@@ -1844,7 +1858,7 @@ func TestAuthEventMockCall(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- sTestMock
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs):     chanInternal,
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers): chanInternal})
@@ -2038,8 +2052,10 @@ func TestEndSession(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- sTestMock
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
-	cfg.SessionSCfg().CDRsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}
+	// RALsConns removed - no longer part of SessionSCfg
+	cfg.SessionSCfg().Conns[utils.MetaCDRs] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}},
+	}
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs): chanInternal,
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs): chanInternal,
@@ -2691,10 +2707,18 @@ func TestBiRPCv1AuthorizeEventWithDigest(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().AttrSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
-	cfg.SessionSCfg().RouteSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRoutes)}
+	cfg.SessionSCfg().Conns[utils.MetaAttributes] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaRoutes] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRoutes)}},
+	}
 	cfg.SessionSCfg().ThreshSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}
 	cfg.SessionSCfg().StatSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaStats)}
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 0
@@ -2789,9 +2813,15 @@ func TestBiRPCv1InitiateSession1(t *testing.T) {
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 1
-	cfg.SessionSCfg().AttrSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
+	cfg.SessionSCfg().Conns[utils.MetaAttributes] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers):   chanInternal,
@@ -2933,7 +2963,9 @@ func TestBiRPCv1InitiateSession2(t *testing.T) {
 	cfg := config.NewDefaultCGRConfig()
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 1
 	cfg.SessionSCfg().ThreshSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers):   chanInternal,
@@ -3067,10 +3099,18 @@ func TestBiRPCv1InitiateSessionWithDigest(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().AttrSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
-	cfg.SessionSCfg().RouteSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRoutes)}
+	cfg.SessionSCfg().Conns[utils.MetaAttributes] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaRoutes] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRoutes)}},
+	}
 	cfg.SessionSCfg().ThreshSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaThresholds)}
 	cfg.SessionSCfg().StatSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaStats)}
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 0
@@ -3139,7 +3179,9 @@ func TestBiRPCv1UpdateSession1(t *testing.T) {
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 1
-	cfg.SessionSCfg().AttrSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}
+	cfg.SessionSCfg().Conns[utils.MetaAttributes] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes): chanInternal,
@@ -3308,7 +3350,9 @@ func TestBiRPCv1TerminateSession1(t *testing.T) {
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 1
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers): chanInternal,
@@ -3411,7 +3455,9 @@ dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), connMgr)
 		Replicate: true,
 	}
 	cfg.SessionSCfg().ReplicationConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaReplicator)}
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
 	connMgr = engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers):   chanInternal,
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaReplicator): chanInternal,
@@ -3443,7 +3489,9 @@ func TestBiRPCv1TerminateSession2(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources): chanInternal,
@@ -3548,7 +3596,9 @@ func TestBiRPCv1ProcessMessage1(t *testing.T) {
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 1
-	cfg.SessionSCfg().AttrSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}
+	cfg.SessionSCfg().Conns[utils.MetaAttributes] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaAttributes): chanInternal,
@@ -3652,7 +3702,9 @@ func TestBiRPCv1ProcessMessage2(t *testing.T) {
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
 	cfg.CacheCfg().Partitions[utils.CacheRPCResponses].Limit = 1
-	cfg.SessionSCfg().ResSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources): chanInternal,
@@ -3887,7 +3939,9 @@ func TestBiRPCv1ProcessEventStats(t *testing.T) {
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
 	cfg.SessionSCfg().StatSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaStats)}
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaStats):    chanInternal,
@@ -3958,7 +4012,9 @@ func TestBiRPCv1ProcessEventResources(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources): chanInternal,
@@ -4076,8 +4132,10 @@ func TestBiRPCv1ProcessEventRals1(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
+	// RALsConns removed - no longer part of SessionSCfg
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs):     chanInternal,
@@ -4186,8 +4244,10 @@ func TestBiRPCv1ProcessEventRals2(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
-	cfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
+	// RALsConns removed - no longer part of SessionSCfg
 	cfg.SessionSCfg().ReplicationConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaReplicator)}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
@@ -4321,8 +4381,12 @@ func TestBiRPCv1ProcessEventCDRs11(t *testing.T) {
 	chanInternal := make(chan birpc.ClientConnector, 1)
 	chanInternal <- clnt
 	cfg := config.NewDefaultCGRConfig()
-	cfg.SessionSCfg().ChargerSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}
-	cfg.SessionSCfg().CDRsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}
+	cfg.SessionSCfg().Conns[utils.MetaChargers] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers)}},
+	}
+	cfg.SessionSCfg().Conns[utils.MetaCDRs] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaCDRs)}},
+	}
 	data , _ := engine.NewInternalDB(nil, nil, nil, cfg.DbCfg().Items)
 	connMgr := engine.NewConnManager(cfg, map[string]chan birpc.ClientConnector{
 		utils.ConcatenatedKey(utils.MetaInternal, utils.MetaChargers): chanInternal,
@@ -4494,7 +4558,7 @@ dm := engine.NewDataManager(dbCM, cfg.CacheCfg(), connMgr)
 	if err := sessions.BiRPCv1GetCost(nil, args, &reply); err == nil || err.Error() != expected {
 		t.Errorf("Exepected %+v, received %+v", expected, err)
 	}
-	sessions.cgrCfg.SessionSCfg().RALsConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaRALs)}
+	// RALsConns removed - no longer part of SessionSCfg
 
 	expectedVal := V1GetCostReply{
 		Attributes: &attributes.AttrSProcessEventReply{
@@ -4639,7 +4703,9 @@ func TestBiRPCv1ForceDisconnect(t *testing.T) {
 	testMk := &mkCallForces{}
 	clntConn := make(chan birpc.ClientConnector, 1)
 	clntConn <- testMk
-	sessions.cfg.SessionSCfg().ResourceSConns = []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}
+	sessions.cfg.SessionSCfg().Conns[utils.MetaResources] = []*config.DynamicStringSliceOpt{
+		{Values: []string{utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources)}},
+	}
 	connMngr := engine.NewConnManager(cfg)
 	connMngr.AddInternalConn(utils.ConcatenatedKey(utils.MetaInternal, utils.MetaResources), utils.ResourceSv1, clntConn)
 	sessions.connMgr = connMngr
