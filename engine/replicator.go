@@ -97,16 +97,14 @@ func (r *replicator) replicate(objType, objID, method string, args any,
 	if !item.Replicate {
 		return nil
 	}
+	// Form a unique key by joining method name with object identifiers.
+	// Including the method name (Set/Remove) allows different operations
+	// on the same object to have distinct keys, which also serve as
+	// predictable filenames if replication fails.
+	_, methodName, _ := strings.Cut(method, utils.NestingSep)
+	key := methodName + "_" + objType + objID
 
 	if r.interval > 0 {
-
-		// Form a unique key by joining method name with object identifiers.
-		// Including the method name (Set/Remove) allows different operations
-		// on the same object to have distinct keys, which also serve as
-		// predictable filenames if replication fails.
-		_, methodName, _ := strings.Cut(method, utils.NestingSep)
-		key := methodName + "_" + objType + objID
-
 		r.mu.Lock()
 		defer r.mu.Unlock()
 		r.pending[key] = &replicationData{
@@ -117,8 +115,37 @@ func (r *replicator) replicate(objType, objID, method string, args any,
 		}
 		return nil
 	}
+	return r.replicateAndRestore(key, objType, objID, method, args)
+}
 
-	return replicate(r.cm, r.conns, r.filtered, objType, objID, method, args)
+// replicateAndRestore is a wrapper over replicate function and checks failedDir
+// to create files for tracking unsuccessful writes
+func (r *replicator) replicateAndRestore(key string, objType, objID, method string, args any) error {
+	var failedPath string
+	if r.failedDir != "" {
+		failedPath = filepath.Join(r.failedDir, key+utils.GOBSuffix)
+		// Clean up any existing file containing failed replications.
+		if err := os.Remove(failedPath); err != nil && !os.IsNotExist(err) {
+			utils.Logger.Warning(fmt.Sprintf(
+				"<DataManager> failed to remove file for %q: %v", key, err))
+		}
+	}
+	err := replicate(r.cm, r.conns, r.filtered, objType, objID, method, args)
+	if err != nil && failedPath != "" {
+		task := &ReplicationTask{
+			ConnIDs:  r.conns,
+			Filtered: r.filtered,
+			ObjType:  objType,
+			ObjID:    objID,
+			Method:   method,
+			Args:     args,
+		}
+		if wErr := task.WriteToFile(failedPath); wErr != nil {
+			utils.Logger.Err(fmt.Sprintf(
+				"<DataManager> failed to dump replication task: %v", wErr))
+		}
+	}
+	return err
 }
 
 // replicate performs the actual replication by calling Set/Remove APIs on ReplicatorSv1
@@ -172,40 +199,11 @@ func (r *replicator) flush() {
 	pending := r.pending
 	r.pending = make(map[string]*replicationData)
 	r.mu.Unlock()
-
 	for key, data := range pending {
-		var failedPath string
-
-		if r.failedDir != "" {
-			failedPath = filepath.Join(r.failedDir, key+utils.GOBSuffix)
-
-			// Clean up any existing file containing failed replications.
-			if err := os.Remove(failedPath); err != nil && !os.IsNotExist(err) {
-				utils.Logger.Warning(fmt.Sprintf(
-					"<DataManager> failed to remove file for %q: %v", key, err))
-			}
-		}
-
-		if err := replicate(r.cm, r.conns, r.filtered, data.objType, data.objID,
-			data.method, data.args); err != nil {
+		if err := r.replicateAndRestore(key, data.objType, data.objID, data.method, data.args); err != nil {
 			utils.Logger.Warning(fmt.Sprintf(
 				"<DataManager> failed to replicate %q for object %q: %v",
 				data.method, data.objType+data.objID, err))
-
-			if failedPath != "" {
-				task := &ReplicationTask{
-					ConnIDs:  r.conns,
-					Filtered: r.filtered,
-					ObjType:  data.objType,
-					ObjID:    data.objID,
-					Method:   data.method,
-					Args:     data.args,
-				}
-				if err := task.WriteToFile(failedPath); err != nil {
-					utils.Logger.Err(fmt.Sprintf(
-						"<DataManager> failed to dump replication task: %v", err))
-				}
-			}
 		}
 	}
 }
@@ -259,14 +257,13 @@ func replicateMultipleIDs(connMgr *ConnManager, connIDs []string, filtered bool,
 // ReplicationTask represents a replication operation that can be saved to disk
 // and executed later, typically used for failed replications.
 type ReplicationTask struct {
-	ConnIDs   []string
-	Filtered  bool
-	Path      string
-	ObjType   string
-	ObjID     string
-	Method    string
-	Args      any
-	failedDir string
+	ConnIDs  []string
+	Filtered bool
+	Path     string
+	ObjType  string
+	ObjID    string
+	Method   string
+	Args     any
 }
 
 // NewReplicationTaskFromFile loads a replication task from the specified file.

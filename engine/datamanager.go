@@ -2879,16 +2879,15 @@ func (dm *DataManager) RemAccountActionPlans(acntID string, apIDs []string) (err
 		return
 	}
 	if itm := config.CgrConfig().DataDbCfg().Items[utils.MetaAccountActionPlans]; itm.Replicate {
-		replicate(dm.connMgr, config.CgrConfig().DataDbCfg().RplConns,
-			config.CgrConfig().DataDbCfg().RplFiltered,
-			utils.AccountActionPlansPrefix, acntID, // these are used to get the host IDs from cache
+		_ = dm.replicator.replicate(
+			utils.AccountActionPlansPrefix, acntID,
 			utils.ReplicatorSv1RemAccountActionPlans,
 			&RemAccountActionPlansArgsWithAPIOpts{
 				AcntID: acntID,
 				ApIDs:  apIDs,
 				Tenant: config.CgrConfig().GeneralCfg().DefaultTenant,
 				APIOpts: utils.GenerateDBItemOpts(itm.APIKey, itm.RouteID,
-					config.CgrConfig().DataDbCfg().RplCache, utils.EmptyString)})
+					config.CgrConfig().DataDbCfg().RplCache, utils.EmptyString)}, itm)
 	}
 	return
 }
