@@ -42,7 +42,7 @@ func BuildParams(argStr string, md *utils.MethodDescriptor) (map[string]any, err
 		if !ok {
 			return nil, fmt.Errorf("invalid argument %q, expected Key=Value", tok)
 		}
-		val, err := parseValue(FieldType(md, key), raw)
+		val, err := ParseValue(FieldType(md, key), raw)
 		if err != nil {
 			return nil, fmt.Errorf("field %s: %w", key, err)
 		}
@@ -68,7 +68,7 @@ func wholeRequest(argStr string) (map[string]any, error) {
 	return params, nil
 }
 
-func parseValue(typ, raw string) (any, error) {
+func ParseValue(typ, raw string) (any, error) {
 	if strings.HasPrefix(raw, "@") {
 		data, err := os.ReadFile(raw[1:])
 		if err != nil {
